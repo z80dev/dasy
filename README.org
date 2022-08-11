@@ -1,0 +1,7 @@
+#+title: Dasy
+
+#+begin_quote
+The Dasypeltis, gansi, is considered an egg-eating snake. Their diet consists of all forms of eggs considering they have no teeth in which to eat living prey with.
+#+end_quote
+
+Dasy is a lisp built on top of [[https://github.com/vyperlang/vyper][vyper]]
