@@ -19,7 +19,7 @@ def parse_return(return_tree):
 def parse_binop(binop_tree):
     global node_id_counter
     match str(binop_tree[0]):
-        case '+':
+        case '+' | '-':
             left = parse_node(binop_tree[1])
             right = parse_node(binop_tree[2])
             op = parse_node(binop_tree[0])
@@ -78,7 +78,7 @@ def parse_expr(expr):
             return parse_fn(expr)
         case 'return':
             return parse_return(expr)
-        case '+':
+        case '+' | '-':
             node = parse_binop(expr)
             return node
         case _:
@@ -91,6 +91,11 @@ def parse_builtin(node):
             op_node = vy_nodes.Add(node_id=node_id_counter, ast_type='Add', _pretty="+", _description="addition")
             node_id_counter += 1
             return op_node
+        case '-':
+            op_node = vy_nodes.Sub(node_id=node_id_counter, ast_type='Sub', _pretty="-", _description="subtraction")
+            node_id_counter += 1
+            return op_node
+
 
 def parse_node(ast_node):
     global node_id_counter
