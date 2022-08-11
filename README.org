@@ -5,3 +5,27 @@ The Dasypeltis, gansi, is considered an egg-eating snake. Their diet consists of
 #+end_quote
 
 Dasy is a lisp built on top of [[https://github.com/vyperlang/vyper][vyper]]
+
+it is parsed into a vyper AST to leverage all the optimizations of the vyper compiler
+* Installation
+For use as a library
+#+begin_src bash
+pip install dasy
+#+end_src
+
+For use as an executable
+#+begin_src bash
+pipx install dasy
+#+end_src
+* Example
+In [[file:helloworld.dasy][hello_world.dasy]]
+#+begin_src lisp
+(defcontract hello_world
+    (defn foo [] uint256 :external
+      (return 8)))
+#+end_src
+
+#+begin_src shell
+> cat hello_world.dasy | ~/.local/bin/dasy
+0x61004f61000f60003961004f6000f36003361161000c57610037565b60003560e01c3461003d5763c29855788118610035576004361861003d57600860405260206040f35b505b60006000fd5b600080fda165767970657283000306000b
+#+end_src

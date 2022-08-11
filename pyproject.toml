@@ -2,7 +2,7 @@
 name = "dasy"
 version = "0.1.0"
 description = ""
-authors = ["z80 <z80dev@mlnl.finance>"]
+authors = ["z80 <z80@ophy.xyz>"]
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.11"
