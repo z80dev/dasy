@@ -47,19 +47,9 @@ def parse_fn(fn_tree):
     assert isinstance(fn_tree, models.Expression)
     assert fn_tree[0] == models.Symbol('defn')
     match fn_tree[1:]:
-        case models.Symbol(sym_node), models.List(list_node), models.Keyword(ret_node), models.Keyword(vis), *body:
-            name = str(sym_node)
-            args_list = parse_args_list(list_node)
-            args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
-            rets = vy_nodes.Name(id=ret_node, node_id=next_nodeid(), ast_type='Name')
-            decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
-            fn_body = [parse_node(body_node) for body_node in body[:-1]]
-            assert isinstance(body[-1], models.Expression)
-            value_node = parse_node(body[-1])
-            implicit_return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
-            fn_body.append(implicit_return_node)
-        case models.Symbol(sym_node), models.List(args_node), models.Expression(rets_node), models.Keyword(vis), *body:
-            rets = parse_node(rets_node)
+        case models.Symbol(sym_node), models.List(args_node), returns, models.Keyword(vis), *body:
+            assert isinstance(returns, models.Keyword) or isinstance(returns, models.Expression)
+            rets = parse_node(returns)
             name = str(sym_node)
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')

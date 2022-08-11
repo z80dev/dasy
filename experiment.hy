@@ -7,7 +7,7 @@
   (with [f (open path "r")]
     (.read f)))
 
-(let [src (get-src "hello_world.dasy")]
+#_(let [src (get-src "hello_world.dasy")]
   (inspect (.read hy src))
   (inspect (.parse_src dasy src)))
 
@@ -16,4 +16,5 @@
       compilation_data (.compile dasy src)
       contract (VyperContract compilation_data)]
   (print f"calling (.multipleRets contract 10 20): {(.multipleRets contract 10 20)}")
+  (print f"calling (.foo contract 10): {(.foo contract 10 )}")
   )
