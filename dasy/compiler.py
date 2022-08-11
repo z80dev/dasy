@@ -112,9 +112,13 @@ def parse_node(ast_node):
         node_id_counter += 1
         return name_node
 
+def parse_src(src: str):
+    ast = parse_node(hy.read(src))
+    return ast
+
 
 def compile(src: str) -> CompilerData:
-    ast = parse_node(hy.read(src))
+    ast = parse_src(src)
     data = phases.CompilerData("", ast.name, None, source_id=0, )
     data.vyper_module = ast
     return data
