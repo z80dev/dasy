@@ -19,7 +19,7 @@ pipx install dasy
 #+end_src
 * Example
 In [[file:helloworld.dasy][hello_world.dasy]]
-#+begin_src lisp
+#+begin_src clojure
 (defcontract hello_world
   (defn subUints [:uint256 x y] :uint256 :external
     (return (- x y)))
