@@ -1,10 +1,5 @@
 (defcontract hello_world
     [base [:uint256 :public]]
-  (defn subUints [:uint256 x y] :uint256 :external
-        (- x y))
-  (defn addUints [:uint256 x y] :uint256 :external
-        (+ x y))
-  (defn mulUints [:uint256 x y] :uint256 :external
-        (* x y))
-  (defn divUints [:uint256 x y] :uint256 :external
-        (/ x y)))
+  (defn multipleRets [:uint256 x y] '(:uint256 :uint256 :uint256) :external
+    '((+ x 1) (+ y 1) 3))
+  )

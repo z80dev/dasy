@@ -1,12 +1,19 @@
-(import rich [print]
+(import rich [print inspect]
         boa.contract [VyperContract]
+        hy
         dasy)
+
+(defn get-src [path]
+  (with [f (open path "r")]
+    (.read f)))
+
+(let [src (get-src "hello_world.dasy")]
+  (inspect (.read hy src))
+  (inspect (.parse_src dasy src)))
 
 (let [src (with [f (open "hello_world.dasy" "r")]
             (.read f))
       compilation_data (.compile dasy src)
       contract (VyperContract compilation_data)]
-  (print f"calling (.addUints contract 10 20): {(.addUints contract 10 20)}")
-  (print f"calling (.subUints contract 10 20): {(.subUints contract 100 20)}")
-  (print f"calling (.mulUints contract 10 20): {(.mulUints contract 10 20)}")
-  (print f"calling (.divUints contract 10 20): {(.divUints contract 100 20)}"))
+  (print f"calling (.multipleRets contract 10 20): {(.multipleRets contract 10 20)}")
+  )

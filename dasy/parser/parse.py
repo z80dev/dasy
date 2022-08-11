@@ -34,6 +34,14 @@ def parse_args_list(args_list) -> [vy_nodes.arg]:
         results.append(vy_nodes.arg(arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid()))
     return results
 
+def parse_tuple(tuple_tree):
+    match tuple_tree:
+        case models.Symbol(q), elements if str(q) == 'quote':
+            elts = [parse_node(e) for e in elements]
+            return vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
+        case _:
+            raise Exception("Invalid tuple declaration; requires quoted list ex: '(2 3 4)")
+
 def parse_fn(fn_tree):
     fn_node_id = next_nodeid()
     assert isinstance(fn_tree, models.Expression)
@@ -44,6 +52,17 @@ def parse_fn(fn_tree):
             args_list = parse_args_list(list_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             rets = vy_nodes.Name(id=ret_node, node_id=next_nodeid(), ast_type='Name')
+            decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
+            fn_body = [parse_node(body_node) for body_node in body[:-1]]
+            assert isinstance(body[-1], models.Expression)
+            value_node = parse_node(body[-1])
+            implicit_return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
+            fn_body.append(implicit_return_node)
+        case models.Symbol(sym_node), models.List(args_node), models.Expression(rets_node), models.Keyword(vis), *body:
+            rets = parse_node(rets_node)
+            name = str(sym_node)
+            args_list = parse_args_list(args_node)
+            args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
             fn_body = [parse_node(body_node) for body_node in body[:-1]]
             assert isinstance(body[-1], models.Expression)
@@ -83,6 +102,8 @@ def parse_expr(expr):
         case '+' | '-' | '*' | '/':
             node = parse_binop(expr)
             return node
+        case 'quote':
+            return parse_tuple(expr)
         case _:
             raise Exception(f"No match for expression cmd {expr[0]}")
 
@@ -110,7 +131,7 @@ def parse_node(node):
             return value_node
         case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
             return parse_builtin(node)
-        case models.Symbol(node):
+        case models.Symbol(node) | models.Keyword(node):
             name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
             return name_node
         case _:
