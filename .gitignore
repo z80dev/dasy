@@ -1,1 +1,3 @@
 /dasy/__pycache__/
+*.pyc
+/dist/

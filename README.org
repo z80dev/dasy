@@ -36,6 +36,20 @@ print(c.addUints(10, 20)) # outputs 30
 print(c.subUints(100, 20)) # outputs 80
 #+end_src
 
+via hy (lisp based on python)
+#+begin_src hy
+(import rich [print]
+        boa.contract [VyperContract]
+        dasy)
+
+(let [src (with [f (open "hello_world.dasy" "r")]
+            (.read f))
+      compilation_data (.compile dasy src)
+      contract (VyperContract compilation_data)]
+  (print f"calling (.addUints contract 10 20): {(.addUints contract 10 20)}")
+  (print f"calling (.subUints contract 10 20): {(.subUints contract 100 20)}"))
+#+end_src
+
 Command line compilation
 #+begin_src shell
 > dasy hello_world.dasy
