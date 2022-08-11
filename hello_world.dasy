@@ -1,3 +1,3 @@
 (defcontract hello_world
-    (defn foo [:uint256 x] uint256 :external
+    (defn foo [:uint256 x] :uint256 :external
     (return (- x 8))))

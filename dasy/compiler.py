@@ -53,7 +53,7 @@ def parse_fn(fn_tree):
     args_list = parse_args_list(fn_tree[2])
     args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=node_id_counter, ast_type='arguments')
     node_id_counter += 1
-    rets = vy_nodes.Name(id=str(fn_tree[3]), node_id=node_id_counter, ast_type='Name')
+    rets = vy_nodes.Name(id=fn_tree[3].name, node_id=node_id_counter, ast_type='Name')
     node_id_counter += 1
     decorators = []
     body = []

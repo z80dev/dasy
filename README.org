@@ -21,7 +21,7 @@ pipx install dasy
 In [[file:helloworld.dasy][hello_world.dasy]]
 #+begin_src lisp
 (defcontract hello_world
-    (defn foo [:uint256 x] uint256 :external
+    (defn foo [:uint256 x] :uint256 :external
     (return (+ x 8))))
 #+end_src
 
