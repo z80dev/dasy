@@ -22,9 +22,9 @@ In [[file:helloworld.dasy][hello_world.dasy]]
 #+begin_src clojure
 (defcontract hello_world
   (defn subUints [:uint256 x y] :uint256 :external
-    (return (- x y)))
+    (- x y)) ;; implicit return
   (defn addUints [:uint256 x y] :uint256 :external
-    (return (+ x y))))
+    (+ x y)))
 #+end_src
 
 via [[https://github.com/z80dev/titanoboa][this fork of titanoboa]]

@@ -1,5 +1,6 @@
 (defcontract hello_world
+    [base [:uint256 :public]]
   (defn subUints [:uint256 x y] :uint256 :external
-    (return (- x y)))
+        (- x y))
   (defn addUints [:uint256 x y] :uint256 :external
-    (return (+ x y))))
+        (+ x y)))

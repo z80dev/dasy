@@ -57,23 +57,43 @@ def parse_fn(fn_tree):
     node_id_counter += 1
     decorators = []
     body = []
-    for el in fn_tree[4:]:
+    for el in fn_tree[4:-1]: # all but last
         if isinstance(el, models.Keyword):
             decorators.append(vy_nodes.Name(id=el.name, node_id=node_id_counter, ast_type='Name'))
             node_id_counter += 1
         elif isinstance(el, models.Expression):
             body.append(parse_node(el))
+    assert isinstance(fn_tree[-1], models.Expression)
+    value_node = parse_node(fn_tree[-1])
+    implicit_return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=node_id_counter)
+    node_id_counter += 1
+    body.append(implicit_return_node)
     return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
 
-def parse_expr(expr):
+def parse_contract(expr):
     global node_id_counter
-    match str(expr[0]):
-        case "defcontract":
+    match expr[1:]:
+        case (name, vars, *body) if isinstance(vars, models.List):
+            print(f"vars match: {expr}")
+            mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=node_id_counter)
+            node_id_counter += 1
+            for node in expr[3:]:
+                mod_node.add_to_body(parse_node(node))
+            return mod_node
+        case (name, *body):
             mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=node_id_counter)
             node_id_counter += 1
             for node in expr[2:]:
                 mod_node.add_to_body(parse_node(node))
             return mod_node
+        case _:
+            print(f"no match: {expr}")
+
+def parse_expr(expr):
+    global node_id_counter
+    match str(expr[0]):
+        case "defcontract":
+            return parse_contract(expr)
         case 'defn':
             return parse_fn(expr)
         case 'return':
