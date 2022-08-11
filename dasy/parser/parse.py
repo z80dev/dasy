@@ -5,7 +5,7 @@ from vyper.compiler.phases import CompilerData
 from hy import models
 from .utils import next_nodeid
 
-BUILTIN_FUNCS = ['+', '-']
+BUILTIN_FUNCS = ['+', '-', '/', '*']
 
 def parse_return(return_tree):
     val = return_tree[1]
@@ -15,7 +15,7 @@ def parse_return(return_tree):
 
 def parse_binop(binop_tree):
     match str(binop_tree[0]):
-        case '+' | '-':
+        case '+' | '-' | '*' | '/':
             left = parse_node(binop_tree[1])
             right = parse_node(binop_tree[2])
             op = parse_node(binop_tree[0])
@@ -80,7 +80,7 @@ def parse_expr(expr):
             return parse_fn(expr)
         case 'return':
             return parse_return(expr)
-        case '+' | '-':
+        case '+' | '-' | '*' | '/':
             node = parse_binop(expr)
             return node
         case _:
@@ -93,6 +93,12 @@ def parse_builtin(node):
             return op_node
         case '-':
             op_node = vy_nodes.Sub(node_id=next_nodeid(), ast_type='Sub', _pretty="-", _description="subtraction")
+            return op_node
+        case '*':
+            op_node = vy_nodes.Mult(node_id=next_nodeid(), ast_type='Mult', _pretty="*", _description="multiplication")
+            return op_node
+        case '/':
+            op_node = vy_nodes.Div(node_id=next_nodeid(), ast_type='Div', _pretty="/", _description="multiplication")
             return op_node
 
 def parse_node(node):

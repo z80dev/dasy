@@ -3,4 +3,8 @@
   (defn subUints [:uint256 x y] :uint256 :external
         (- x y))
   (defn addUints [:uint256 x y] :uint256 :external
-        (+ x y)))
+        (+ x y))
+  (defn mulUints [:uint256 x y] :uint256 :external
+        (* x y))
+  (defn divUints [:uint256 x y] :uint256 :external
+        (/ x y)))

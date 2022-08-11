@@ -7,4 +7,6 @@
       compilation_data (.compile dasy src)
       contract (VyperContract compilation_data)]
   (print f"calling (.addUints contract 10 20): {(.addUints contract 10 20)}")
-  (print f"calling (.subUints contract 10 20): {(.subUints contract 100 20)}"))
+  (print f"calling (.subUints contract 10 20): {(.subUints contract 100 20)}")
+  (print f"calling (.mulUints contract 10 20): {(.mulUints contract 10 20)}")
+  (print f"calling (.divUints contract 10 20): {(.divUints contract 100 20)}"))

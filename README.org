@@ -21,10 +21,15 @@ pipx install dasy
 In [[file:helloworld.dasy][hello_world.dasy]]
 #+begin_src clojure
 (defcontract hello_world
+    [base [:uint256 :public]]
   (defn subUints [:uint256 x y] :uint256 :external
-    (- x y)) ;; implicit return
+        (- x y))
   (defn addUints [:uint256 x y] :uint256 :external
-    (+ x y)))
+        (+ x y))
+  (defn mulUints [:uint256 x y] :uint256 :external
+        (* x y))
+  (defn divUints [:uint256 x y] :uint256 :external
+        (/ x y)))
 #+end_src
 
 via [[https://github.com/z80dev/titanoboa][this fork of titanoboa]]
