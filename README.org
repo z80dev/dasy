@@ -21,17 +21,17 @@ pipx install dasy
 In [[file:helloworld.dasy][hello_world.dasy]]
 #+begin_src clojure
 (defcontract hello_world
-    [base [:uint256 :public]]
-  (defn subUints [:uint256 x y] :uint256 :external
-        (- x y))
+  [base [:uint256 :public]]
   (defn addUints [:uint256 x y] :uint256 :external
-        (+ x y))
-  (defn mulUints [:uint256 x y] :uint256 :external
-        (* x y))
-  (defn divUints [:uint256 x y] :uint256 :external
-        (/ x y))
+    (+ x y))
   (defn multipleRets [:uint256 x y] '(:uint256 :uint256 :uint256) :external
-    '((+ x 1) (+ y 1) 3)))
+    '((+ x 1) (+ y 1) 3))
+  (defn setBase [:uint256 x] :uint256 :external
+    (setv (. self base) x)
+    x)
+  (defn addToBase [:uint256 x] :uint256 :external
+    (+ (. self base) x))
+  )
 #+end_src
 
 via [[https://github.com/z80dev/titanoboa][this fork of titanoboa]]
@@ -41,6 +41,8 @@ import boa
 c = boa.load("hello_world.dasy")
 print(c.addUints(10, 20)) # outputs 30
 print(c.subUints(100, 20)) # outputs 80
+c.setBase(10)
+print(c.addToBase(10)) # outputs 20
 #+end_src
 
 via hy (lisp based on python)

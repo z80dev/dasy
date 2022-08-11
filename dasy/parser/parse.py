@@ -55,7 +55,6 @@ def parse_fn(fn_tree):
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
             fn_body = [parse_node(body_node) for body_node in body[:-1]]
-            assert isinstance(body[-1], models.Expression)
             value_node = parse_node(body[-1])
             implicit_return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
             fn_body.append(implicit_return_node)
@@ -63,12 +62,37 @@ def parse_fn(fn_tree):
             raise Exception(f"Invalid fn form {fn_tree}")
     return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
 
+def pairwise(iterable):
+    "s -> (s0, s1), (s2, s3), (s4, s5), ..."
+    a = iter(iterable)
+    return zip(a, a)
+
 def parse_contract(expr):
     mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=next_nodeid())
     expr_body = []
     match expr[1:]:
         case (name, vars, *body) if isinstance(vars, models.List):
             # contract has state
+            for var, typ in pairwise(vars):
+                target = parse_node(var)
+                is_constant = False
+                is_public = False
+                is_immutable = False
+                match typ:
+                    case [models.Symbol(e), models.Keyword(name)] if str(e) in ["public", "immutable", "constant"]:
+                        annotation = parse_node(typ)
+                        match str(e):
+                            case "public":
+                                is_public = True
+                            case "immutable":
+                                is_immutable = True
+                            case "constant":
+                                is_constant = True
+                    case models.Keyword():
+                        annotation = parse_node(typ)
+                    case _:
+                        raise Exception(f"Invalid declaration type {typ}")
+                mod_node.add_to_body(vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable))
             expr_body = expr[3:]
         case (name, *body):
             # no contract state
@@ -80,6 +104,22 @@ def parse_contract(expr):
         mod_node.add_to_body(parse_node(node))
 
     return mod_node
+
+def parse_attribute(expr):
+    match expr[1:]:
+        case [obj, attr]:
+            return vy_nodes.Attribute(ast_type='Attribute', node_id=next_nodeid(), attr=str(attr), value=parse_node(obj))
+
+def parse_call(expr):
+    match expr:
+        case (fn_name, *args):
+            args_list = [parse_node(arg) for arg in args]
+            return vy_nodes.Call(func=parse_node(fn_name), args=args_list, keywords=[], ast_type='Call', node_id=next_nodeid())
+
+def parse_assignment(expr):
+    match expr[1:]:
+        case [target, value]:
+            return vy_nodes.Assign(ast_type='Call', node_id=next_nodeid(), targets=[parse_node(target)], value=parse_node(value))
 
 def parse_expr(expr):
     match str(expr[0]):
@@ -94,8 +134,12 @@ def parse_expr(expr):
             return node
         case 'quote':
             return parse_tuple(expr)
+        case '.':
+            return parse_attribute(expr)
+        case 'setv':
+            return parse_assignment(expr)
         case _:
-            raise Exception(f"No match for expression cmd {expr[0]}")
+            return parse_call(expr)
 
 def parse_builtin(node):
     match str(node):
