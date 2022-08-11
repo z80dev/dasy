@@ -1,3 +1,3 @@
 @external
-def foo() -> uint256:
-    return 8
+def foo(x: uint256) -> uint256:
+    return x + 8
