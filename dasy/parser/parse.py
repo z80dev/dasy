@@ -3,26 +3,9 @@ import vyper.ast.nodes as vy_nodes
 import vyper.compiler.phases as phases
 from vyper.compiler.phases import CompilerData
 from hy import models
+from .utils import next_nodeid
 
 BUILTIN_FUNCS = ['+', '-']
-
-def counter_gen():
-    _counter = 0
-    while True:
-        yield _counter
-        _counter += 1
-
-def next_node_id_maker():
-    counter = counter_gen()
-
-    def next_num():
-        return next(counter)
-
-    return next_num
-
-
-next_nodeid = next_node_id_maker()
-
 
 def parse_return(return_tree):
     val = return_tree[1]
@@ -115,19 +98,18 @@ def parse_builtin(node):
             op_node = vy_nodes.Sub(node_id=next_nodeid(), ast_type='Sub', _pretty="-", _description="subtraction")
             return op_node
 
-
-def parse_node(ast_node):
-    global node_id_counter
-    if isinstance(ast_node, models.Expression):
-        return parse_expr(ast_node)
-    if isinstance(ast_node, models.Integer):
-        value_node = vy_nodes.Int(value=int(ast_node), node_id=next_nodeid(), ast_type='Int')
-        return value_node
-    if str(ast_node) in BUILTIN_FUNCS:
-        return parse_builtin(ast_node)
-    if isinstance(ast_node, models.Symbol):
-        name_node = vy_nodes.Name(id=str(ast_node), node_id=next_nodeid(), ast_type='Name')
-        return name_node
+def parse_node(node):
+    match node:
+        case models.Expression(node):
+            return parse_expr(node)
+        case models.Integer(node):
+            value_node = vy_nodes.Int(value=int(node), node_id=next_nodeid(), ast_type='Int')
+            return value_node
+        case str(node) if node in BUILTIN_FUNCS:
+            return parse_builtin(node)
+        case models.Symbol(node):
+            name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
+            return name_node
 
 def parse_src(src: str):
     ast = parse_node(hy.read(src))
