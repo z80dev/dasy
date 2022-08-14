@@ -32,6 +32,8 @@
             (.read f))
       compilation_data (.compile dasy src)
       contract (VyperContract compilation_data)]
-    (print f"calling (.foo contract ): {(.foo contract )}")
-    (print f"calling (.base contract) : {(.base contract)}")
+    (.setCap contract 100)
+    (print f"calling (.foo contract 10): {(.foo contract 10)}")
+    (print f"calling (.chainAdd contract 1 2 3): {(.chainAdd contract 1 2 3)})")
+    (print f"calling (.cap contract) : {(.cap contract)}")
   )

@@ -1,9 +1,10 @@
 (defcontract noret
   [a :bool
    b :bool
-   base :uint256]
+   cap (public :uint256)]
+  (defn setCap [:uint256 x] :external
+    (setv self/cap x))
+  (defn chainAdd [:uint256 x y z] :uint256 :external
+    (+ 2 x y z))
   (defn foo [:uint256 x] :bool :external
-    (or (not self/a)
-        self/b
-        (< base x)
-        (== x 1))))
+    (< 2 x self/cap 1000)))

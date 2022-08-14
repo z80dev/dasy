@@ -14,6 +14,27 @@ BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 
 NAME_CONSTS = ["True", "False"]
 
+def chain_comps(expr):
+    new_node = models.Expression()
+    new_expr = [models.Symbol("and")]
+    for vals in zip(expr[1:], expr[2:]):
+        new_expr.append(models.Expression((expr[0], vals[0], vals[1])))
+    new_node += tuple(new_expr)
+    return new_node
+
+def chain_binops(expr):
+    if len(expr) == 3:
+        return expr
+    else:
+        new_node = models.Expression()
+        new_expr = [expr[0], expr[1]]
+        tmp_expr = tuple([expr[0], *expr[2:]])
+        tmp_node = models.Expression()
+        tmp_node += tmp_expr
+        subtree = chain_binops(tmp_node)
+        new_node += tuple(subtree)
+        return new_node
+
 def has_return(tree):
     match tree:
         case models.Symbol(sym) if str(sym) == "return":
@@ -35,6 +56,8 @@ def parse_return(return_tree):
 def parse_binop(binop_tree):
     match str(binop_tree[0]):
         case '+' | '-' | '*' | '/':
+            if len(binop_tree) > 3:
+                return parse_node(chain_binops(binop_tree))
             left = parse_node(binop_tree[1])
             right = parse_node(binop_tree[2])
             op = parse_node(binop_tree[0])
@@ -51,6 +74,8 @@ def parse_boolop(expr):
     return vy_nodes.BoolOp(op=op, values=values, node_id=next_nodeid(), ast_type="BoolOp")
 
 def parse_comparison(comp_tree):
+    if len(comp_tree[1:]) > 2: # comparing more than 2 things; chain comps for (< 2 3 4 )
+        return parse_node(chain_comps(comp_tree))
     left = parse_node(comp_tree[1])
     right = parse_node(comp_tree[2])
     op = parse_node(comp_tree[0])
