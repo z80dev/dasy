@@ -245,7 +245,6 @@ def parse_node(node):
         case models.Symbol(node) if str(node) in NAME_CONSTS:
             return vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), id=next_nodeid(), ast_type='NameConstant')
         case models.Symbol(node) if str(node).startswith("self/"):
-            print(f"matched self/ {node}")
             replacement_node = models.Expression((models.Symbol('.'), models.Symbol('self'), models.Symbol(str(node).split('/')[1])))
             return parse_node(replacement_node)
         case models.Symbol(node) | models.Keyword(node):
