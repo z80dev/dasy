@@ -1,3 +1,4 @@
+import hy
 from dasy.compiler import compile
 from dasy.main import main
 from .parser import parse

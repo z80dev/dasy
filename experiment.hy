@@ -7,9 +7,9 @@
   (with [f (open path "r")]
     (.read f)))
 
-(let [src (get-src "hello_world.dasy")]
+(let [src (get-src "noret.dasy")]
   (inspect (.read hy src))
-  (inspect (. (get (. (.parse_src dasy src) body) 3) body)))
+  #_(inspect (. (get (. (.parse_src dasy src) body) 3) body)))
 
 #_(let [src (with [f (open "hello_world.dasy" "r")]
             (.read f))

@@ -3,7 +3,7 @@ import vyper.ast.nodes as vy_nodes
 import vyper.compiler.phases as phases
 from vyper.compiler.phases import CompilerData
 from hy import models
-from .utils import next_nodeid
+from .utils import next_nodeid, pairwise
 
 BUILTIN_FUNCS = ['+', '-', '/', '*']
 
@@ -68,11 +68,6 @@ def parse_fn(fn_tree):
         case _:
             raise Exception(f"Invalid fn form {fn_tree}")
     return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
-
-def pairwise(iterable):
-    "s -> (s0, s1), (s2, s3), (s4, s5), ..."
-    a = iter(iterable)
-    return zip(a, a)
 
 def parse_contract(expr):
     mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=next_nodeid())
@@ -172,6 +167,10 @@ def parse_node(node):
             return value_node
         case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
             return parse_builtin(node)
+        case models.Symbol(node) if str(node).startswith("self/"):
+            print(f"matched self/ {node}")
+            replacement_node = models.Expression((models.Symbol('.'), models.Symbol('self'), models.Symbol(str(node).split('/')[1])))
+            return parse_node(replacement_node)
         case models.Symbol(node) | models.Keyword(node):
             name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
             return name_node
