@@ -7,7 +7,7 @@ with open("hello_world.vy", "r") as f:
     src = f.read()
 
 ast = phases.generate_ast(src, 0, "")
-inspect(ast.body[0].body[0].value)
+inspect(ast.body[2].body[0].value)
 # inspect(ast.body[2].body[0].target)
 # inspect(ast.body[2].body[0].target.value)
 # compilation_data = dasy.compile(src)

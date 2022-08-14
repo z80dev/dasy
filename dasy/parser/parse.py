@@ -8,7 +8,9 @@ from .utils import next_nodeid, pairwise
 
 BIN_FUNCS = ['+', '-', '/', '*']
 COMP_FUNCS = ['<', '<=', '>', '>=', '==', '!=']
-BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS
+UNARY_OPS = ['not']
+BOOL_OPS = ['and', 'or']
+BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 
 NAME_CONSTS = ["True", "False"]
 
@@ -37,6 +39,16 @@ def parse_binop(binop_tree):
             right = parse_node(binop_tree[2])
             op = parse_node(binop_tree[0])
             return vy_nodes.BinOp(left=left, right=right, op=op, node_id=next_nodeid(), ast_type='BinOp')
+
+def parse_unary(expr):
+    operand = parse_node(expr[1])
+    op = parse_node(expr[0])
+    return vy_nodes.UnaryOp(operand=operand, op=op, node_id=next_nodeid(), ast_type="UnaryOp")
+
+def parse_boolop(expr):
+    op = parse_node(expr[0])
+    values = [parse_node(e) for e in expr[1:]]
+    return vy_nodes.BoolOp(op=op, values=values, node_id=next_nodeid(), ast_type="BoolOp")
 
 def parse_comparison(comp_tree):
     left = parse_node(comp_tree[1])
@@ -151,19 +163,25 @@ def parse_assignment(expr):
 
 
 def parse_expr(expr):
-    match str(expr[0]):
+
+    cmd_str = str(expr[0])
+
+    if cmd_str in BIN_FUNCS:
+        return parse_binop(expr)
+    if cmd_str in COMP_FUNCS:
+        return parse_comparison(expr)
+    if cmd_str in UNARY_OPS:
+        return parse_unary(expr)
+    if cmd_str in BOOL_OPS:
+        return parse_boolop(expr)
+
+    match cmd_str:
         case "defcontract":
             return parse_contract(expr)
         case 'defn':
             return parse_fn(expr)
         case 'return':
             return parse_return(expr)
-        case '+' | '-' | '*' | '/':
-            node = parse_binop(expr)
-            return node
-        case '<' | '<=' | '>' | '>=' | '==' | '!=':
-            node = parse_comparison(expr)
-            return node
         case 'quote':
             return parse_tuple(expr)
         case '.':
@@ -204,6 +222,15 @@ def parse_builtin(node):
             return op_node
         case '!=':
             op_node = vy_nodes.NotEq(node_id=next_nodeid(), ast_type='NotEq', _pretty="!=", _description="inequality")
+            return op_node
+        case 'not':
+            op_node = vy_nodes.Not(node_id=next_nodeid(), ast_type='Not', _pretty="not", _description="negation")
+            return op_node
+        case 'and':
+            op_node = vy_nodes.And(node_id=next_nodeid(), ast_type='And', _pretty="and", _description="boolean and")
+            return op_node
+        case 'or':
+            op_node = vy_nodes.Or(node_id=next_nodeid(), ast_type='Or', _pretty="or", _description="boolean or")
             return op_node
 
 def parse_node(node):
