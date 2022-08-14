@@ -6,18 +6,11 @@ The Dasypeltis, gansi, is considered an egg-eating snake. Their diet consists of
 
 Dasy is a lisp built on top of [[https://github.com/vyperlang/vyper][vyper]]
 
-it is parsed into a vyper AST to leverage all the optimizations of the vyper compiler
-* Installation
-For use as a library
-#+begin_src bash
-pip install dasy
-#+end_src
+During compilation, lisp-syntax Dasy code is transformed into a form that is compatible with the Vyper compiler. This allows Dasy code to benefit from the optimizations of the Vyper compiler.
 
-For use as an executable
-#+begin_src bash
-pipx install dasy
-#+end_src
-* Example
+Learn more in the [[file:docs.org][documentation]]
+
+* Examples
 In [[file:helloworld.dasy][hello_world.dasy]]
 #+begin_src clojure
 (defcontract hello_world
@@ -63,6 +56,16 @@ Command line compilation
 #+begin_src shell
 > dasy hello_world.dasy
 0x61004f61000f60003961004f6000f36003361161000c57610037565b60003560e01c3461003d5763c29855788118610035576004361861003d57600860405260206040f35b505b60006000fd5b600080fda165767970657283000306000b
+#+end_src
+* Installation
+For use as a library
+#+begin_src bash
+pip install dasy
+#+end_src
+
+For use as an executable
+#+begin_src bash
+pipx install dasy
 #+end_src
 * Motivation
 ** Macros
