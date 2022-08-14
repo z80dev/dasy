@@ -181,6 +181,9 @@ def parse_call(expr):
             args_list = [parse_node(arg) for arg in args]
             return vy_nodes.Call(func=parse_node(fn_name), args=args_list, keywords=[], ast_type='Call', node_id=next_nodeid())
 
+def parse_if(expr):
+    return vy_nodes.If(ast_type='If', node_id=next_nodeid(), test=parse_node(expr[1]), body=[parse_node(expr[2])], orelse=[parse_node(expr[3])])
+
 def parse_assignment(expr):
     match expr[1:]:
         case [target, value]:
@@ -213,6 +216,8 @@ def parse_expr(expr):
             return parse_attribute(expr)
         case 'setv':
             return parse_assignment(expr)
+        case 'if':
+            return parse_if(expr)
         case _:
             return parse_call(expr)
 
@@ -275,6 +280,8 @@ def parse_node(node):
         case models.Symbol(node) | models.Keyword(node):
             name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
             return name_node
+        case None:
+            return None
         case _:
             raise Exception(f"No match for node {node}")
 

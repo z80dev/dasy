@@ -1,9 +1,10 @@
 a: bool
 b: bool
+cap: public(uint256)
 
 @external
-def add_to_base(x: uint256) -> bool:
-    if x > 10:
-        return True
+def checkA() -> bool:
+    if self.cap < 100:
+        return self.cap
     else:
-        return a
+        return 100

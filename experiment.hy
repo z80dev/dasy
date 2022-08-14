@@ -13,9 +13,8 @@
       body (. parsed-src body)
       f-def (get body 3)
       ret (get (. f-def body) 0)
-      val (. ret value)
       ]
-  (inspect val)
+  (inspect ret)
   )
 
 #_(let [src (with [f (open "hello_world.dasy" "r")]
@@ -32,8 +31,9 @@
             (.read f))
       compilation_data (.compile dasy src)
       contract (VyperContract compilation_data)]
-    (.setCap contract 100)
-    (print f"calling (.foo contract 10): {(.foo contract 10)}")
-    (print f"calling (.chainAdd contract 1 2 3): {(.chainAdd contract 1 2 3)})")
+    (.setCap contract 20)
+    (print f"calling (.checkA contract): {(.checkA contract)}")
     (print f"calling (.cap contract) : {(.cap contract)}")
+    (.setA contract True)
+    (print f"calling (.checkA contract): {(.checkA contract)}")
   )

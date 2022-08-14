@@ -2,9 +2,12 @@
   [a :bool
    b :bool
    cap (public :uint256)]
+  (defn checkA [] :uint256 :external
+    (if self/a
+        (return self/cap)
+        (return 100)))
   (defn setCap [:uint256 x] :external
     (setv self/cap x))
-  (defn chainAdd [:uint256 x y z] :uint256 :external
-    (+ 2 x y z))
-  (defn foo [:uint256 x] :bool :external
-    (< 2 x self/cap 1000)))
+(defn setA [:bool x] :external
+    (setv self/a x))
+  )
