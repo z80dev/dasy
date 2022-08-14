@@ -1,4 +1,5 @@
 #+title: Dasy Docs
+#+options: toc: t
 * Current Status
 Dasy is currently in pre-alpha. The language's core is still being designed and implemented.
 * Syntax
