@@ -8,7 +8,7 @@ Dasy has a clojure-inspired lisp syntax with some influences from python. Some c
 Tuples are signified by a quoted list such as ~'(1 2 3)~
 The vyper equivalent is ~(1, 2, 3)~
 
-* API Reference
+* Core Macros
 ** ~defcontract~
 
 ~(defcontract name  [state-vars] & fns)~
