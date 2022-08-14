@@ -144,7 +144,7 @@ def parse_contract(expr):
                 is_public = False
                 is_immutable = False
                 match typ:
-                    case [models.Symbol(e), models.Keyword(name)] if str(e) in ["public", "immutable", "constant"]:
+                    case [models.Symbol(e), typ_decl] if str(e) in ["public", "immutable", "constant"]:
                         annotation = parse_node(typ)
                         match str(e):
                             case "public":
@@ -185,6 +185,7 @@ def parse_if(expr):
     return vy_nodes.If(ast_type='If', node_id=next_nodeid(), test=parse_node(expr[1]), body=[parse_node(expr[2])], orelse=[parse_node(expr[3])])
 
 def parse_assignment(expr):
+    print(expr)
     match expr[1:]:
         case [target, value]:
             return vy_nodes.Assign(ast_type='Call', node_id=next_nodeid(), targets=[parse_node(target)], value=parse_node(value))
@@ -192,6 +193,15 @@ def parse_assignment(expr):
 
 def parse_expr(expr):
 
+    match expr:
+        case models.Keyword(name), models.Integer(length):
+            if str(name) == "string":
+                value_node = parse_node(models.Symbol("String"))
+                annotation = vy_nodes.Subscript(ast_type='Subscript', node_id=next_nodeid(), slice=vy_nodes.Index(ast_type='Index', node_id=next_nodeid(), value=parse_node(length)), value=value_node)
+                annotation._children.add(value_node)
+                return annotation
+
+    
     cmd_str = str(expr[0])
 
     if cmd_str in BIN_FUNCS:
@@ -269,6 +279,9 @@ def parse_node(node):
             return parse_expr(node)
         case models.Integer(node):
             value_node = vy_nodes.Int(value=int(node), node_id=next_nodeid(), ast_type='Int')
+            return value_node
+        case models.String(node):
+            value_node = vy_nodes.Str(value=str(node), node_id=next_nodeid(), ast_type='Str')
             return value_node
         case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
             return parse_builtin(node)

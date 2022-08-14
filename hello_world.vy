@@ -1,10 +1,6 @@
-a: bool
-b: bool
-cap: public(uint256)
+# Create a string variable that can store maximum 100 characters
+greet: public(String[100])
 
 @external
-def checkA() -> bool:
-    if self.cap < 100:
-        return self.cap
-    else:
-        return 100
+def __init__():
+    self.greet = "Hello World"
