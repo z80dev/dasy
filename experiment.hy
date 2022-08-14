@@ -7,9 +7,15 @@
   (with [f (open path "r")]
     (.read f)))
 
-(let [src (get-src "noret.dasy")]
-  (inspect (.read hy src))
-  #_(inspect (. (get (. (.parse_src dasy src) body) 3) body)))
+(let [src (get-src "noret.dasy")
+      read-src (.read hy src)
+      parsed-src (.parse_src dasy src)
+      body (. parsed-src body)
+      f-def (get body 1)
+      ret (get (. f-def body) 0)
+      ]
+  (inspect (. (. ret value) op))
+  )
 
 #_(let [src (with [f (open "hello_world.dasy" "r")]
             (.read f))
@@ -25,6 +31,6 @@
             (.read f))
       compilation_data (.compile dasy src)
       contract (VyperContract compilation_data)]
-    (print f"calling (.foo contract 4): {(.foo contract 4)}")
+    (print f"calling (.foo contract 40): {(.foo contract 40)}")
     (print f"calling (.base contract : {(.base contract)}")
   )

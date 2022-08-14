@@ -1,11 +1,28 @@
 import hy
+import ast as py_ast
 import vyper.ast.nodes as vy_nodes
 import vyper.compiler.phases as phases
 from vyper.compiler.phases import CompilerData
 from hy import models
 from .utils import next_nodeid, pairwise
 
-BUILTIN_FUNCS = ['+', '-', '/', '*']
+BIN_FUNCS = ['+', '-', '/', '*']
+COMP_FUNCS = ['<', '<=', '>', '>=', '==', '!=']
+BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS
+
+NAME_CONSTS = ["True", "False"]
+
+def has_return(tree):
+    match tree:
+        case models.Symbol(sym) if str(sym) == "return":
+            return True
+        case models.Sequence(seq):
+            for el in seq:
+                if has_return(el):
+                    return True
+        case _:
+            return False
+    return False
 
 def parse_return(return_tree):
     val = return_tree[1]
@@ -20,6 +37,12 @@ def parse_binop(binop_tree):
             right = parse_node(binop_tree[2])
             op = parse_node(binop_tree[0])
             return vy_nodes.BinOp(left=left, right=right, op=op, node_id=next_nodeid(), ast_type='BinOp')
+
+def parse_comparison(comp_tree):
+    left = parse_node(comp_tree[1])
+    right = parse_node(comp_tree[2])
+    op = parse_node(comp_tree[0])
+    return vy_nodes.Compare(left=left, ops=[op], comparators=[right], node_id=next_nodeid(), ast_type='Compare')
 
 def parse_args_list(args_list) -> [vy_nodes.arg]:
     if len(args_list) == 0:
@@ -55,9 +78,12 @@ def parse_fn(fn_tree):
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
             fn_body = [parse_node(body_node) for body_node in body[:-1]]
-            value_node = parse_node(body[-1])
-            implicit_return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
-            fn_body.append(implicit_return_node)
+            if not has_return(body[-1]):
+                value_node = parse_node(body[-1])
+                implicit_return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
+                fn_body.append(implicit_return_node)
+            else:
+                fn_body.append(parse_node(body[-1]))
         case models.Symbol(sym_node), models.List(args_node), models.Keyword(vis), *body:
             rets = None
             name = str(sym_node)
@@ -123,6 +149,7 @@ def parse_assignment(expr):
         case [target, value]:
             return vy_nodes.Assign(ast_type='Call', node_id=next_nodeid(), targets=[parse_node(target)], value=parse_node(value))
 
+
 def parse_expr(expr):
     match str(expr[0]):
         case "defcontract":
@@ -133,6 +160,9 @@ def parse_expr(expr):
             return parse_return(expr)
         case '+' | '-' | '*' | '/':
             node = parse_binop(expr)
+            return node
+        case '<' | '<=' | '>' | '>=' | '==' | '!=':
+            node = parse_comparison(expr)
             return node
         case 'quote':
             return parse_tuple(expr)
@@ -157,6 +187,24 @@ def parse_builtin(node):
         case '/':
             op_node = vy_nodes.Div(node_id=next_nodeid(), ast_type='Div', _pretty="/", _description="multiplication")
             return op_node
+        case '<':
+            op_node = vy_nodes.Lt(node_id=next_nodeid(), ast_type='Lt', _pretty="<", _description="less than")
+            return op_node
+        case '<=':
+            op_node = vy_nodes.LtE(node_id=next_nodeid(), ast_type='LtE', _pretty="<=", _description="less than equal")
+            return op_node
+        case '>':
+            op_node = vy_nodes.Gt(node_id=next_nodeid(), ast_type='Gt', _pretty="<", _description="greater than")
+            return op_node
+        case '>=':
+            op_node = vy_nodes.GtE(node_id=next_nodeid(), ast_type='GtE', _pretty=">=", _description="greater than equal")
+            return op_node
+        case '==':
+            op_node = vy_nodes.Eq(node_id=next_nodeid(), ast_type='Eq', _pretty="==", _description="equality")
+            return op_node
+        case '!=':
+            op_node = vy_nodes.NotEq(node_id=next_nodeid(), ast_type='NotEq', _pretty="!=", _description="inequality")
+            return op_node
 
 def parse_node(node):
     match node:
@@ -167,6 +215,8 @@ def parse_node(node):
             return value_node
         case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
             return parse_builtin(node)
+        case models.Symbol(node) if str(node) in NAME_CONSTS:
+            return vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), id=next_nodeid(), ast_type='NameConstant')
         case models.Symbol(node) if str(node).startswith("self/"):
             print(f"matched self/ {node}")
             replacement_node = models.Expression((models.Symbol('.'), models.Symbol('self'), models.Symbol(str(node).split('/')[1])))

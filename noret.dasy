@@ -1,0 +1,4 @@
+(defcontract noret
+  [base (public :uint256)]
+  (defn foo [:uint256 x] :bool :external
+    (return (< x 10))))

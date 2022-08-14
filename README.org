@@ -24,6 +24,8 @@ In [[file:helloworld.dasy][hello_world.dasy]]
     x)
   (defn addToBase [:uint256 x] :uint256 :external
     (+ self/base x))
+  (defn ltBase [:uint256 x] :bool :external
+    (< x self/base))
   )
 #+end_src
 
