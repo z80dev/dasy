@@ -7,7 +7,7 @@ def set_base(x: uint256):
 
 @external
 def add_to_base(x: uint256):
-    return x + self.base
+    self.base += x
 
 @external
 def foo(x: uint256) -> (uint256, uint256):

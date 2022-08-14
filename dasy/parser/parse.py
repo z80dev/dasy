@@ -58,6 +58,13 @@ def parse_fn(fn_tree):
             value_node = parse_node(body[-1])
             implicit_return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
             fn_body.append(implicit_return_node)
+        case models.Symbol(sym_node), models.List(args_node), models.Keyword(vis), *body:
+            rets = None
+            name = str(sym_node)
+            args_list = parse_args_list(args_node)
+            args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
+            decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
+            fn_body = [parse_node(body_node) for body_node in body]
         case _:
             raise Exception(f"Invalid fn form {fn_tree}")
     return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
