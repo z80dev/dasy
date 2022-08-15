@@ -1,4 +1,5 @@
 import hy
+from decimal import Decimal
 import ast as py_ast
 import vyper.ast.nodes as vy_nodes
 import vyper.compiler.phases as phases
@@ -185,7 +186,6 @@ def parse_if(expr):
     return vy_nodes.If(ast_type='If', node_id=next_nodeid(), test=parse_node(expr[1]), body=[parse_node(expr[2])], orelse=[parse_node(expr[3])])
 
 def parse_assignment(expr):
-    print(expr)
     match expr[1:]:
         case [target, value]:
             return vy_nodes.Assign(ast_type='Call', node_id=next_nodeid(), targets=[parse_node(target)], value=parse_node(value))
@@ -197,9 +197,11 @@ def parse_expr(expr):
         case models.Keyword(name), models.Integer(length):
             if str(name) == "string":
                 value_node = parse_node(models.Symbol("String"))
-                annotation = vy_nodes.Subscript(ast_type='Subscript', node_id=next_nodeid(), slice=vy_nodes.Index(ast_type='Index', node_id=next_nodeid(), value=parse_node(length)), value=value_node)
-                annotation._children.add(value_node)
-                return annotation
+            elif str(name) == "bytes":
+                value_node = parse_node(models.Symbol("Bytes"))
+            annotation = vy_nodes.Subscript(ast_type='Subscript', node_id=next_nodeid(), slice=vy_nodes.Index(ast_type='Index', node_id=next_nodeid(), value=parse_node(length)), value=value_node)
+            annotation._children.add(value_node)
+            return annotation
 
     
     cmd_str = str(expr[0])
@@ -280,6 +282,10 @@ def parse_node(node):
         case models.Integer(node):
             value_node = vy_nodes.Int(value=int(node), node_id=next_nodeid(), ast_type='Int')
             return value_node
+        case models.Float(node):
+            raise Exception("Floating point not supported (yet)")
+            # value_node = vy_nodes.Decimal(value=Decimal(float(node)), node_id=next_nodeid(), ast_type='Decimal')
+            # return value_node
         case models.String(node):
             value_node = vy_nodes.Str(value=str(node), node_id=next_nodeid(), ast_type='Str')
             return value_node
@@ -287,12 +293,17 @@ def parse_node(node):
             return parse_builtin(node)
         case models.Symbol(node) if str(node) in NAME_CONSTS:
             return vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), id=next_nodeid(), ast_type='NameConstant')
+        case models.Symbol(node) if str(node).startswith('0x'):
+            return vy_nodes.Hex(id=next_nodeid(), ast_type='Hex', value=str(node))
         case models.Symbol(node) if str(node).startswith("self/"):
             replacement_node = models.Expression((models.Symbol('.'), models.Symbol('self'), models.Symbol(str(node).split('/')[1])))
             return parse_node(replacement_node)
         case models.Symbol(node) | models.Keyword(node):
             name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
             return name_node
+        case models.Bytes(byt):
+            bytes_node = vy_nodes.Bytes(node_id=next_nodeid(), ast_type='Byte', value=byt)
+            return bytes_node
         case None:
             return None
         case _:

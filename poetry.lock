@@ -51,15 +51,7 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
-name = "funcparserlib"
-version = "1.0.0"
-description = "Recursive descent parsing library based on functional combinators"
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
-
-[[package]]
-name = "hy"
+name = "dasy-hy"
 version = "0.24.0"
 description = "A Lisp dialect embedded in Python"
 category = "main"
@@ -69,6 +61,14 @@ python-versions = ">= 3.7, < 3.11"
 [package.dependencies]
 colorama = "*"
 funcparserlib = ">=1.0,<2.0"
+
+[[package]]
+name = "funcparserlib"
+version = "1.0.0"
+description = "Recursive descent parsing library based on functional combinators"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
 
 [[package]]
 name = "more-itertools"
@@ -195,7 +195,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10, <3.11"
-content-hash = "631d730cb7e00f40f76125b1eee69aa7b67f26d93db7306fcd9e21dd221fee83"
+content-hash = "c9ed07bd00c0e47be5ed5d1578ee13dcbdfd60cc3b0289e48e54108497bb380d"
 
 [metadata.files]
 argparse = [
@@ -217,12 +217,13 @@ colorama = [
     {file = "colorama-0.4.5-py2.py3-none-any.whl", hash = "sha256:854bf444933e37f5824ae7bfc1e98d5bce2ebe4160d46b5edf346a89358e99da"},
     {file = "colorama-0.4.5.tar.gz", hash = "sha256:e6c6b4334fc50988a639d9b98aa429a0b57da6e17b9a44f0451f930b6967b7a4"},
 ]
+dasy-hy = [
+    {file = "dasy-hy-0.24.0.tar.gz", hash = "sha256:67cc9e1cdc6e980f9327034053a93b1af38eace5848fd63f85b769cfa0717f3a"},
+    {file = "dasy_hy-0.24.0-py3-none-any.whl", hash = "sha256:ee0c352905b11a2a022cec40bbb3297bd0ae61de59e387bc21e9a49de76be496"},
+]
 funcparserlib = [
     {file = "funcparserlib-1.0.0-py2.py3-none-any.whl", hash = "sha256:280fa30e608d547581d65f9294f9bbda7475da86d85119079da4a8402315025f"},
     {file = "funcparserlib-1.0.0.tar.gz", hash = "sha256:7dd33dd4299fc55cbdbf4b9fdfb3abc54d3b5ed0c694b83fb38e9e3e8ac38b6b"},
-]
-hy = [
-    {file = "hy-0.24.0.tar.gz", hash = "sha256:de3928ff7f97893bb825e59f17f3cd19e4b59beecb71c38039b8f349ca8dfe1d"},
 ]
 more-itertools = [
     {file = "more-itertools-8.14.0.tar.gz", hash = "sha256:c09443cd3d5438b8dafccd867a6bc1cb0894389e90cb53d227456b0b0bccb750"},

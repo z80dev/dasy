@@ -7,7 +7,7 @@
   (with [f (open path "r")]
     (.read f)))
 
-(let [src (get-src "noret.dasy")
+#_(let [src (get-src "noret.dasy")
       read-src (.read hy src)
       parsed-src (.parse_src dasy src)
       body (. parsed-src body)
@@ -33,4 +33,8 @@
             (.read f))
       compilation_data (.compile dasy src)
       contract (VyperContract compilation_data)]
-    (print f"calling (.greet contract): {(.greet contract)}"))
+(print f"calling (.i contract): {(.i contract)}")
+(print f"calling (.b contract): {(.b contract)}")
+(print f"calling (.u contract): {(.u contract)}")
+(print f"calling (.bs contract): {(.bs contract)}")
+    (print f"calling (.s contract): {(.s contract)}"))
