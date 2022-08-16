@@ -3,6 +3,41 @@ from hy import models
 import dasy
 import vyper.ast.nodes as vy_nodes
 
+
+def parse_attribute(expr):
+    match expr[1:]:
+        case [obj, attr]:
+            return vy_nodes.Attribute(ast_type='Attribute', node_id=next_nodeid(), attr=str(attr), value=dasy.parser.parse_node(obj))
+
+def parse_call(expr):
+    match expr:
+        case (fn_name, *args):
+            args_list = [dasy.parser.parse_node(arg) for arg in args]
+            return vy_nodes.Call(func=dasy.parser.parse_node(fn_name), args=args_list, keywords=[], ast_type='Call', node_id=next_nodeid())
+
+
+def parse_tuple(tuple_tree):
+    match tuple_tree:
+        case models.Symbol(q), elements if str(q) == 'quote':
+            elts = [dasy.parser.parse_node(e) for e in elements]
+            return vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
+        case _:
+            raise Exception("Invalid tuple declaration; requires quoted list ex: '(2 3 4)")
+
+
+def parse_args_list(args_list) -> [vy_nodes.arg]:
+    if len(args_list) == 0:
+        return []
+    results = []
+    current_type = args_list[0]
+    assert isinstance(current_type, models.Keyword)
+    # get annotation and name
+    for arg in args_list[1:]:
+        # get annotation and name
+        annotation_node = vy_nodes.Name(id=str(current_type.name), parent=None, node_id=next_nodeid(), ast_type='Name')
+        results.append(vy_nodes.arg(arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid()))
+    return results
+
 def parse_fn(fn_tree):
     fn_node_id = next_nodeid()
     assert isinstance(fn_tree, models.Expression)
@@ -12,7 +47,7 @@ def parse_fn(fn_tree):
             assert isinstance(returns, models.Keyword) or isinstance(returns, models.Expression)
             rets = dasy.parse.parse_node(returns)
             name = str(sym_node)
-            args_list = dasy.parse.parse_args_list(args_node)
+            args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
@@ -25,7 +60,7 @@ def parse_fn(fn_tree):
         case models.Symbol(sym_node), models.List(args_node), models.Keyword(vis), *body:
             rets = None
             name = str(sym_node)
-            args_list = dasy.parse.parse_args_list(args_node)
+            args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body]

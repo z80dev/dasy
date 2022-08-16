@@ -1,45 +1,16 @@
 import hy
-from decimal import Decimal
 import ast as py_ast
 import vyper.ast.nodes as vy_nodes
-import vyper.compiler.phases as phases
-from vyper.compiler.phases import CompilerData
 from hy import models
-from .utils import next_nodeid, pairwise, has_return
+from .utils import next_nodeid
 from .ops import BIN_FUNCS, parse_binop, COMP_FUNCS, parse_comparison, UNARY_OPS, BOOL_OPS, parse_unary, parse_boolop
 from .builtins import parse_builtin
-from .core import parse_contract, parse_fn
+from .core import parse_contract, parse_fn, parse_tuple
+from .stmt import parse_if, parse_return, parse_assignment
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 
 NAME_CONSTS = ["True", "False"]
-
-def parse_return(return_tree):
-    val = return_tree[1]
-    value_node = parse_node(val)
-    return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
-    return return_node
-
-def parse_args_list(args_list) -> [vy_nodes.arg]:
-    if len(args_list) == 0:
-        return []
-    results = []
-    current_type = args_list[0]
-    assert isinstance(current_type, models.Keyword)
-    # get annotation and name
-    for arg in args_list[1:]:
-        # get annotation and name
-        annotation_node = vy_nodes.Name(id=str(current_type.name), parent=None, node_id=next_nodeid(), ast_type='Name')
-        results.append(vy_nodes.arg(arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid()))
-    return results
-
-def parse_tuple(tuple_tree):
-    match tuple_tree:
-        case models.Symbol(q), elements if str(q) == 'quote':
-            elts = [parse_node(e) for e in elements]
-            return vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
-        case _:
-            raise Exception("Invalid tuple declaration; requires quoted list ex: '(2 3 4)")
 
 def parse_attribute(expr):
     match expr[1:]:
@@ -51,15 +22,6 @@ def parse_call(expr):
         case (fn_name, *args):
             args_list = [parse_node(arg) for arg in args]
             return vy_nodes.Call(func=parse_node(fn_name), args=args_list, keywords=[], ast_type='Call', node_id=next_nodeid())
-
-def parse_if(expr):
-    return vy_nodes.If(ast_type='If', node_id=next_nodeid(), test=parse_node(expr[1]), body=[parse_node(expr[2])], orelse=[parse_node(expr[3])])
-
-def parse_assignment(expr):
-    match expr[1:]:
-        case [target, value]:
-            return vy_nodes.Assign(ast_type='Call', node_id=next_nodeid(), targets=[parse_node(target)], value=parse_node(value))
-
 
 def parse_expr(expr):
 

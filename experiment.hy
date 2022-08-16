@@ -2,21 +2,26 @@
         boa.contract [VyperContract]
         hy
         dasy)
+(require hyrule.argmove [->])
 
 (defn get-src [path]
   (with [f (open path "r")]
     (.read f)))
 
-#_(let [src (get-src "noret.dasy")
+(let [src (get-src "noret.dasy")
       read-src (.read hy src)
       parsed-src (.parse_src dasy src)
       body (. parsed-src body)
-      v-decl (get body 0)
-      f-def (get body 1)
-      annotation (. v-decl annotation)
-      args (. annotation args)
+      ;; v-decl (get body 0)
+      f-def (get body 6)
+      ;; annotation (. v-decl annotation)
+      ;; args (. annotation args)
       ]
-  (inspect  (get args 0)  :private True)
+  ;; (inspect  (get args 0)  :private True)
+  (-> (. f-def body)
+      (get 0)
+      (. op)
+      inspect)
   )
 
 #_(let [src (with [f (open "hello_world.dasy" "r")]
