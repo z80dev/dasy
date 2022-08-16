@@ -6,11 +6,10 @@ import vyper.compiler.phases as phases
 from vyper.compiler.phases import CompilerData
 from hy import models
 from .utils import next_nodeid, pairwise, has_return
-from .binops import BIN_FUNCS, parse_binop
-from .comparisons import COMP_FUNCS, parse_comparison
+from .ops import BIN_FUNCS, parse_binop, COMP_FUNCS, parse_comparison, UNARY_OPS, BOOL_OPS, parse_unary, parse_boolop
+from .builtins import parse_builtin
+from .core import parse_contract, parse_fn
 
-UNARY_OPS = ['not']
-BOOL_OPS = ['and', 'or']
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 
 NAME_CONSTS = ["True", "False"]
@@ -20,16 +19,6 @@ def parse_return(return_tree):
     value_node = parse_node(val)
     return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
     return return_node
-
-def parse_unary(expr):
-    operand = parse_node(expr[1])
-    op = parse_node(expr[0])
-    return vy_nodes.UnaryOp(operand=operand, op=op, node_id=next_nodeid(), ast_type="UnaryOp")
-
-def parse_boolop(expr):
-    op = parse_node(expr[0])
-    values = [parse_node(e) for e in expr[1:]]
-    return vy_nodes.BoolOp(op=op, values=values, node_id=next_nodeid(), ast_type="BoolOp")
 
 def parse_args_list(args_list) -> [vy_nodes.arg]:
     if len(args_list) == 0:
@@ -51,74 +40,6 @@ def parse_tuple(tuple_tree):
             return vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
         case _:
             raise Exception("Invalid tuple declaration; requires quoted list ex: '(2 3 4)")
-
-def parse_fn(fn_tree):
-    fn_node_id = next_nodeid()
-    assert isinstance(fn_tree, models.Expression)
-    assert fn_tree[0] == models.Symbol('defn')
-    match fn_tree[1:]:
-        case models.Symbol(sym_node), models.List(args_node), returns, models.Keyword(vis), *body:
-            assert isinstance(returns, models.Keyword) or isinstance(returns, models.Expression)
-            rets = parse_node(returns)
-            name = str(sym_node)
-            args_list = parse_args_list(args_node)
-            args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
-            decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
-            fn_body = [parse_node(body_node) for body_node in body[:-1]]
-            if not has_return(body[-1]):
-                value_node = parse_node(body[-1])
-                implicit_return_node = vy_nodes.Return(value=value_node, ast_type='Return', node_id=next_nodeid())
-                fn_body.append(implicit_return_node)
-            else:
-                fn_body.append(parse_node(body[-1]))
-        case models.Symbol(sym_node), models.List(args_node), models.Keyword(vis), *body:
-            rets = None
-            name = str(sym_node)
-            args_list = parse_args_list(args_node)
-            args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
-            decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
-            fn_body = [parse_node(body_node) for body_node in body]
-        case _:
-            raise Exception(f"Invalid fn form {fn_tree}")
-    return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
-
-def parse_contract(expr):
-    mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=next_nodeid())
-    expr_body = []
-    match expr[1:]:
-        case (name, vars, *body) if isinstance(vars, models.List):
-            # contract has state
-            for var, typ in pairwise(vars):
-                target = parse_node(var)
-                is_constant = False
-                is_public = False
-                is_immutable = False
-                match typ:
-                    case [models.Symbol(e), typ_decl] if str(e) in ["public", "immutable", "constant"]:
-                        annotation = parse_node(typ)
-                        match str(e):
-                            case "public":
-                                is_public = True
-                            case "immutable":
-                                is_immutable = True
-                            case "constant":
-                                is_constant = True
-                    case models.Keyword():
-                        annotation = parse_node(typ)
-                    case _:
-                        raise Exception(f"Invalid declaration type {typ}")
-                mod_node.add_to_body(vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable))
-            expr_body = expr[3:]
-        case (name, *body):
-            # no contract state
-            expr_body = expr[2:]
-        case _:
-            # print(f"no match: {expr}")
-            raise Exception(f"Invalid defcontract form: {expr}")
-    for node in expr_body:
-        mod_node.add_to_body(parse_node(node))
-
-    return mod_node
 
 def parse_attribute(expr):
     match expr[1:]:
@@ -182,47 +103,6 @@ def parse_expr(expr):
         case _:
             return parse_call(expr)
 
-def parse_builtin(node):
-    match str(node):
-        case '+':
-            op_node = vy_nodes.Add(node_id=next_nodeid(), ast_type='Add', _pretty="+", _description="addition")
-            return op_node
-        case '-':
-            op_node = vy_nodes.Sub(node_id=next_nodeid(), ast_type='Sub', _pretty="-", _description="subtraction")
-            return op_node
-        case '*':
-            op_node = vy_nodes.Mult(node_id=next_nodeid(), ast_type='Mult', _pretty="*", _description="multiplication")
-            return op_node
-        case '/':
-            op_node = vy_nodes.Div(node_id=next_nodeid(), ast_type='Div', _pretty="/", _description="multiplication")
-            return op_node
-        case '<':
-            op_node = vy_nodes.Lt(node_id=next_nodeid(), ast_type='Lt', _pretty="<", _description="less than")
-            return op_node
-        case '<=':
-            op_node = vy_nodes.LtE(node_id=next_nodeid(), ast_type='LtE', _pretty="<=", _description="less than equal")
-            return op_node
-        case '>':
-            op_node = vy_nodes.Gt(node_id=next_nodeid(), ast_type='Gt', _pretty="<", _description="greater than")
-            return op_node
-        case '>=':
-            op_node = vy_nodes.GtE(node_id=next_nodeid(), ast_type='GtE', _pretty=">=", _description="greater than equal")
-            return op_node
-        case '==':
-            op_node = vy_nodes.Eq(node_id=next_nodeid(), ast_type='Eq', _pretty="==", _description="equality")
-            return op_node
-        case '!=':
-            op_node = vy_nodes.NotEq(node_id=next_nodeid(), ast_type='NotEq', _pretty="!=", _description="inequality")
-            return op_node
-        case 'not':
-            op_node = vy_nodes.Not(node_id=next_nodeid(), ast_type='Not', _pretty="not", _description="negation")
-            return op_node
-        case 'and':
-            op_node = vy_nodes.And(node_id=next_nodeid(), ast_type='And', _pretty="and", _description="boolean and")
-            return op_node
-        case 'or':
-            op_node = vy_nodes.Or(node_id=next_nodeid(), ast_type='Or', _pretty="or", _description="boolean or")
-            return op_node
 
 def parse_node(node):
     match node:
