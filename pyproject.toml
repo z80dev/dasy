@@ -9,9 +9,10 @@ python = ">=3.10, <3.11"
 vyper = "^0.3.6"
 argparse = "^1.4.0"
 dasy-hy = "^0.24.0"
+titanoboa = "^0.1.5"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = ">=7.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -19,3 +20,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 "dasy" = "dasy:main"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    # note the use of single quote below to denote "raw" strings in TOML
+    'ignore::DeprecationWarning',
+]
