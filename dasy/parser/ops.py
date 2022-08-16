@@ -26,17 +26,14 @@ def parse_comparison(comp_tree):
     return Compare(left=left, ops=[op], comparators=[right], node_id=next_nodeid(), ast_type='Compare')
 
 def parse_unary(expr):
-    operand = parse_node(expr[1])
-    op = parse_node(expr[0])
+    operand = parser.parse_node(expr[1])
+    op = parser.parse_node(expr[0])
     return UnaryOp(operand=operand, op=op, node_id=next_nodeid(), ast_type="UnaryOp")
 
 def parse_boolop(expr):
-    op = parse_node(expr[0])
-    values = [parse_node(e) for e in expr[1:]]
+    op = parser.parse_node(expr[0])
+    values = [parser.parse_node(e) for e in expr[1:]]
     return BoolOp(op=op, values=values, node_id=next_nodeid(), ast_type="BoolOp")
-
-
-
 
 def chain_binops(expr):
     if len(expr) == 3:
