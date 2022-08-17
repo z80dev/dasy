@@ -25,7 +25,6 @@ def parse_tuple(tuple_tree):
         case _:
             raise Exception("Invalid tuple declaration; requires quoted list ex: '(2 3 4)")
 
-
 def parse_args_list(args_list) -> [vy_nodes.arg]:
     if len(args_list) == 0:
         return []
@@ -89,6 +88,10 @@ def parse_declaration(var, typ):
         case _:
             raise Exception(f"Invalid declaration type {typ}")
     return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+
+
+def parse_declarations(expr):
+    return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
 
 def parse_contract(expr):
