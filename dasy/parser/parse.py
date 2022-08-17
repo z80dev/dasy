@@ -97,11 +97,24 @@ def parse_node(node):
 
 def parse_src(src: str):
     mod_node = vy_nodes.Module(body=[], name="", doc_string="", ast_type='Module', node_id=next_nodeid())
+
+    vars = []
+    fs = []
     for element in hy.read_many(src):
-        ast = parse_node(hy.read(src))
-        if isinstance(ast, vy_nodes.Module):
-            mod_node = ast
-            break
-        else:
-            mod_node.add_to_body(parse_node(element))
+        ast = parse_node(element)
+
+        match type(ast):
+            case vy_nodes.Module:
+                mod_node = ast
+            case vy_nodes.VariableDecl:
+                vars.append(ast)
+            case vy_nodes.FunctionDef:
+                fs.append(ast)
+            case _:
+                raise(f"Unrecognized top-level form {ast}")
+
+    for e in vars + fs:
+        mod_node.add_to_body(e)
+
+
     return mod_node

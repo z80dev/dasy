@@ -31,3 +31,13 @@ def test_defvar():
     c = get_contract(src)
     c.setX(10)
     assert c.getX() == 10
+
+def test_hello_world():
+    c = get_contract("""
+    (defvar greet (public (:string 100)))
+    (defn __init__ [] :external (setv self/greet "Hello World"))
+    (defn setGreet [(:string 100) x] :external (setv self/greet x))
+    """)
+    assert c.greet() == "Hello World"
+    c.setGreet("yo yo")
+    assert c.greet() == "yo yo"

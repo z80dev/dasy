@@ -1,3 +1,4 @@
+from ast import Expression
 import dasy
 import vyper.ast.nodes as vy_nodes
 from hy import models
@@ -30,11 +31,14 @@ def parse_args_list(args_list) -> [vy_nodes.arg]:
         return []
     results = []
     current_type = args_list[0]
-    assert isinstance(current_type, models.Keyword)
+    assert isinstance(current_type, models.Keyword) or isinstance(current_type, models.Expression)
     # get annotation and name
     for arg in args_list[1:]:
         # get annotation and name
-        annotation_node = vy_nodes.Name(id=str(current_type.name), parent=None, node_id=next_nodeid(), ast_type='Name')
+        if isinstance(current_type, models.Keyword):
+            annotation_node = vy_nodes.Name(id=str(current_type.name), parent=None, node_id=next_nodeid(), ast_type='Name')
+        elif isinstance(current_type, models.Expression):
+            annotation_node = dasy.parse.parse_node(current_type)
         results.append(vy_nodes.arg(arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid()))
     return results
 
@@ -64,6 +68,13 @@ def parse_fn(fn_tree):
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
+        case models.Symbol(sym_node), models.List(args_node), *body if str(sym_node) == "__init__":
+            rets = None
+            name = str(sym_node)
+            args_list = parse_args_list(args_node)
+            args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
+            decorators = [vy_nodes.Name(id="external", node_id=next_nodeid(), ast_type='Name')]
+            fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
         case _:
             raise Exception(f"Invalid fn form {fn_tree}")
     return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
@@ -83,6 +94,8 @@ def parse_declaration(var, typ):
                     is_immutable = True
                 case "constant":
                     is_constant = True
+        case models.Expression():
+            annotation = dasy.parse.parse_node(typ)
         case models.Keyword():
             annotation = dasy.parse.parse_node(typ)
         case _:
