@@ -1,7 +1,8 @@
-from .utils import next_nodeid, has_return, pairwise
-from hy import models
 import dasy
 import vyper.ast.nodes as vy_nodes
+from hy import models
+
+from .utils import has_return, next_nodeid, pairwise
 
 
 def parse_attribute(expr):
@@ -68,32 +69,55 @@ def parse_fn(fn_tree):
             raise Exception(f"Invalid fn form {fn_tree}")
     return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
 
+def parse_declaration(var, typ):
+    target = dasy.parse.parse_node(var)
+    is_constant = False
+    is_public = False
+    is_immutable = False
+    match typ:
+        case [models.Symbol(e), typ_decl] if str(e) in ["public", "immutable", "constant"]:
+            annotation = dasy.parse.parse_node(typ)
+            match str(e):
+                case "public":
+                    is_public = True
+                case "immutable":
+                    is_immutable = True
+                case "constant":
+                    is_constant = True
+        case models.Keyword():
+            annotation = dasy.parse.parse_node(typ)
+        case _:
+            raise Exception(f"Invalid declaration type {typ}")
+    return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+
+
 def parse_contract(expr):
     mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=next_nodeid())
     expr_body = []
     match expr[1:]:
         case (name, vars, *body) if isinstance(vars, models.List):
-            # contract has state
+            # # contract has state
             for var, typ in pairwise(vars):
-                target = dasy.parse.parse_node(var)
-                is_constant = False
-                is_public = False
-                is_immutable = False
-                match typ:
-                    case [models.Symbol(e), typ_decl] if str(e) in ["public", "immutable", "constant"]:
-                        annotation = dasy.parse.parse_node(typ)
-                        match str(e):
-                            case "public":
-                                is_public = True
-                            case "immutable":
-                                is_immutable = True
-                            case "constant":
-                                is_constant = True
-                    case models.Keyword():
-                        annotation = dasy.parse.parse_node(typ)
-                    case _:
-                        raise Exception(f"Invalid declaration type {typ}")
-                mod_node.add_to_body(vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable))
+            #     target = dasy.parse.parse_node(var)
+            #     is_constant = False
+            #     is_public = False
+            #     is_immutable = False
+            #     match typ:
+            #         case [models.Symbol(e), typ_decl] if str(e) in ["public", "immutable", "constant"]:
+            #             annotation = dasy.parse.parse_node(typ)
+            #             match str(e):
+            #                 case "public":
+            #                     is_public = True
+            #                 case "immutable":
+            #                     is_immutable = True
+            #                 case "constant":
+            #                     is_constant = True
+            #         case models.Keyword():
+            #             annotation = dasy.parse.parse_node(typ)
+            #         case _:
+            #             raise Exception(f"Invalid declaration type {typ}")
+            #     mod_node.add_to_body(vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable))
+                mod_node.add_to_body(parse_declaration(var, typ))
             expr_body = expr[3:]
         case (name, *body):
             # no contract state

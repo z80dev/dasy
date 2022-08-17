@@ -1,27 +1,20 @@
-import hy
 import ast as py_ast
+
+import hy
 import vyper.ast.nodes as vy_nodes
 from hy import models
-from .utils import next_nodeid
-from .ops import BIN_FUNCS, parse_binop, COMP_FUNCS, parse_comparison, UNARY_OPS, BOOL_OPS, parse_unary, parse_boolop
+
 from .builtins import parse_builtin
-from .core import parse_contract, parse_fn, parse_tuple
-from .stmt import parse_if, parse_return, parse_assignment
+from .core import (parse_attribute, parse_call, parse_contract,
+                   parse_declaration, parse_fn, parse_tuple)
+from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
+                  parse_boolop, parse_comparison, parse_unary)
+from .stmt import parse_assignment, parse_if, parse_return
+from .utils import next_nodeid
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 
 NAME_CONSTS = ["True", "False"]
-
-def parse_attribute(expr):
-    match expr[1:]:
-        case [obj, attr]:
-            return vy_nodes.Attribute(ast_type='Attribute', node_id=next_nodeid(), attr=str(attr), value=parse_node(obj))
-
-def parse_call(expr):
-    match expr:
-        case (fn_name, *args):
-            args_list = [parse_node(arg) for arg in args]
-            return vy_nodes.Call(func=parse_node(fn_name), args=args_list, keywords=[], ast_type='Call', node_id=next_nodeid())
 
 def parse_expr(expr):
 
@@ -62,6 +55,8 @@ def parse_expr(expr):
             return parse_assignment(expr)
         case 'if':
             return parse_if(expr)
+        case 'defvar':
+            return parse_declaration(expr[1], expr[2])
         case _:
             return parse_call(expr)
 
@@ -101,5 +96,12 @@ def parse_node(node):
             raise Exception(f"No match for node {node}")
 
 def parse_src(src: str):
-    ast = parse_node(hy.read(src))
-    return ast
+    mod_node = vy_nodes.Module(body=[], name="", doc_string="", ast_type='Module', node_id=next_nodeid())
+    for element in hy.read_many(src):
+        ast = parse_node(hy.read(src))
+        if isinstance(ast, vy_nodes.Module):
+            mod_node = ast
+            break
+        else:
+            mod_node.add_to_body(parse_node(element))
+    return mod_node
