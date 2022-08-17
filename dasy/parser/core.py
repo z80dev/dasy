@@ -47,13 +47,18 @@ def parse_fn(fn_tree):
     assert isinstance(fn_tree, models.Expression)
     assert fn_tree[0] == models.Symbol('defn')
     match fn_tree[1:]:
-        case models.Symbol(sym_node), models.List(args_node), returns, models.Keyword(vis), *body:
+        case models.Symbol(sym_node), models.List(args_node), returns, decs, *body if isinstance(decs, models.Keyword) or isinstance(decs, models.List):
             assert isinstance(returns, models.Keyword) or isinstance(returns, models.Expression)
             rets = dasy.parse.parse_node(returns)
             name = str(sym_node)
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
-            decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
+            if isinstance(decs, models.Keyword):
+                decorators = [vy_nodes.Name(id=str(decs.name), node_id=next_nodeid(), ast_type='Name')]
+            elif isinstance(decs, models.List):
+                decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
+            else:
+                decorators = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
             if not has_return(body[-1]):
                 value_node = dasy.parse.parse_node(body[-1])
@@ -61,12 +66,17 @@ def parse_fn(fn_tree):
                 fn_body.append(implicit_return_node)
             else:
                 fn_body.append(dasy.parse.parse_node(body[-1]))
-        case models.Symbol(sym_node), models.List(args_node), models.Keyword(vis), *body:
+        case models.Symbol(sym_node), models.List(args_node), decs, *body:
             rets = None
             name = str(sym_node)
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
-            decorators = [vy_nodes.Name(id=vis, node_id=next_nodeid(), ast_type='Name')]
+            if isinstance(decs, models.Keyword):
+                decorators = [vy_nodes.Name(id=str(decs.name), node_id=next_nodeid(), ast_type='Name')]
+            elif isinstance(decs, models.List):
+                decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
+            else:
+                decorators = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
         case models.Symbol(sym_node), models.List(args_node), *body if str(sym_node) == "__init__":
             rets = None
