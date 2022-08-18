@@ -6,7 +6,7 @@ from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_attribute, parse_call, parse_contract,
-                   parse_declaration, parse_fn, parse_tuple)
+                   parse_declaration, parse_declarations, parse_fn, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .stmt import parse_assignment, parse_if, parse_return
@@ -56,7 +56,8 @@ def parse_expr(expr):
         case 'if':
             return parse_if(expr)
         case 'defvar':
-            return parse_declaration(expr[1], expr[2])
+            # return parse_declaration(expr[1], expr[2])
+            return parse_declarations(expr)
         case _:
             return parse_call(expr)
 
@@ -81,8 +82,9 @@ def parse_node(node):
             return vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), id=next_nodeid(), ast_type='NameConstant')
         case models.Symbol(node) if str(node).startswith('0x'):
             return vy_nodes.Hex(id=next_nodeid(), ast_type='Hex', value=str(node))
-        case models.Symbol(node) if str(node).startswith("self/"):
-            replacement_node = models.Expression((models.Symbol('.'), models.Symbol('self'), models.Symbol(str(node).split('/')[1])))
+        case models.Symbol(node) if "/" in str(node):
+            target, attr = str(node).split('/')
+            replacement_node = models.Expression((models.Symbol('.'), models.Symbol(target), models.Symbol(attr)))
             return parse_node(replacement_node)
         case models.Symbol(node) | models.Keyword(node):
             name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
@@ -103,15 +105,17 @@ def parse_src(src: str):
     for element in hy.read_many(src):
         ast = parse_node(element)
 
-        match type(ast):
-            case vy_nodes.Module:
-                mod_node = ast
-            case vy_nodes.VariableDecl:
-                vars.append(ast)
-            case vy_nodes.FunctionDef:
-                fs.append(ast)
-            case _:
-                raise(f"Unrecognized top-level form {ast}")
+        if isinstance(ast, vy_nodes.Module):
+            mod_node = ast
+        elif isinstance(ast, vy_nodes.VariableDecl):
+            vars.append(ast)
+        elif isinstance(ast, vy_nodes.FunctionDef):
+            fs.append(ast)
+        elif isinstance(ast, list):
+            for v in ast:
+                vars.append(v)
+        else:
+            raise(f"Unrecognized top-level form {element} {ast}")
 
     for e in vars + fs:
         mod_node.add_to_body(e)

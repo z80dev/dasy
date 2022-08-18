@@ -60,15 +60,15 @@ def test_pure_fn():
 
 def test_constructor():
     c = get_contract("""
-    (defvar owner (public :address))
-    (defvar createdAt (public :uint256))
-    (defvar expiresAt (public :uint256))
-    (defvar name (public (:string 10)))
+    (defvar owner (public :address)
+            createdAt (public :uint256)
+            expiresAt (public :uint256)
+            name (public (:string 10)))
     (defn __init__ [:uint256 duration] :external
-      (setv self/owner (. msg sender))
+      (setv self/owner msg/sender)
       (setv self/name "z80")
-      (setv self/createdAt (. block timestamp))
-      (setv self/expiresAt (+ (. block timestamp)
+      (setv self/createdAt block/timestamp)
+      (setv self/expiresAt (+ block/timestamp
                               duration)))
     """, 100)
 
@@ -85,11 +85,3 @@ def test_if():
          (return (- y x))))""")
     assert c.absValue(4, 7) == 3
 
-
-def test_if_expr():
-    c = get_contract("""
-    (defn absValue [:uint256 x y] :uint256 [:external :pure]
-      (if (>= x y)
-         (- x y)
-         (- y x)))""")
-    assert c.absValue(4, 7) == 3
