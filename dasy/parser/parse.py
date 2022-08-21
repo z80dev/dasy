@@ -4,7 +4,7 @@ import hy
 import vyper.ast.nodes as vy_nodes
 from hy import models
 
-from .hybuiltins import parse_builtin
+from .builtins import parse_builtin
 from .core import (parse_attribute, parse_call, parse_contract,
                    parse_declaration, parse_declarations, parse_fn, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
