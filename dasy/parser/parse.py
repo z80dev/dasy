@@ -6,7 +6,7 @@ from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_attribute, parse_call, parse_contract,
-                   parse_declaration, parse_declarations, parse_fn, parse_tuple)
+                   parse_declarations, parse_fn, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .stmt import parse_assignment, parse_if, parse_return
@@ -115,7 +115,7 @@ def parse_src(src: str):
             for v in ast:
                 vars.append(v)
         else:
-            raise(f"Unrecognized top-level form {element} {ast}")
+            raise Exception(f"Unrecognized top-level form {element} {ast}")
 
     for e in vars + fs:
         mod_node.add_to_body(e)
