@@ -216,6 +216,29 @@ doc = ["jinja2 (>=3.0.0,<3.1.0)", "towncrier (>=21,<22)", "sphinx-rtd-theme (>=0
 dev = ["jinja2 (>=3.0.0,<3.1.0)", "towncrier (>=21,<22)", "sphinx-rtd-theme (>=0.1.9,<1)", "Sphinx (>=1.6.5,<2)", "black (>=22,<23)", "pydocstyle (>=5.0.0,<6)", "mypy (==0.971)", "isort (>=4.2.15,<5)", "flake8 (==3.7.9)", "eth-utils (>=1.0.1,<2)", "hypothesis (>=3.44.24,<=6.31.6)", "tox (>=3.25.1,<4)", "pytest-xdist", "pytest (>=7,<8)", "ipython", "twine", "wheel", "pytest-watch (>=4.1.0,<5)", "bumpversion (>=0.5.3,<1)"]
 
 [[package]]
+name = "hy"
+version = "0.24.0"
+description = "A Lisp dialect embedded in Python"
+category = "main"
+optional = false
+python-versions = ">= 3.7, < 3.11"
+
+[package.dependencies]
+colorama = "*"
+funcparserlib = ">=1.0,<2.0"
+
+[[package]]
+name = "hyrule"
+version = "0.2"
+description = "A utility library for the Hy programming language"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+hy = "0.24.0"
+
+[[package]]
 name = "iniconfig"
 version = "1.1.1"
 description = "iniconfig: brain-dead simple config-ini parsing"
@@ -495,7 +518,7 @@ test = ["pytest (>=6.2.5,<7.0)", "pytest-cov (>=2.10,<3.0)", "pytest-instafail (
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10, <3.11"
-content-hash = "b6479db42244dc7ba65596bcbd326a73375cb09afa6976d8351e503c452015c9"
+content-hash = "2c269f5071ff0eb0735272573f8e7a860949f9fbdf3ff8ac573339fcddb0a677"
 
 [metadata.files]
 argparse = [
@@ -642,6 +665,12 @@ funcparserlib = [
 hexbytes = [
     {file = "hexbytes-0.2.3-py3-none-any.whl", hash = "sha256:1b33a3f101084763551e0094dbf35104868dfa82ba48787a1ca77f81ce15a44c"},
     {file = "hexbytes-0.2.3.tar.gz", hash = "sha256:199daa356aeb14879ee9c43de637acaaa1409febf15151a0e3dbcf1f8df128c0"},
+]
+hy = [
+    {file = "hy-0.24.0.tar.gz", hash = "sha256:de3928ff7f97893bb825e59f17f3cd19e4b59beecb71c38039b8f349ca8dfe1d"},
+]
+hyrule = [
+    {file = "hyrule-0.2.tar.gz", hash = "sha256:b98588145298c5770ce2e376440c6b5279063b3ac6c540daee9df7bffebd1a76"},
 ]
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
