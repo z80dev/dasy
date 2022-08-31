@@ -6,11 +6,11 @@ from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_attribute, parse_call, parse_contract,
-                   parse_declarations, parse_fn, parse_tuple)
+                   parse_declarations, parse_fn, parse_structbody, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .stmt import parse_assignment, parse_if, parse_return
-from .utils import next_nodeid
+from .utils import next_node_id_maker, next_nodeid
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 
@@ -58,6 +58,8 @@ def parse_expr(expr):
         case 'defvar':
             # return parse_declaration(expr[1], expr[2])
             return parse_declarations(expr)
+        case 'defstruct':
+            return vy_nodes.StructDef(ast_type='StructDef', node_id=next_nodeid(), name=str(expr[1]), body=parse_structbody(expr))
         case _:
             return parse_call(expr)
 
@@ -108,6 +110,8 @@ def parse_src(src: str):
         if isinstance(ast, vy_nodes.Module):
             mod_node = ast
         elif isinstance(ast, vy_nodes.VariableDecl):
+            vars.append(ast)
+        elif isinstance(ast, vy_nodes.StructDef):
             vars.append(ast)
         elif isinstance(ast, vy_nodes.FunctionDef):
             fs.append(ast)

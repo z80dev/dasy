@@ -116,6 +116,20 @@ def parse_declaration(var, typ):
 def parse_declarations(expr):
     return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
+def parse_annassign(var, typ):
+    target = dasy.parse.parse_node(var)
+    match typ:
+        case models.Expression():
+            annotation = dasy.parse.parse_node(typ)
+        case models.Keyword():
+            annotation = dasy.parse.parse_node(typ)
+        case _:
+            raise Exception(f"Invalid declaration type {typ}")
+    return vy_nodes.AnnAssign(ast_type='AnnAssign', node_id=next_nodeid(), target=target, annotation=annotation, value=None)
+
+def parse_structbody(expr):
+    return [parse_annassign(var, typ) for var, typ in pairwise(expr[2:])]
+
 
 def parse_contract(expr):
     mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=next_nodeid())

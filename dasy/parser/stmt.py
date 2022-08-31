@@ -8,7 +8,7 @@ def parse_if(expr):
 def parse_assignment(expr):
     match expr[1:]:
         case [target, value]:
-            return Assign(ast_type='Call', node_id=next_nodeid(), targets=[parser.parse_node(target)], value=parser.parse_node(value))
+            return Assign(ast_type='Assign', node_id=next_nodeid(), targets=[parser.parse_node(target)], value=parser.parse_node(value))
 
 def parse_return(return_tree):
     val = return_tree[1]

@@ -85,3 +85,12 @@ def test_if():
          (return (- y x))))""")
     assert c.absValue(4, 7) == 3
 
+def test_struct():
+    c = get_contract("""
+    (defstruct Person
+        age :uint256)
+    (defvar person (public Person))
+    (defn __init__ [] :external
+      )
+    """)
+    assert c.person()[0] == 0
