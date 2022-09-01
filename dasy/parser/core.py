@@ -150,3 +150,10 @@ def parse_contract(expr):
         mod_node.add_to_body(dasy.parse.parse_node(node))
 
     return mod_node
+
+def parse_struct(expr):
+    return vy_nodes.StructDef(ast_type='StructDef', node_id=next_nodeid(), name=str(expr[1]), body=parse_structbody(expr))
+
+def parse_subscript(expr):
+    """(subscript value slice)"""
+    return vy_nodes.Subscript(ast_type='Subscript', node_id=next_nodeid(), slice=vy_nodes.Index(ast_type='Index', node_id=next_nodeid(), value=dasy.parse.parse_node(expr[2])), value=dasy.parse.parse_node(expr[1]))

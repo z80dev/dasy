@@ -91,6 +91,16 @@ def test_struct():
         age :uint256)
     (defvar person (public Person))
     (defn __init__ [] :external
-      )
+      (setv (. self/person age) 12))
     """)
-    assert c.person()[0] == 0
+    assert c.person()[0] == 12
+
+def test_arrays():
+    c = get_contract("""
+    (defvar nums (public (:uint256 10)))
+    (defn __init__ [] :external
+      (setv (subscript self/nums 0) 5)
+      (set-in self/nums 1 10))
+    """)
+    assert c.nums(0) == 5
+    assert c.nums(1) == 10

@@ -6,7 +6,7 @@ from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_attribute, parse_call, parse_contract,
-                   parse_declarations, parse_fn, parse_structbody, parse_tuple)
+                   parse_declarations, parse_fn, parse_struct, parse_subscript, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .stmt import parse_assignment, parse_if, parse_return
@@ -24,6 +24,8 @@ def parse_expr(expr):
                 value_node = parse_node(models.Symbol("String"))
             elif str(name) == "bytes":
                 value_node = parse_node(models.Symbol("Bytes"))
+            else:
+                value_node = parse_node(models.Symbol(str(name)))
             annotation = vy_nodes.Subscript(ast_type='Subscript', node_id=next_nodeid(), slice=vy_nodes.Index(ast_type='Index', node_id=next_nodeid(), value=parse_node(length)), value=value_node)
             annotation._children.add(value_node)
             return annotation
@@ -53,13 +55,18 @@ def parse_expr(expr):
             return parse_attribute(expr)
         case 'setv':
             return parse_assignment(expr)
+        case 'set-in':
+            subscript_node = models.Expression((models.Symbol('subscript'), expr[1], expr[2]))
+            replacement_node = models.Expression((models.Symbol('setv'), subscript_node, expr[3]))
+            return parse_node(replacement_node)
         case 'if':
             return parse_if(expr)
         case 'defvar':
-            # return parse_declaration(expr[1], expr[2])
             return parse_declarations(expr)
         case 'defstruct':
-            return vy_nodes.StructDef(ast_type='StructDef', node_id=next_nodeid(), name=str(expr[1]), body=parse_structbody(expr))
+            return parse_struct(expr)
+        case 'subscript':
+            return parse_subscript(expr)
         case _:
             return parse_call(expr)
 
