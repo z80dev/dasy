@@ -23,8 +23,11 @@ def parse_tuple(tuple_tree):
         case models.Symbol(q), elements if str(q) == 'quote':
             elts = [dasy.parser.parse_node(e) for e in elements]
             return vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
+        case models.Symbol(q), *elements if str(q) == 'tuple':
+            elts = [dasy.parser.parse_node(e) for e in elements]
+            return vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
         case _:
-            raise Exception("Invalid tuple declaration; requires quoted list ex: '(2 3 4)")
+            raise Exception("Invalid tuple declaration; requires quoted list or tuple-fn ex: '(2 3 4)/(tuple 2 3 4)")
 
 def parse_args_list(args_list) -> [vy_nodes.arg]:
     if len(args_list) == 0:
@@ -156,4 +159,12 @@ def parse_struct(expr):
 
 def parse_subscript(expr):
     """(subscript value slice)"""
-    return vy_nodes.Subscript(ast_type='Subscript', node_id=next_nodeid(), slice=vy_nodes.Index(ast_type='Index', node_id=next_nodeid(), value=dasy.parse.parse_node(expr[2])), value=dasy.parse.parse_node(expr[1]))
+    index_value_node = dasy.parse.parse_node(expr[2])
+    index_node = vy_nodes.Index(ast_type='Index', node_id=next_nodeid(), value=index_value_node)
+    if isinstance(index_value_node, vy_nodes.Tuple):
+        index_node._children.add(index_value_node)
+    value_node = dasy.parse.parse_node(expr[1])
+    subscript_node = vy_nodes.Subscript(ast_type='Subscript', node_id=next_nodeid(), slice=index_node, value=value_node)
+    subscript_node._children.add(index_node)
+    subscript_node._children.add(value_node)
+    return subscript_node

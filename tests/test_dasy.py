@@ -104,3 +104,17 @@ def test_arrays():
     """)
     assert c.nums(0) == 5
     assert c.nums(1) == 10
+
+def test_map():
+    c = get_contract("""
+    (defvar myMap (public (hash-map :address :uint256))
+            owner (public :address))
+    (defn __init__ [] :external
+      (setv self/owner msg/sender)
+      (set-in self/myMap msg/sender 10))
+    (defn getOwnerNum [] :uint256 :external
+     (get-in self/myMap msg/sender))
+    """)
+    assert c.myMap("0x8B4de256180CFEC54c436A470AF50F9EE2813dbB") == 0
+    assert c.myMap(c.owner()) == 10
+    assert c.getOwnerNum() == 10

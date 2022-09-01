@@ -51,6 +51,13 @@ def parse_expr(expr):
             return parse_return(expr)
         case 'quote':
             return parse_tuple(expr)
+        case 'tuple':
+            return parse_tuple(expr)
+        case 'hash-map':
+            tuple_node = models.Expression((models.Symbol('tuple'), expr[1], expr[2]))
+            subscript_node = models.Expression((models.Symbol('subscript'), models.Symbol('HashMap'), tuple_node))
+            parsed = parse_node(subscript_node)
+            return parsed
         case '.':
             return parse_attribute(expr)
         case 'setv':
@@ -66,6 +73,8 @@ def parse_expr(expr):
         case 'defstruct':
             return parse_struct(expr)
         case 'subscript':
+            return parse_subscript(expr)
+        case 'get-in':
             return parse_subscript(expr)
         case _:
             return parse_call(expr)
