@@ -6,7 +6,7 @@ from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_attribute, parse_call, parse_contract,
-                   parse_declarations, parse_fn, parse_struct, parse_subscript, parse_tuple)
+                   parse_declarations, parse_do_body, parse_fn, parse_struct, parse_subscript, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .stmt import parse_assignment, parse_if, parse_return
@@ -76,8 +76,12 @@ def parse_expr(expr):
             return parse_subscript(expr)
         case 'get-in':
             return parse_subscript(expr)
-        case _:
+        case 'public' | 'immutable' | 'constant':
             return parse_call(expr)
+        case 'do':
+            return parse_do_body(expr)
+        case _:
+            return parse_call(expr, wrap_expr=False)
 
 
 def parse_node(node):

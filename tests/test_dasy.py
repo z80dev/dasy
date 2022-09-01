@@ -118,3 +118,12 @@ def test_map():
     assert c.myMap("0x8B4de256180CFEC54c436A470AF50F9EE2813dbB") == 0
     assert c.myMap(c.owner()) == 10
     assert c.getOwnerNum() == 10
+
+def test_dynarrays():
+    c = get_contract("""
+    (defvar nums (public (subscript DynArray (tuple :uint256 3))))
+    (defn __init__ [] :external
+    (do
+      ((. self/nums append) 11)))
+    """)
+    assert c.nums(0) == 11

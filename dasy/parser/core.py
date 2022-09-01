@@ -9,13 +9,25 @@ from .utils import has_return, next_nodeid, pairwise
 def parse_attribute(expr):
     match expr[1:]:
         case [obj, attr]:
-            return vy_nodes.Attribute(ast_type='Attribute', node_id=next_nodeid(), attr=str(attr), value=dasy.parser.parse_node(obj))
+            value_node = dasy.parser.parse_node(obj)
+            attr_node = vy_nodes.Attribute(ast_type='Attribute', node_id=next_nodeid(), attr=str(attr), value=value_node)
+            attr_node._children.add(value_node)
+            return attr_node
 
-def parse_call(expr):
+def parse_call(expr, wrap_expr=False):
     match expr:
         case (fn_name, *args):
             args_list = [dasy.parser.parse_node(arg) for arg in args]
-            return vy_nodes.Call(func=dasy.parser.parse_node(fn_name), args=args_list, keywords=[], ast_type='Call', node_id=next_nodeid())
+            func_node = dasy.parser.parse_node(fn_name)
+            call_node = vy_nodes.Call(func=func_node, args=args_list, keywords=[], ast_type='Call', node_id=next_nodeid())
+            call_node._children.add(func_node)
+            for a in args_list:
+                call_node._children.add(a)
+            if wrap_expr:
+                expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=call_node)
+                expr_node._children.add(call_node)
+                return expr_node
+            return call_node
 
 
 def parse_tuple(tuple_tree):
@@ -62,6 +74,7 @@ def parse_fn(fn_tree):
                 decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
             else:
                 decorators = []
+            new_body = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
             if not has_return(body[-1]):
                 value_node = dasy.parse.parse_node(body[-1])
@@ -69,6 +82,13 @@ def parse_fn(fn_tree):
                 fn_body.append(implicit_return_node)
             else:
                 fn_body.append(dasy.parse.parse_node(body[-1]))
+            for f in fn_body:
+                if isinstance(f, list):
+                    for f2 in f:
+                        new_body.append(f2)
+                else:
+                    new_body.append(f)
+            fn_body = new_body
         case models.Symbol(sym_node), models.List(args_node), decs, *body:
             rets = None
             name = str(sym_node)
@@ -80,14 +100,30 @@ def parse_fn(fn_tree):
                 decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
             else:
                 decorators = []
+            new_body = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
+            for f in fn_body:
+                if isinstance(f, list):
+                    for f2 in f:
+                        new_body.append(f2)
+                else:
+                    new_body.append(f)
+            fn_body = new_body
         case models.Symbol(sym_node), models.List(args_node), *body if str(sym_node) == "__init__":
             rets = None
             name = str(sym_node)
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             decorators = [vy_nodes.Name(id="external", node_id=next_nodeid(), ast_type='Name')]
+            new_body = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
+            for f in fn_body:
+                if isinstance(f, list):
+                    for f2 in f:
+                        new_body.append(f2)
+                else:
+                    new_body.append(f)
+            fn_body = new_body
         case _:
             raise Exception(f"Invalid fn form {fn_tree}")
     return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
@@ -156,6 +192,17 @@ def parse_contract(expr):
 
 def parse_struct(expr):
     return vy_nodes.StructDef(ast_type='StructDef', node_id=next_nodeid(), name=str(expr[1]), body=parse_structbody(expr))
+
+def parse_do_body(expr):
+    calls = [dasy.parse.parse_node(x) for x in expr[1:]]
+    exprs = []
+    for call_node in calls:
+        expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=call_node)
+        expr_node._children.add(call_node)
+        exprs.append(expr_node)
+    return exprs
+
+
 
 def parse_subscript(expr):
     """(subscript value slice)"""
