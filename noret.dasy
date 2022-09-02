@@ -1,15 +1,4 @@
-(defcontract noret
-  [b (public :bool)
-   i (public :int128)
-   u (public :uint256)
-   addr (public :address)
-   bs (public (:bytes 100))
-   s   (public (:string 100))]
-  (defn __init__ [] :external
-    (setv self/b False)
-    (setv self/i -1)
-    (setv self/u 123)
-    (setv self/s "Hello World")
-    (setv self/bs b"\x01")
-    (setv self/addr 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4)
-    ))
+(defvar nums (public (subscript DynArray (tuple :uint256 3))))
+
+(defn __init__ [] :external
+  ((. self/nums append) 11))

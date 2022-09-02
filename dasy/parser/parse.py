@@ -58,6 +58,11 @@ def parse_expr(expr):
             subscript_node = models.Expression((models.Symbol('subscript'), models.Symbol('HashMap'), tuple_node))
             parsed = parse_node(subscript_node)
             return parsed
+        case 'dyn-arr':
+            tuple_node = models.Expression((models.Symbol('tuple'), expr[1], expr[2]))
+            subscript_node = models.Expression((models.Symbol('subscript'), models.Symbol('DynArray'), tuple_node))
+            parsed = parse_node(subscript_node)
+            return parsed
         case '.':
             return parse_attribute(expr)
         case 'setv':
