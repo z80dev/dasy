@@ -121,7 +121,7 @@ def test_map():
 
 def test_dynarrays():
     c = get_contract("""
-    (defvar nums (public (subscript DynArray (tuple :uint256 3))))
+    (defvar nums (public (dyn-arr :uint256 3)))
     (defn __init__ [] :external
     (do
       ((. self/nums append) 11)))

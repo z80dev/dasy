@@ -16,6 +16,8 @@ BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 
 NAME_CONSTS = ["True", "False"]
 
+MACROS = []
+
 def parse_expr(expr):
 
     match expr:
@@ -45,6 +47,12 @@ def parse_expr(expr):
     match cmd_str:
         case "defcontract":
             return parse_contract(expr)
+        case "defmacro":
+            hy.eval(expr)
+            MACROS.append(str(expr[1]))
+        case str(cmd) if cmd in MACROS:
+            new_node = hy.macroexpand_1(expr)
+            return parse_node(new_node)
         case 'defn':
             return parse_fn(expr)
         case 'return':
@@ -53,24 +61,10 @@ def parse_expr(expr):
             return parse_tuple(expr)
         case 'tuple':
             return parse_tuple(expr)
-        case 'hash-map':
-            tuple_node = models.Expression((models.Symbol('tuple'), expr[1], expr[2]))
-            subscript_node = models.Expression((models.Symbol('subscript'), models.Symbol('HashMap'), tuple_node))
-            parsed = parse_node(subscript_node)
-            return parsed
-        case 'dyn-arr':
-            tuple_node = models.Expression((models.Symbol('tuple'), expr[1], expr[2]))
-            subscript_node = models.Expression((models.Symbol('subscript'), models.Symbol('DynArray'), tuple_node))
-            parsed = parse_node(subscript_node)
-            return parsed
         case '.':
             return parse_attribute(expr)
         case 'setv':
             return parse_assignment(expr)
-        case 'set-in':
-            subscript_node = models.Expression((models.Symbol('subscript'), expr[1], expr[2]))
-            replacement_node = models.Expression((models.Symbol('setv'), subscript_node, expr[3]))
-            return parse_node(replacement_node)
         case 'if':
             return parse_if(expr)
         case 'defvar':
@@ -143,6 +137,9 @@ def parse_src(src: str):
         elif isinstance(ast, list):
             for v in ast:
                 vars.append(v)
+        elif ast is None:
+            # macro declarations return None
+            pass
         else:
             raise Exception(f"Unrecognized top-level form {element} {ast}")
 
@@ -151,3 +148,8 @@ def parse_src(src: str):
 
 
     return mod_node
+
+with open("dasy/parser/macros.hy", encoding="utf-8") as f:
+    code = f.read()
+    for expr in hy.read_many(code):
+        parse_node(expr)
