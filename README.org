@@ -14,13 +14,15 @@ Learn more in the [[file:docs.org][documentation]]
 In [[file:helloworld.dasy][hello_world.dasy]]
 #+begin_src clojure
 (defvar myMap (public (hash-map :address :uint256))
-  nums (public (dyn-arr :uint256 3))
-  owner (public :address))
+        nums (public (dyn-arr :uint256 3))
+        owner (public :address))
+
 (defn __init__ [] :external
   (setv self/owner msg/sender)
   (set-in self/myMap msg/sender 10)
   (do ;; wrap statements in do
     (.append self/nums 11)))
+
 (defn getOwnerNum [] :uint256 :external
   (get-in self/myMap self/owner))
 #+end_src
