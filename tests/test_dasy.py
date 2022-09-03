@@ -129,12 +129,3 @@ def test_dynarrays():
     """)
     assert c.nums(0) == 11
     assert c.nums(1) == 12
-
-def test_macro():
-    c = get_contract("""
-    (defmacro current-directory []
-      (import os)
-      (.getcwd os))
-    (defn getCwd [] (:string 100) :external
-     (current-directory))""")
-    assert c.getCwd() == "/Users/z80/Developer/dasy"
