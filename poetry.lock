@@ -74,7 +74,7 @@ cython = ["cython"]
 
 [[package]]
 name = "dasy-hy"
-version = "0.24.0"
+version = "0.24.1"
 description = "A Lisp dialect embedded in Python"
 category = "main"
 optional = false
@@ -518,7 +518,7 @@ test = ["pytest (>=6.2.5,<7.0)", "pytest-cov (>=2.10,<3.0)", "pytest-instafail (
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10, <3.11"
-content-hash = "2c269f5071ff0eb0735272573f8e7a860949f9fbdf3ff8ac573339fcddb0a677"
+content-hash = "dc8d3e7d4c5885d5b8243647e9e0c62cb9225147abbb229dabe62db9d451a0af"
 
 [metadata.files]
 argparse = [
@@ -631,8 +631,8 @@ cytoolz = [
     {file = "cytoolz-0.12.0.tar.gz", hash = "sha256:c105b05f85e03fbcd60244375968e62e44fe798c15a3531c922d531018d22412"},
 ]
 dasy-hy = [
-    {file = "dasy-hy-0.24.0.tar.gz", hash = "sha256:67cc9e1cdc6e980f9327034053a93b1af38eace5848fd63f85b769cfa0717f3a"},
-    {file = "dasy_hy-0.24.0-py3-none-any.whl", hash = "sha256:ee0c352905b11a2a022cec40bbb3297bd0ae61de59e387bc21e9a49de76be496"},
+    {file = "dasy-hy-0.24.1.tar.gz", hash = "sha256:656fa87f9b4f2738480c39f6a703d3777c337285bbaac8e9ced92db968534138"},
+    {file = "dasy_hy-0.24.1-py3-none-any.whl", hash = "sha256:686c65ff345460965ebf6657ad9f8df18190a88d5a9142f779ebbabcdc08d448"},
 ]
 eth-abi = [
     {file = "eth_abi-3.0.1-py3-none-any.whl", hash = "sha256:63d16f1f60870afc974cb0a3325fb275fa97822be1723b8878598df25eea8096"},

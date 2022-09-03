@@ -51,7 +51,7 @@ def parse_expr(expr):
             hy.eval(expr)
             MACROS.append(str(expr[1]))
         case str(cmd) if cmd in MACROS:
-            new_node = hy.macroexpand_1(expr)
+            new_node = hy.macroexpand(expr)
             return parse_node(new_node)
         case str(cmd) if cmd.startswith('.') and len(cmd) > 1:
             inner_node = models.Expression((models.Symbol('.'), expr[1], (cmd[1:])))
