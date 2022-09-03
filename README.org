@@ -71,11 +71,11 @@ pipx install dasy
 ** Macros
 There's a lot of opportunities for macros in smart contracts. They could also be used as a proof of concept for features before implementing them at a lower level in the compiler.
 
-While macros are not implemented yet, the goal is to be able to implement constructs like "while" using macros similarly to the following example from Common Lisp.
-
+some example dasy macros:
 #+begin_src lisp
-(defmacro while (condition &body body)
-  `(loop while ,condition do (progn ,@body)))
+(defmacro set-in [array index new-val] `(setv (subscript ~array ~index) ~new-val))
+(defmacro hash-map [key-type val-type] `(subscript HashMap (tuple ~key-type ~val-type)))
+(defmacro dyn-arr [type length] `(subscript DynArray (tuple ~type ~length)))
 #+end_src
 
 The macro's inner body would be made up of a pre-initialized for-loop.
