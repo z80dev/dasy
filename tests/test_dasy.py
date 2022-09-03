@@ -124,6 +124,17 @@ def test_dynarrays():
     (defvar nums (public (dyn-arr :uint256 3)))
     (defn __init__ [] :external
     (do
-      ((. self/nums append) 11)))
+      (.append self/nums 11)
+      ((. self/nums append) 12)))
     """)
     assert c.nums(0) == 11
+    assert c.nums(1) == 12
+
+def test_macro():
+    c = get_contract("""
+    (defmacro current-directory []
+      (import os)
+      (.getcwd os))
+    (defn getCwd [] (:string 100) :external
+     (current-directory))""")
+    assert c.getCwd() == "/Users/z80/Developer/dasy"
