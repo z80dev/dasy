@@ -5,8 +5,8 @@ import vyper.ast.nodes as vy_nodes
 from hy import models
 
 from .builtins import parse_builtin
-from .core import (parse_attribute, parse_call, parse_contract,
-                   parse_defvar, parse_do_body, parse_defn, parse_defstruct, parse_subscript, parse_tuple)
+from .core import (parse_annassign, parse_attribute, parse_call, parse_contract,
+                   parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_subscript, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .stmt import parse_setv, parse_if, parse_return
@@ -56,12 +56,14 @@ def parse_expr(expr):
             return parse_setv(expr)
         case 'if':
             return parse_if(expr)
-        case 'defvar':
-            return parse_defvar(expr)
+        case 'defvars':
+            return parse_defvars(expr)
         case 'defstruct':
             return parse_defstruct(expr)
         case 'subscript' | 'array' | 'get-in':
             return parse_subscript(expr)
+        case 'annassign' | 'defvar':
+            return parse_annassign(expr)
         case 'do':
             return parse_do_body(expr)
         case _:
@@ -120,6 +122,17 @@ def parse_src(src: str):
         elif isinstance(ast, list):
             for v in ast:
                 vars.append(v)
+        elif isinstance(ast, vy_nodes.AnnAssign):
+            # top-level AnnAssign nodes should be replaced with a VariableDecl
+            is_public = False
+            is_immutable = False
+            is_constant = False
+            if isinstance(ast.annotation, vy_nodes.Call):
+                is_public = ast.annotation.func == "public"
+                is_immutable = ast.annotation.func == "immutable"
+                is_constant = ast.annotation.func == "constant"
+            new_node = vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=ast.target, annotation=ast.annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+            vars.append(new_node)
         elif ast is None:
             # macro declarations return None
             pass
@@ -132,8 +145,10 @@ def parse_src(src: str):
 
     return mod_node
 
-with open("dasy/parser/macros.hy", encoding="utf-8") as f:
-    # evaluate built-in macros
-    code = f.read()
-    for expr in hy.read_many(code):
-        parse_node(expr)
+def install_builtin_macros():
+    with open("dasy/parser/macros.hy", encoding="utf-8") as f:
+        code = f.read()
+        for expr in hy.read_many(code):
+            parse_node(expr)
+
+install_builtin_macros()

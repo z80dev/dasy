@@ -157,23 +157,23 @@ def parse_declaration(var, typ):
     return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
 
 
-def parse_defvar(expr):
+def parse_defvars(expr):
     return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
-def parse_annassign(var, typ):
+def create_annassign_node(var, typ, value=None) -> vy_nodes.AnnAssign:
     target = dasy.parse.parse_node(var)
     match typ:
-        case models.Expression():
-            annotation = dasy.parse.parse_node(typ)
-        case models.Keyword():
+        case models.Expression() | models.Keyword() | models.Symbol():
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    return vy_nodes.AnnAssign(ast_type='AnnAssign', node_id=next_nodeid(), target=target, annotation=annotation, value=None)
+    return vy_nodes.AnnAssign(ast_type='AnnAssign', node_id=next_nodeid(), target=target, annotation=annotation, value=value)
+
+def parse_annassign(expr) -> vy_nodes.AnnAssign:
+    return create_annassign_node(expr[1], expr[2], value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None)
 
 def parse_structbody(expr):
-    return [parse_annassign(var, typ) for var, typ in pairwise(expr[2:])]
-
+    return [create_annassign_node(var, typ) for var, typ in pairwise(expr[2:])]
 
 def parse_contract(expr):
     mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=next_nodeid())

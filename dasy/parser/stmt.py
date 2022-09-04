@@ -6,12 +6,7 @@ def parse_if(expr):
     return If(ast_type='If', node_id=next_nodeid(), test=parser.parse_node(expr[1]), body=[parser.parse_node(expr[2])], orelse=[parser.parse_node(expr[3])])
 
 def parse_setv(expr):
-    match expr[1:]:
-        case [target, value]:
-            return Assign(ast_type='Assign', node_id=next_nodeid(), targets=[parser.parse_node(target)], value=parser.parse_node(value))
+    return Assign(ast_type='Assign', node_id=next_nodeid(), targets=[parser.parse_node(expr[1])], value=parser.parse_node(expr[2]))
 
 def parse_return(return_tree):
-    val = return_tree[1]
-    value_node = parser.parse_node(val)
-    return_node = Return(value=value_node, ast_type='Return', node_id=next_nodeid())
-    return return_node
+    return Return(value=parser.parse_node(return_tree[1]), ast_type='Return', node_id=next_nodeid())

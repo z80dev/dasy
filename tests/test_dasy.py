@@ -23,9 +23,9 @@ def test_chain_binops():
     c = get_contract(src)
     assert c.plus() == 21
 
-def test_defvar():
+def test_defvars():
     src = """
-    (defvar x :uint256)
+    (defvars x :uint256)
     (defn setX [:uint256 x] :external
       (setv self/x x))
     (defn getX [] :uint256 [:external :view] self/x)
@@ -36,7 +36,7 @@ def test_defvar():
 
 def test_hello_world():
     c = get_contract("""
-    (defvar greet (public (string 100)))
+    (defvars greet (public (string 100)))
     (defn __init__ [] :external (setv self/greet "Hello World"))
     (defn setGreet [(string 100) x] :external (setv self/greet x))
     """)
@@ -60,7 +60,7 @@ def test_pure_fn():
 
 def test_constructor():
     c = get_contract("""
-    (defvar owner (public :address)
+    (defvars owner (public :address)
             createdAt (public :uint256)
             expiresAt (public :uint256)
             name (public (string 10)))
@@ -89,7 +89,7 @@ def test_struct():
     c = get_contract("""
     (defstruct Person
         age :uint256)
-    (defvar person (public Person))
+    (defvars person (public Person))
     (defn __init__ [] :external
       (setv (. self/person age) 12))
     """)
@@ -97,7 +97,7 @@ def test_struct():
 
 def test_arrays():
     c = get_contract("""
-    (defvar nums (public (array :uint256 10)))
+    (defvars nums (public (array :uint256 10)))
     (defn __init__ [] :external
       (set-in self/nums 0 5)
       (set-in self/nums 1 10))
@@ -107,7 +107,7 @@ def test_arrays():
 
 def test_map():
     c = get_contract("""
-    (defvar myMap (public (hash-map :address :uint256))
+    (defvars myMap (public (hash-map :address :uint256))
             owner (public :address))
     (defn __init__ [] :external
       (setv self/owner msg/sender)
@@ -129,3 +129,20 @@ def test_dynarrays():
     """)
     assert c.nums(0) == 11
     assert c.nums(1) == 12
+
+
+def test_reference_types():
+    c = get_contract("""
+    (defvar nums (public (array :uint256 10)))
+    (defn __init__ [] :external
+      (set-in self/nums 0 123)
+      (set-in self/nums 9 456)
+      (defvar arr (array :uint256 10) self/nums))
+    (defn memoryArrayVal [] '(:uint256 :uint256) :external
+      (defvar arr (array :uint256 10) self/nums)
+      (set-in arr 1 12)
+      '((get-in arr 0) (get-in arr 1)))
+    """)
+    assert c.nums(0) == 123
+    assert c.nums(1) == 0
+    assert c.memoryArrayVal() == (123, 12)

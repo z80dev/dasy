@@ -49,11 +49,9 @@ def chain_binops(expr):
 
 
 def parse_binop(binop_tree):
-    match str(binop_tree[0]):
-        case '+' | '-' | '*' | '/':
-            if len(binop_tree) > 3:
-                return parser.parse_node(chain_binops(binop_tree))
-            left = parser.parse_node(binop_tree[1])
-            right = parser.parse_node(binop_tree[2])
-            op = parser.parse_node(binop_tree[0])
-            return BinOp(left=left, right=right, op=op, node_id=next_nodeid(), ast_type='BinOp')
+    if len(binop_tree) > 3:
+        return parser.parse_node(chain_binops(binop_tree))
+    left = parser.parse_node(binop_tree[1])
+    right = parser.parse_node(binop_tree[2])
+    op = parser.parse_node(binop_tree[0])
+    return BinOp(left=left, right=right, op=op, node_id=next_nodeid(), ast_type='BinOp')
