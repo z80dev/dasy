@@ -4,22 +4,20 @@
 The Dasypeltis, gansi, is considered an egg-eating snake. Their diet consists of all forms of eggs considering they have no teeth in which to eat living prey with.
 #+end_quote
 
-Dasy is a lisp built on top of [[https://github.com/vyperlang/vyper][vyper]]
-
-During compilation, lisp-syntax Dasy code is transformed into a form that is compatible with the Vyper compiler. This allows Dasy code to benefit from the optimizations of the Vyper compiler.
+Dasy is a smart contract programming language in the lisp family. It is implemented by compiling to Vyper and benefits from the extensive optimizations and excellent performance of Vyper.
 
 Learn more in the [[file:docs.org][documentation]]
 
 * Examples
 In [[file:helloworld.dasy][hello_world.dasy]]
 #+begin_src clojure
-(defvar myMap (public (hash-map :address :uint256))
+(defvars myMap (public (hash-map :address :uint256))
         nums (public (dyn-arr :uint256 3))
         owner (public :address))
 
 (defn __init__ [] :external
   (setv self/owner msg/sender)
-  (set-in self/myMap msg/sender 10)
+  (set-at self/myMap msg/sender 10)
   (do ;; wrap statements in do
     (.append self/nums 11)))
 

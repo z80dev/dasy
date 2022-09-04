@@ -6,7 +6,6 @@ import boa
 def get_contract(src: str, *args) -> VyperContract:
     return VyperContract(dasy.compile(src), *args)
 
-
 def test_binops():
     src = """
         (defn plus [] :uint256 :external
@@ -92,15 +91,20 @@ def test_struct():
     (defvars person (public Person))
     (defn __init__ [] :external
       (setv (. self/person age) 12))
+    (defn memoryPerson [] Person :external
+      (defvar mPers Person self/person)
+      (set-in mPers age 10)
+      mPers)
     """)
     assert c.person()[0] == 12
+    assert c.memoryPerson() == (10,)
 
 def test_arrays():
     c = get_contract("""
     (defvars nums (public (array :uint256 10)))
     (defn __init__ [] :external
-      (set-in self/nums 0 5)
-      (set-in self/nums 1 10))
+      (set-at self/nums 0 5)
+      (set-at self/nums 1 10))
     """)
     assert c.nums(0) == 5
     assert c.nums(1) == 10
@@ -111,7 +115,7 @@ def test_map():
             owner (public :address))
     (defn __init__ [] :external
       (setv self/owner msg/sender)
-      (set-in self/myMap msg/sender 10))
+      (set-at self/myMap msg/sender 10))
     (defn getOwnerNum [] :uint256 :external
      (get-in self/myMap msg/sender))
     """)
@@ -135,12 +139,12 @@ def test_reference_types():
     c = get_contract("""
     (defvar nums (public (array :uint256 10)))
     (defn __init__ [] :external
-      (set-in self/nums 0 123)
-      (set-in self/nums 9 456)
+      (set-at self/nums 0 123)
+      (set-at self/nums 9 456)
       (defvar arr (array :uint256 10) self/nums))
     (defn memoryArrayVal [] '(:uint256 :uint256) :external
       (defvar arr (array :uint256 10) self/nums)
-      (set-in arr 1 12)
+      (set-at arr 1 12)
       '((get-in arr 0) (get-in arr 1)))
     """)
     assert c.nums(0) == 123

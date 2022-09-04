@@ -85,7 +85,7 @@ def parse_defn(fn_tree):
         case models.Symbol(sym_node), models.List(args_node), returns, decs, *body if isinstance(decs, models.Keyword) or isinstance(decs, models.List):
             # (defn name [args] :uint256 :external ...)
             # (defn name [args] :uint256 [:external :view] ...)
-            assert isinstance(returns, models.Keyword) or isinstance(returns, models.Expression)
+            assert isinstance(returns, models.Keyword) or isinstance(returns, models.Expression) or isinstance(returns, models.Symbol)
             rets = dasy.parse.parse_node(returns)
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
