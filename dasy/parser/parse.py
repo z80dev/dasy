@@ -6,10 +6,10 @@ from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_attribute, parse_call, parse_contract,
-                   parse_declarations, parse_do_body, parse_fn, parse_struct, parse_subscript, parse_tuple)
+                   parse_defvar, parse_do_body, parse_defn, parse_defstruct, parse_subscript, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
-from .stmt import parse_assignment, parse_if, parse_return
+from .stmt import parse_setv, parse_if, parse_return
 from .utils import next_node_id_maker, next_nodeid
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
@@ -20,19 +20,6 @@ MACROS = []
 
 def parse_expr(expr):
 
-    match expr:
-        case models.Keyword(name), models.Integer(length):
-            if str(name) == "string":
-                value_node = parse_node(models.Symbol("String"))
-            elif str(name) == "bytes":
-                value_node = parse_node(models.Symbol("Bytes"))
-            else:
-                value_node = parse_node(models.Symbol(str(name)))
-            annotation = vy_nodes.Subscript(ast_type='Subscript', node_id=next_nodeid(), slice=vy_nodes.Index(ast_type='Index', node_id=next_nodeid(), value=parse_node(length)), value=value_node)
-            annotation._children.add(value_node)
-            return annotation
-
-    
     cmd_str = str(expr[0])
 
     if cmd_str in BIN_FUNCS:
@@ -58,33 +45,27 @@ def parse_expr(expr):
             outer_node = models.Expression((inner_node, *expr[2:]))
             return parse_node(outer_node)
         case 'defn':
-            return parse_fn(expr)
+            return parse_defn(expr)
         case 'return':
             return parse_return(expr)
-        case 'quote':
-            return parse_tuple(expr)
-        case 'tuple':
+        case 'quote' | 'tuple':
             return parse_tuple(expr)
         case '.':
             return parse_attribute(expr)
         case 'setv':
-            return parse_assignment(expr)
+            return parse_setv(expr)
         case 'if':
             return parse_if(expr)
         case 'defvar':
-            return parse_declarations(expr)
+            return parse_defvar(expr)
         case 'defstruct':
-            return parse_struct(expr)
-        case 'subscript':
+            return parse_defstruct(expr)
+        case 'subscript' | 'array' | 'get-in':
             return parse_subscript(expr)
-        case 'get-in':
-            return parse_subscript(expr)
-        case 'public' | 'immutable' | 'constant':
-            return parse_call(expr)
         case 'do':
             return parse_do_body(expr)
         case _:
-            return parse_call(expr, wrap_expr=False)
+            return parse_call(expr)
 
 
 def parse_node(node):
@@ -92,15 +73,13 @@ def parse_node(node):
         case models.Expression(node):
             return parse_expr(node)
         case models.Integer(node):
-            value_node = vy_nodes.Int(value=int(node), node_id=next_nodeid(), ast_type='Int')
-            return value_node
+            return vy_nodes.Int(value=int(node), node_id=next_nodeid(), ast_type='Int')
         case models.Float(node):
             raise Exception("Floating point not supported (yet)")
             # value_node = vy_nodes.Decimal(value=Decimal(float(node)), node_id=next_nodeid(), ast_type='Decimal')
             # return value_node
         case models.String(node):
-            value_node = vy_nodes.Str(value=str(node), node_id=next_nodeid(), ast_type='Str')
-            return value_node
+            return vy_nodes.Str(value=str(node), node_id=next_nodeid(), ast_type='Str')
         case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
             return parse_builtin(node)
         case models.Symbol(node) if str(node) in NAME_CONSTS:
@@ -154,6 +133,7 @@ def parse_src(src: str):
     return mod_node
 
 with open("dasy/parser/macros.hy", encoding="utf-8") as f:
+    # evaluate built-in macros
     code = f.read()
     for expr in hy.read_many(code):
         parse_node(expr)

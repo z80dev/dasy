@@ -36,9 +36,9 @@ def test_defvar():
 
 def test_hello_world():
     c = get_contract("""
-    (defvar greet (public (:string 100)))
+    (defvar greet (public (string 100)))
     (defn __init__ [] :external (setv self/greet "Hello World"))
-    (defn setGreet [(:string 100) x] :external (setv self/greet x))
+    (defn setGreet [(string 100) x] :external (setv self/greet x))
     """)
     assert c.greet() == "Hello World"
     c.setGreet("yo yo")
@@ -63,7 +63,7 @@ def test_constructor():
     (defvar owner (public :address)
             createdAt (public :uint256)
             expiresAt (public :uint256)
-            name (public (:string 10)))
+            name (public (string 10)))
     (defn __init__ [:uint256 duration] :external
       (setv self/owner msg/sender)
       (setv self/name "z80")
@@ -97,9 +97,9 @@ def test_struct():
 
 def test_arrays():
     c = get_contract("""
-    (defvar nums (public (:uint256 10)))
+    (defvar nums (public (array :uint256 10)))
     (defn __init__ [] :external
-      (setv (subscript self/nums 0) 5)
+      (set-in self/nums 0 5)
       (set-in self/nums 1 10))
     """)
     assert c.nums(0) == 5
@@ -121,11 +121,11 @@ def test_map():
 
 def test_dynarrays():
     c = get_contract("""
-    (defvar nums (public (dyn-arr :uint256 3)))
+    (defvar nums (public (dyn-array :uint256 3)))
     (defn __init__ [] :external
-    (do
+    (do ;; wrap expressions in do
       (.append self/nums 11)
-      ((. self/nums append) 12)))
+      (.append self/nums 12)))
     """)
     assert c.nums(0) == 11
     assert c.nums(1) == 12

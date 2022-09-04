@@ -41,7 +41,7 @@ def parse_tuple(tuple_tree):
         case _:
             raise Exception("Invalid tuple declaration; requires quoted list or tuple-fn ex: '(2 3 4)/(tuple 2 3 4)")
 
-def parse_args_list(args_list) -> [vy_nodes.arg]:
+def parse_args_list(args_list) -> list[vy_nodes.arg]:
     if len(args_list) == 0:
         return []
     results = []
@@ -57,15 +57,36 @@ def parse_args_list(args_list) -> [vy_nodes.arg]:
         results.append(vy_nodes.arg(arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid()))
     return results
 
-def parse_fn(fn_tree):
+def parse_defn(fn_tree):
     fn_node_id = next_nodeid()
     assert isinstance(fn_tree, models.Expression)
     assert fn_tree[0] == models.Symbol('defn')
+    rets = None
+    name = str(fn_tree[1])
+    args = None
+    decorators = []
+
+    if str(fn_tree[1]) == "__init__":
+        args_node, decs, *body = fn_tree[2:]
+        args_list = parse_args_list(args_node)
+        args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
+        decorators = [vy_nodes.Name(id="external", node_id=next_nodeid(), ast_type='Name')]
+        new_body = []
+        fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
+        for f in fn_body:
+            if isinstance(f, list):
+                for f2 in f:
+                    new_body.append(f2)
+            else:
+                new_body.append(f)
+        fn_body = new_body
+
     match fn_tree[1:]:
         case models.Symbol(sym_node), models.List(args_node), returns, decs, *body if isinstance(decs, models.Keyword) or isinstance(decs, models.List):
+            # (defn name [args] :uint256 :external ...)
+            # (defn name [args] :uint256 [:external :view] ...)
             assert isinstance(returns, models.Keyword) or isinstance(returns, models.Expression)
             rets = dasy.parse.parse_node(returns)
-            name = str(sym_node)
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             if isinstance(decs, models.Keyword):
@@ -90,8 +111,6 @@ def parse_fn(fn_tree):
                     new_body.append(f)
             fn_body = new_body
         case models.Symbol(sym_node), models.List(args_node), decs, *body:
-            rets = None
-            name = str(sym_node)
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
             if isinstance(decs, models.Keyword):
@@ -109,21 +128,7 @@ def parse_fn(fn_tree):
                 else:
                     new_body.append(f)
             fn_body = new_body
-        case models.Symbol(sym_node), models.List(args_node), *body if str(sym_node) == "__init__":
-            rets = None
-            name = str(sym_node)
-            args_list = parse_args_list(args_node)
-            args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
-            decorators = [vy_nodes.Name(id="external", node_id=next_nodeid(), ast_type='Name')]
-            new_body = []
-            fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
-            for f in fn_body:
-                if isinstance(f, list):
-                    for f2 in f:
-                        new_body.append(f2)
-                else:
-                    new_body.append(f)
-            fn_body = new_body
+        # case models.Symbol(sym_node), models.List(args_node), *body if str(sym_node) == "__init__":
         case _:
             raise Exception(f"Invalid fn form {fn_tree}")
     return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
@@ -152,7 +157,7 @@ def parse_declaration(var, typ):
     return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
 
 
-def parse_declarations(expr):
+def parse_defvar(expr):
     return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
 def parse_annassign(var, typ):
@@ -190,7 +195,7 @@ def parse_contract(expr):
 
     return mod_node
 
-def parse_struct(expr):
+def parse_defstruct(expr):
     return vy_nodes.StructDef(ast_type='StructDef', node_id=next_nodeid(), name=str(expr[1]), body=parse_structbody(expr))
 
 def parse_do_body(expr):
@@ -201,7 +206,6 @@ def parse_do_body(expr):
         expr_node._children.add(call_node)
         exprs.append(expr_node)
     return exprs
-
 
 
 def parse_subscript(expr):
