@@ -26,5 +26,4 @@
 
   ;; Person struct is copied into memory
   (defvar p Person self/person)
-  (set-in p name "Solidity")
-  )
+  (set-in p name "Solidity"))
