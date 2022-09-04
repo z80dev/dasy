@@ -9,7 +9,7 @@ Dasy is a smart contract programming language in the lisp family. It is implemen
 Learn more in the [[file:docs.org][documentation]]
 
 * Examples
-In [[file:helloworld.dasy][hello_world.dasy]]
+[[file:examples][More examples]]
 #+begin_src clojure
 (defvars myMap (public (hash-map :address :uint256))
         nums (public (dyn-arr :uint256 3))
