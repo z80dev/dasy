@@ -1,0 +1,28 @@
+;; dynamic array of type uint256, max 3 elements
+(defvar nums (public (dyn-array :uint256 3)))
+
+(defn __init__ [] :external
+  (doto self/nums
+   (.append  11)
+   (.append  22)
+    (.append  33)
+   ;; this will revert, appending to array with max 3 elements
+   ;; (.append self/nums 44)
+   )
+  ;; delete all elements
+  (setv self/nums [])
+  ;; set values
+  (setv self/nums [1 2 3]))
+
+(defn examples [(dyn-array :uint256 5) xs] (dyn-array :uint256 8) [:external :pure]
+  (defvar ys (dyn-array :uint256 8) [1 2 3])
+  (for [x xs]
+       (do (.append ys x)))
+  (return ys))
+
+(defn filter [(dyn-array :address 5) addrs] (dyn-array :address 5) [:external :pure]
+  (defvar nonzeros (dyn-array :address 5) [])
+  (for [addr addrs]
+       (if (!= addr (empty :address))
+           (do (.append nonzeros addr))))
+  (return nonzeros))

@@ -29,6 +29,27 @@ def parse_call(expr, wrap_expr=False):
                 return expr_node
             return call_node
 
+def parse_for(expr):
+    # (for [x xs] (.append self/nums x))
+    # (for [target iter] *body)
+    target, iter_ = expr[1]
+    target_node = dasy.parser.parse_node(target)
+    iter_node = dasy.parser.parse_node(iter_)
+    body_nodes = [dasy.parser.parse_node(b) for b in expr[2:]]
+    body = []
+    for node in body_nodes:
+        if isinstance(node, list):
+            for inner_node in node:
+                body.append(inner_node)
+        else:
+            body.append(node)
+    for_node = vy_nodes.For(ast_type='For', node_id=next_nodeid(), body=body, iter=iter_node, target=target_node)
+    for_node._children.add(target_node)
+    for_node._children.add(iter_node)
+    for n in body:
+        for_node._children.add(n)
+    return for_node
+
 
 def parse_tuple(tuple_tree):
     match tuple_tree:

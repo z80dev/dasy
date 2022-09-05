@@ -6,7 +6,7 @@ from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_annassign, parse_attribute, parse_call, parse_contract,
-                   parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_subscript, parse_tuple)
+                   parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_for, parse_subscript, parse_tuple)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .stmt import parse_setv, parse_if, parse_return
@@ -62,6 +62,8 @@ def parse_expr(expr):
             return parse_defstruct(expr)
         case 'subscript' | 'array' | 'get-in':
             return parse_subscript(expr)
+        case 'for':
+            return parse_for(expr)
         case 'annassign' | 'defvar':
             return parse_annassign(expr)
         case 'do':
@@ -98,6 +100,13 @@ def parse_node(node):
         case models.Bytes(byt):
             bytes_node = vy_nodes.Bytes(node_id=next_nodeid(), ast_type='Byte', value=byt)
             return bytes_node
+        case models.List(lst):
+            list_node = vy_nodes.List(node_id=next_nodeid(), ast_type='List', elements=[])
+            for elmt in lst:
+                node = parse_node(elmt)
+                list_node._children.add(node)
+                list_node.elements.append(node)
+            return list_node
         case None:
             return None
         case _:

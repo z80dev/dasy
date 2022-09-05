@@ -11,6 +11,7 @@ argparse = "^1.4.0"
 dasy-hy = "0.24.1"
 titanoboa = "^0.1.5"
 hyrule = "^0.2"
+rich = "^12.5.1"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.1"

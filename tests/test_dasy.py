@@ -3,15 +3,20 @@ import hy
 from boa.contract import VyperContract
 import boa
 
-def get_contract(src: str, *args) -> VyperContract:
+def compile_src(src: str, *args) -> VyperContract:
     return VyperContract(dasy.compile(src), *args)
+
+def compile(filename: str, *args) -> VyperContract:
+    with open(filename) as f:
+        src = f.read()
+        return compile_src(src, *args)
 
 def test_binops():
     src = """
         (defn plus [] :uint256 :external
         (+ 1 2))
     """
-    c = get_contract(src)
+    c = compile_src(src)
     assert c.plus() == 3
 
 def test_chain_binops():
@@ -19,7 +24,7 @@ def test_chain_binops():
         (defn plus [] :uint256 :external
         (+ 1 2 3 4 5 6))
     """
-    c = get_contract(src)
+    c = compile_src(src)
     assert c.plus() == 21
 
 def test_defvars():
