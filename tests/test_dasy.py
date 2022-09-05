@@ -202,3 +202,4 @@ def test_ifelse():
 def test_for_loop():
     c = compile("examples/for_loop.dasy")
     assert c.forLoop() == 2
+    assert c.sum([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) == 55
