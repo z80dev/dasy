@@ -34,12 +34,12 @@ def test_defvars():
       (setv self/x x))
     (defn getX [] :uint256 [:external :view] self/x)
     """
-    c = get_contract(src)
+    c = compile_src(src)
     c.setX(10)
     assert c.getX() == 10
 
 def test_hello_world():
-    c = get_contract("""
+    c = compile_src("""
     (defvars greet (public (string 100)))
     (defn __init__ [] :external (setv self/greet "Hello World"))
     (defn setGreet [(string 100) x] :external (setv self/greet x))
@@ -49,7 +49,7 @@ def test_hello_world():
     assert c.greet() == "yo yo"
 
 def test_call_internal():
-    c = get_contract("""
+    c = compile_src("""
     (defn _getX [] :uint256 :internal 4)
     (defn useX [] :uint256 :external
       (+ 2 (self/_getX)))
@@ -57,13 +57,13 @@ def test_call_internal():
     assert c.useX() == 6
 
 def test_pure_fn():
-    c = get_contract("""
+    c = compile_src("""
     (defn pureX [:uint256 x] :uint256 [:external :pure] x)
     """)
     assert c.pureX(6) == 6
 
 def test_constructor():
-    c = get_contract("""
+    c = compile_src("""
     (defvars owner (public :address)
             createdAt (public :uint256)
             expiresAt (public :uint256)
@@ -82,7 +82,7 @@ def test_constructor():
     assert c.name() == "z80"
 
 def test_if():
-    c = get_contract("""
+    c = compile_src("""
     (defn absValue [:uint256 x y] :uint256 [:external :pure]
       (if (>= x y)
          (return (- x y))
@@ -90,7 +90,7 @@ def test_if():
     assert c.absValue(4, 7) == 3
 
 def test_struct():
-    c = get_contract("""
+    c = compile_src("""
     (defstruct Person
         age :uint256)
     (defvars person (public Person))
@@ -105,7 +105,7 @@ def test_struct():
     assert c.memoryPerson() == (10,)
 
 def test_arrays():
-    c = get_contract("""
+    c = compile_src("""
     (defvars nums (public (array :uint256 10)))
     (defn __init__ [] :external
       (set-at self/nums 0 5)
@@ -115,7 +115,7 @@ def test_arrays():
     assert c.nums(1) == 10
 
 def test_map():
-    c = get_contract("""
+    c = compile_src("""
     (defvars myMap (public (hash-map :address :uint256))
             owner (public :address))
     (defn __init__ [] :external
@@ -129,19 +129,18 @@ def test_map():
     assert c.getOwnerNum() == 10
 
 def test_dynarrays():
-    c = get_contract("""
+    c = compile_src("""
     (defvar nums (public (dyn-array :uint256 3)))
     (defn __init__ [] :external
-    (do ;; wrap expressions in do
-      (.append self/nums 11)
-      (.append self/nums 12)))
+    (.append self/nums 11)
+    (.append self/nums 12))
     """)
     assert c.nums(0) == 11
     assert c.nums(1) == 12
 
 
 def test_reference_types():
-    c = get_contract("""
+    c = compile_src("""
     (defvar nums (public (array :uint256 10)))
     (defn __init__ [] :external
       (set-at self/nums 0 123)
@@ -155,3 +154,19 @@ def test_reference_types():
     assert c.nums(0) == 123
     assert c.nums(1) == 0
     assert c.memoryArrayVal() == (123, 12)
+
+def test_dynarrays():
+    c = compile("examples/dynamic_arrays.dasy")
+    assert c.nums(0) == 1
+    assert c.nums(1) == 2
+    assert c.nums(2) == 3
+    assert c.examples([9, 8, 7, 6, 5]) == (1, 2, 3, 9, 8, 7, 6, 5)
+
+def test_expr_wrap():
+    c = compile_src("""
+    (defvar owner (public :address))
+    (defvar nums (public (dyn-array :uint256 3)))
+    (defn test [] :external
+      (setv self/owner msg/sender)
+      (.append self/nums 1))
+    """)

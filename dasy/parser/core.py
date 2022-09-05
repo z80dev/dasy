@@ -78,6 +78,22 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
         results.append(vy_nodes.arg(arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid()))
     return results
 
+def process_body(body):
+    # flatten list if necessary
+    # wrap raw Call in Expr if needed
+    new_body = []
+    for f in body:
+        if isinstance(f, list):
+            for f2 in f:
+                new_body.append(f2)
+        elif isinstance(f, vy_nodes.Call):
+            expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=f)
+            new_body.append(expr_node)
+        else:
+            new_body.append(f)
+    return new_body
+
+
 def parse_defn(fn_tree):
     fn_node_id = next_nodeid()
     assert isinstance(fn_tree, models.Expression)
@@ -94,13 +110,7 @@ def parse_defn(fn_tree):
         decorators = [vy_nodes.Name(id="external", node_id=next_nodeid(), ast_type='Name')]
         new_body = []
         fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
-        for f in fn_body:
-            if isinstance(f, list):
-                for f2 in f:
-                    new_body.append(f2)
-            else:
-                new_body.append(f)
-        fn_body = new_body
+        fn_body = process_body(fn_body)
 
     match fn_tree[1:]:
         case models.Symbol(sym_node), models.List(args_node), returns, decs, *body if isinstance(decs, models.Keyword) or isinstance(decs, models.List):
@@ -124,13 +134,7 @@ def parse_defn(fn_tree):
                 fn_body.append(implicit_return_node)
             else:
                 fn_body.append(dasy.parse.parse_node(body[-1]))
-            for f in fn_body:
-                if isinstance(f, list):
-                    for f2 in f:
-                        new_body.append(f2)
-                else:
-                    new_body.append(f)
-            fn_body = new_body
+            fn_body = process_body(fn_body)
         case models.Symbol(sym_node), models.List(args_node), decs, *body:
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
@@ -142,17 +146,21 @@ def parse_defn(fn_tree):
                 decorators = []
             new_body = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
-            for f in fn_body:
-                if isinstance(f, list):
-                    for f2 in f:
-                        new_body.append(f2)
-                else:
-                    new_body.append(f)
-            fn_body = new_body
-        # case models.Symbol(sym_node), models.List(args_node), *body if str(sym_node) == "__init__":
+            fn_body = process_body(fn_body)
         case _:
             raise Exception(f"Invalid fn form {fn_tree}")
-    return vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
+    fn_node = vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
+    for n in decorators:
+        fn_node._children.add(n)
+    fn_node._children.add(args)
+    for n in fn_body:
+        if isinstance(n, vy_nodes.Call):
+            expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=n)
+            expr_node._children.add(n)
+            fn_node._children.add(expr_node)
+        else:
+            fn_node._children.add(n)
+    return fn_node
 
 def parse_declaration(var, typ):
     target = dasy.parse.parse_node(var)

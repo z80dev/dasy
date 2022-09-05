@@ -45,7 +45,8 @@ def parse_expr(expr):
             outer_node = models.Expression((inner_node, *expr[2:]))
             return parse_node(outer_node)
         case 'defn':
-            return parse_defn(expr)
+            fn_node = parse_defn(expr)
+            return fn_node
         case 'return':
             return parse_return(expr)
         case 'quote' | 'tuple':
