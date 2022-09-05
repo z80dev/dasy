@@ -191,3 +191,10 @@ def test_constants():
 def test_immutables():
     c = compile("examples/immutable.dasy", 10)
     assert c.getMyImmutable() == 10
+
+def test_ifelse():
+    c = compile("examples/if_else.dasy")
+    assert c.ifElse(5) == 1
+    assert c.ifElse(15) == 2
+    assert c.ifElse(25) == 3
+    assert c.absoluteValue(10, 5) == 5

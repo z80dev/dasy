@@ -1,0 +1,11 @@
+(defn ifElse [:uint256 x] :uint256 :external
+  (if (<= x 10)
+      (return 1)
+      (if (<= x 20)
+          (return 2)
+          (return 3))))
+
+(defn absoluteValue [:uint256 x y] :uint256 [:external :pure]
+  (if (>= x y)
+      (return (- x y)))
+  (return (- y x)))
