@@ -10,7 +10,7 @@
   (case (str node)
         "+" (build-node Add  :-pretty "+" :-description "addition")
         "-" (build-node Sub :-pretty "-" :-description "subtraction")
-        "*" (build-node Mul :-pretty "*" :-description "multiplication")
+        "*" (build-node Mult :-pretty "*" :-description "multiplication")
         "/" (build-node Div :-pretty "/" :-description "division")
         "<" (build-node Lt :-pretty "<" :-description "less than")
         ">" (build-node Gt :-pretty ">" :-description "greater than")
