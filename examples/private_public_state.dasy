@@ -1,0 +1,9 @@
+(defvars
+    owner (public :address)
+    foo :uint256
+    bar (public :bool))
+
+(defn __init__ [] :external
+  (setv self/owner msg/sender)
+  (setv self/foo 123)
+  (setv self/bar True))

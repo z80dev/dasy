@@ -63,18 +63,7 @@ def test_pure_fn():
     assert c.pureX(6) == 6
 
 def test_constructor():
-    c = compile_src("""
-    (defvars owner (public :address)
-            createdAt (public :uint256)
-            expiresAt (public :uint256)
-            name (public (string 10)))
-    (defn __init__ [:uint256 duration] :external
-      (setv self/owner msg/sender)
-      (setv self/name "z80")
-      (setv self/createdAt block/timestamp)
-      (setv self/expiresAt (+ block/timestamp
-                              duration)))
-    """, 100)
+    c = compile("examples/constructor.dasy", "z80", 100)
 
     createdAt = c.createdAt()
     expiresAt = c.expiresAt()
@@ -143,19 +132,19 @@ def test_dynarrays():
 
 def test_reference_types():
     c = compile_src("""
-    (defvar nums (public (array :uint256 10)))
-    (defn __init__ [] :external
-      (doto self/nums
-        (set-at 0 123)
-        (set-at 9 456)))
+    (defvar nums (array :uint256 10))
     (defn memoryArrayVal [] '(:uint256 :uint256) :external
       (defvar arr (array :uint256 10) self/nums)
       (set-at arr 1 12)
       '((get-in arr 0) (get-in arr 1)))
     """)
-    assert c.nums(0) == 123
-    assert c.nums(1) == 0
-    assert c.memoryArrayVal() == (123, 12)
+    assert c.memoryArrayVal() == (0, 12)
+
+    d = compile("examples/reference_types.dasy")
+    assert d.person() == ("Dasy", 11)
+    assert d.nums(0) == 123
+    assert d.nums(1) == 0
+    assert d.nums(9) == 456
 
 def test_dynarrays():
     c = compile("examples/dynamic_arrays.dasy")
@@ -173,3 +162,28 @@ def test_expr_wrap():
       (.append self/nums 1))
     """)
     c.test()
+
+def test_funtions():
+    c = compile("examples/functions.dasy")
+    assert c.multiply(5, 10) == 50
+    assert c.divide(100, 10) == 10
+    assert c.multiOut() == (1, True)
+    assert c.addAndSub(50, 25) == (75, 25)
+
+def test_visibility():
+    c = compile("examples/function_visibility.dasy")
+    assert c.extFunc() == True
+    assert c.sumOfSquares(2, 5) == 29
+    assert c.avg(20, 80) == 50
+
+def test_view_pure():
+    c = compile("examples/view_pure.dasy")
+    assert c.pureFunc(5) == 5
+    assert c.viewFunc(1) == True
+    assert c.sum(4, 5, 6) == 15
+    assert c.addNum(10) == 10
+
+def test_constants():
+    c = compile("examples/constants.dasy")
+    assert c.getMyConstants() == (1, 10, "0xab5801a7d398351b8be11c439e05c5b3259aec9b")
+    assert c.test(5) == 6

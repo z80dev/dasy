@@ -1,12 +1,13 @@
 import ast as py_ast
 
 import hy
+import rich
 import vyper.ast.nodes as vy_nodes
 from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_annassign, parse_attribute, parse_call, parse_contract,
-                   parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_for, parse_subscript, parse_tuple)
+                   parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_for, parse_subscript, parse_tuple, parse_variabledecl)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .stmt import parse_setv, parse_if, parse_return
@@ -17,6 +18,8 @@ BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 NAME_CONSTS = ["True", "False"]
 
 MACROS = []
+
+CONSTS = {}
 
 def parse_expr(expr):
 
@@ -34,9 +37,13 @@ def parse_expr(expr):
     match cmd_str:
         case "defcontract":
             return parse_contract(expr)
+        case "defconst":
+            CONSTS[str(expr[1])] = expr[2]
+            return None
         case "defmacro":
             hy.eval(expr)
             MACROS.append(str(expr[1]))
+            return None
         case str(cmd) if cmd in MACROS:
             new_node = hy.macroexpand(expr)
             return parse_node(new_node)
@@ -67,6 +74,8 @@ def parse_expr(expr):
             return parse_for(expr)
         case 'annassign' | 'defvar':
             return parse_annassign(expr)
+        case 'variabledecl':
+            return parse_variabledecl(expr)
         case 'do':
             return parse_do_body(expr)
         case _:
@@ -85,6 +94,8 @@ def parse_node(node):
             # return value_node
         case models.String(node):
             return vy_nodes.Str(value=str(node), node_id=next_nodeid(), ast_type='Str')
+        case models.Symbol(node) if str(node) in CONSTS.keys():
+            return parse_node(CONSTS[str(node)])
         case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
             return parse_builtin(node)
         case models.Symbol(node) if str(node) in NAME_CONSTS:
@@ -141,7 +152,7 @@ def parse_src(src: str):
                 is_public = ast.annotation.func == "public"
                 is_immutable = ast.annotation.func == "immutable"
                 is_constant = ast.annotation.func == "constant"
-            new_node = vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=ast.target, annotation=ast.annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+            new_node = vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=ast.target, annotation=ast.annotation, value=ast.value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
             vars.append(new_node)
         elif ast is None:
             # macro declarations return None
@@ -151,6 +162,7 @@ def parse_src(src: str):
 
     for e in vars + fs:
         mod_node.add_to_body(e)
+        mod_node._children.add(e)
 
 
     return mod_node

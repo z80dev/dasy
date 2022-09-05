@@ -50,10 +50,12 @@ def parse_tuple(tuple_tree):
     match tuple_tree:
         case models.Symbol(q), elements if str(q) == 'quote':
             elts = [dasy.parser.parse_node(e) for e in elements]
-            return vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
+            tuple_node = vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
+            return tuple_node
         case models.Symbol(q), *elements if str(q) == 'tuple':
             elts = [dasy.parser.parse_node(e) for e in elements]
-            return vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
+            tuple_node = vy_nodes.Tuple(elements=elts, node_id=next_nodeid(), ast_type='Tuple')
+            return tuple_node
         case _:
             raise Exception("Invalid tuple declaration; requires quoted list or tuple-fn ex: '(2 3 4)/(tuple 2 3 4)")
 
@@ -168,7 +170,7 @@ def parse_defn(fn_tree):
             fn_node._children.add(n)
     return fn_node
 
-def parse_declaration(var, typ):
+def parse_declaration(var, typ, value=None):
     target = dasy.parse.parse_node(var)
     is_constant = False
     is_public = False
@@ -189,7 +191,7 @@ def parse_declaration(var, typ):
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=None, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+    return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
 
 
 def parse_defvars(expr):
@@ -203,6 +205,19 @@ def create_annassign_node(var, typ, value=None) -> vy_nodes.AnnAssign:
         case _:
             raise Exception(f"Invalid declaration type {typ}")
     return vy_nodes.AnnAssign(ast_type='AnnAssign', node_id=next_nodeid(), target=target, annotation=annotation, value=value)
+
+def create_variabledecl_node(var, typ, value=None) -> vy_nodes.VariableDecl:
+    target = dasy.parse.parse_node(var)
+    match typ:
+        case models.Expression() | models.Keyword() | models.Symbol():
+            annotation = dasy.parse.parse_node(typ)
+        case _:
+            raise Exception(f"Invalid declaration type {typ}")
+    return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=value)
+
+def parse_variabledecl(expr) -> vy_nodes.VariableDecl:
+    node = create_variabledecl_node(expr[1], expr[2], value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None)
+    return node
 
 def parse_annassign(expr) -> vy_nodes.AnnAssign:
     return create_annassign_node(expr[1], expr[2], value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None)

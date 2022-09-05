@@ -1,0 +1,15 @@
+(defvar num (public :uint256))
+
+;; Pure functions do not read any state or global variables
+(defn pureFunc [:uint256 x] :uint256 [:external :pure]
+  x)
+
+;; View functions might read state or global state, or call an internal function
+(defn viewFunc [:uint256 x] :bool [:external :view]
+  (> x self/num))
+
+(defn sum [:uint256 x y z] :uint256 [:external :pure]
+  (+ x  y z))
+
+(defn addNum [:uint256 x] :uint256 [:external :view]
+  (+ x self/num))

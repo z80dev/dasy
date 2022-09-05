@@ -1,0 +1,24 @@
+;; internal functions can only be called inside this contract
+(defn _add [:uint256 x y] :uint256 [:internal :pure]
+  (+ x y))
+
+;; external functions can only be called from outside this contract
+(defn extFunc [] :bool [:external :view]
+  True)
+
+;; external functions can only be called from outside this contract
+(defn avg [:uint256 x y] :uint256 [:external :view]
+  ;; cannot call other external function
+  ;; (.extFunc self)
+
+  ;; can call internal functions
+  (defvar z :uint256 (self/_add x y))
+  (/ (+ x y)
+     2))
+
+(defn _sqr [:uint256 x] :uint256 [:internal :pure]
+  (* x x))
+
+(defn sumOfSquares [:uint256 x y] :uint256 [:external :view]
+  (+ (self/_sqr x)
+     (self/_sqr y)))
