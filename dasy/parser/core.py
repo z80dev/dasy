@@ -65,6 +65,10 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
     assert isinstance(current_type, models.Keyword) or isinstance(current_type, models.Expression)
     # get annotation and name
     for arg in args_list[1:]:
+        # check if we hit a new type
+        if isinstance(arg, models.Keyword) or isinstance(arg, models.Expression):
+            current_type = arg
+            continue
         # get annotation and name
         if isinstance(current_type, models.Keyword):
             annotation_node = vy_nodes.Name(id=str(current_type.name), parent=None, node_id=next_nodeid(), ast_type='Name')
