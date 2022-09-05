@@ -1,5 +1,5 @@
 from dasy import parser
-from vyper.ast.nodes import If, Assign, Return, AugAssign
+from vyper.ast.nodes import Assert, If, Assign, Raise, Return, AugAssign
 
 from dasy.parser.core import process_body
 from .utils import next_nodeid
@@ -21,3 +21,9 @@ def parse_augassign(expr):
 
 def parse_return(return_tree):
     return Return(value=parser.parse_node(return_tree[1]), ast_type='Return', node_id=next_nodeid())
+
+def parse_assert(assert_tree):
+    return Assert(ast_type='Assert', node_id=next_nodeid(), test=parser.parse_node(assert_tree[1]), msg=parser.parse_node(assert_tree[2]))
+
+def parse_raise(raise_tree):
+    return Raise(ast_type='Raise', node_id=next_nodeid(), exc=parser.parse_node(raise_tree[1]))

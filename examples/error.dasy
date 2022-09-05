@@ -1,0 +1,28 @@
+(defvars
+    x (public :uint256)
+    owner (public :address))
+
+(defn __init__ [] :external
+  (setv self/owner msg/sender))
+
+(defn testAssert [:uint256 x] :external
+  (assert (>= x 1) "x < 1")
+  (setv self/x x))
+
+(defn testRaise [:uint256 x] :external
+  (if (<= x 1)
+      (raise "x < 1"))
+  (setv self/x x))
+
+(defn _testErrorBubblesUp [:uint256 x] :internal
+  (assert (>= x 1) "x < 1")
+  (setv self/x x))
+
+(defn testErrorBubblesUp [:uint256 x] :external
+  (self/_testErrorBubblesUp x)
+  (setv self/x 123))
+
+(defn setOwner [:address owner] :external
+  (assert (== msg/sender self/owner) "!owner")
+  (assert (!= owner (empty :address)) "owner = zero")
+  (setv self/owner owner))

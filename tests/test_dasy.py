@@ -2,6 +2,7 @@ import dasy
 import hy
 from boa.contract import VyperContract
 import boa
+import pytest
 
 def compile_src(src: str, *args) -> VyperContract:
     return VyperContract(dasy.compile(src), *args)
@@ -203,3 +204,21 @@ def test_for_loop():
     c = compile("examples/for_loop.dasy")
     assert c.forLoop() == 2
     assert c.sum([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) == 55
+
+def testError():
+    c = compile("examples/error.dasy")
+    with pytest.raises(boa.contract.BoaError):
+        # TODO: implement checking error msg
+        c.testAssert(0)
+    c.testAssert(10)
+    with pytest.raises(boa.contract.BoaError):
+        c.testRaise(0)
+    c.testRaise(10)
+    with pytest.raises(boa.contract.BoaError):
+        c.testErrorBubblesUp(0)
+    c.testErrorBubblesUp(10)
+    with pytest.raises(boa.contract.BoaError):
+        c.setOwner("0x0000000000000000000000000000000000000000")
+    c.setOwner("0xab5801a7d398351b8be11c439e05c5b3259aec9b")
+    with pytest.raises(boa.contract.BoaError):
+        c.setOwner("0xab5801a7d398351b8be11c439e05c5b3259aec9b")

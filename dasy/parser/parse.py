@@ -10,7 +10,7 @@ from .core import (parse_annassign, parse_attribute, parse_call, parse_contract,
                    parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_for, parse_subscript, parse_tuple, parse_variabledecl)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
-from .stmt import parse_augassign, parse_setv, parse_if, parse_return
+from .stmt import parse_assert, parse_augassign, parse_raise, parse_setv, parse_if, parse_return
 from .utils import next_node_id_maker, next_nodeid
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
@@ -63,8 +63,12 @@ def parse_expr(expr):
             return fn_node
         case 'return':
             return parse_return(expr)
+        case 'assert':
+            return parse_assert(expr)
         case 'quote' | 'tuple':
             return parse_tuple(expr)
+        case 'raise':
+            return parse_raise(expr)
         case '.':
             return parse_attribute(expr)
         case 'setv':
