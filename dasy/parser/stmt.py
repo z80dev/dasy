@@ -1,24 +1,14 @@
 from dasy import parser
 from vyper.ast.nodes import If, Assign, Return
+
+from dasy.parser.core import process_body
 from .utils import next_nodeid
 
 def parse_if(expr):
     body_nodes = [parser.parse_node(expr[2])]
-    body = []
-    for n in body_nodes:
-        if isinstance(n, list):
-            for i_n in n:
-                body.append(i_n)
-        else:
-            body.append(n)
+    body = process_body(body_nodes)
     else_nodes = [parser.parse_node(expr[3])] if len(expr) == 4 else []
-    else_ = []
-    for n in else_nodes:
-        if isinstance(n, list):
-            for i_n in n:
-                else_.append(i_n)
-        else:
-            else_.append(n)
+    else_ = process_body(else_nodes)
     return If(ast_type='If', node_id=next_nodeid(), test=parser.parse_node(expr[1]), body=body, orelse=else_)
 
 def parse_setv(expr):

@@ -1,4 +1,5 @@
 from ast import Expression
+
 import dasy
 import vyper.ast.nodes as vy_nodes
 from hy import models
@@ -36,13 +37,7 @@ def parse_for(expr):
     target_node = dasy.parser.parse_node(target)
     iter_node = dasy.parser.parse_node(iter_)
     body_nodes = [dasy.parser.parse_node(b) for b in expr[2:]]
-    body = []
-    for node in body_nodes:
-        if isinstance(node, list):
-            for inner_node in node:
-                body.append(inner_node)
-        else:
-            body.append(node)
+    body = process_body(body_nodes)
     for_node = vy_nodes.For(ast_type='For', node_id=next_nodeid(), body=body, iter=iter_node, target=target_node)
     for_node._children.add(target_node)
     for_node._children.add(iter_node)
@@ -86,6 +81,13 @@ def process_body(body):
         if isinstance(f, list):
             for f2 in f:
                 new_body.append(f2)
+        elif isinstance(f, vy_nodes.List):
+            for f2 in f.elements:
+                if isinstance(f2, vy_nodes.Call):
+                    expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=f2)
+                    new_body.append(expr_node)
+                else:
+                    new_body.append(f2)
         elif isinstance(f, vy_nodes.Call):
             expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=f)
             new_body.append(expr_node)

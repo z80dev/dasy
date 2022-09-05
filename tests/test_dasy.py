@@ -108,8 +108,10 @@ def test_arrays():
     c = compile_src("""
     (defvars nums (public (array :uint256 10)))
     (defn __init__ [] :external
-      (set-at self/nums 0 5)
-      (set-at self/nums 1 10))
+      (doto self/nums
+        (set-at 0 5)
+        (set-at 1 10))
+      )
     """)
     assert c.nums(0) == 5
     assert c.nums(1) == 10
@@ -143,9 +145,9 @@ def test_reference_types():
     c = compile_src("""
     (defvar nums (public (array :uint256 10)))
     (defn __init__ [] :external
-      (set-at self/nums 0 123)
-      (set-at self/nums 9 456)
-      (defvar arr (array :uint256 10) self/nums))
+      (doto self/nums
+        (set-at 0 123)
+        (set-at 9 456)))
     (defn memoryArrayVal [] '(:uint256 :uint256) :external
       (defvar arr (array :uint256 10) self/nums)
       (set-at arr 1 12)
@@ -170,3 +172,4 @@ def test_expr_wrap():
       (setv self/owner msg/sender)
       (.append self/nums 1))
     """)
+    c.test()

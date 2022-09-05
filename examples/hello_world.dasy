@@ -1,5 +1,3 @@
-
-http://vyper-by-example.github.io
 ;; Create a string variable that can store maximum 100 characters
 (defvar greet (public (string 100)))
 

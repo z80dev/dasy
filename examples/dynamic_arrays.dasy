@@ -17,7 +17,7 @@
 (defn examples [(dyn-array :uint256 5) xs] (dyn-array :uint256 8) [:external :pure]
   (defvar ys (dyn-array :uint256 8) [1 2 3])
   (for [x xs]
-       (do (.append ys x)))
+       (.append ys x))
   (return ys))
 
 (defn filter [(dyn-array :address 5) addrs] (dyn-array :address 5) [:external :pure]

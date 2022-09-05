@@ -8,22 +8,29 @@
     person (public Person))
 
 (defn __init__ [] :external
-  (set-at self/nums 0 123) ;; this updates self.nums[0]
-  (set-at self/nums 9 456) ;; this updates self.nums[9]
+  (doto self/nums
+        (set-at 0 123) ;; this updates self.nums[0]
+        (set-at 9 456)) ;; this updates self.nums[9]
 
   ;; copies self.nums to array in memory
-  (defvar arr (array :uint256 10) self/nums)
-  ;; does not modify self/nums
-  (set-at arr 0 123)
+  (doto arr
+        (defvar (array :uint256 10) self/nums)
+        ;; does not modify self/nums
+        (set-at 0 123))
 
   ;; this updates self/myMap
-  (set-at self/myMap msg/sender 1)
-  (set-at self/myMap msg/sender 11)
+  (doto self/myMap
+        (set-at msg/sender 1)
+        (set-at msg/sender 11))
 
   ;; this updates self/person
-  (set-in self/person age 11)
-  (set-in self/person name "Dasy")
+  (doto self/person
+        (set-in age 11)
+        (set-in name "Dasy"))
 
+  ;; you could put defvar inside a doto like the arr example
+  ;; above, but I don't think that is very readable
+  ;; doing it this way is clearer, leaving the defvar out of doto
   ;; Person struct is copied into memory
   (defvar p Person self/person)
   (set-in p name "Solidity"))
