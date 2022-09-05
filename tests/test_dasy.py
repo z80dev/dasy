@@ -187,3 +187,7 @@ def test_constants():
     c = compile("examples/constants.dasy")
     assert c.getMyConstants() == (1, 10, "0xab5801a7d398351b8be11c439e05c5b3259aec9b")
     assert c.test(5) == 6
+
+def test_immutables():
+    c = compile("examples/immutable.dasy", 10)
+    assert c.getMyImmutable() == 10

@@ -40,6 +40,9 @@ def parse_expr(expr):
         case "defconst":
             CONSTS[str(expr[1])] = expr[2]
             return None
+        case "defimmutable" | "defimm":
+            CONSTS[str(expr[1])] = None
+            return None
         case "defmacro":
             hy.eval(expr)
             MACROS.append(str(expr[1]))
@@ -61,6 +64,8 @@ def parse_expr(expr):
         case '.':
             return parse_attribute(expr)
         case 'setv':
+            if str(expr[1]) in CONSTS.keys():
+                CONSTS[str(expr[1])] = expr[2]
             return parse_setv(expr)
         case 'if':
             return parse_if(expr)

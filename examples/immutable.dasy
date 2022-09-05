@@ -1,0 +1,9 @@
+(defvar OWNER (immutable :address))
+(defvar MY_IMMUTABLE (immutable :uint256))
+
+(defn __init__ [:uint256 _val] :external
+  (setv OWNER msg/sender)
+  (setv MY_IMMUTABLE _val))
+
+(defn getMyImmutable [] :uint256 [:external :pure]
+  MY_IMMUTABLE)
