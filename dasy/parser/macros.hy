@@ -5,8 +5,6 @@
 (defmacro string [length] `(subscript String ~length))
 (defmacro bytes [length] `(subscript Bytes ~length))
 (defmacro doto [ obj #*cmds]
-  (print (lfor c cmds
-             [(get c 0) obj (get c 1)]))
   `(do
      ~@(lfor c cmds
              `(~(get c 0) ~obj ~(get c 1)))))
