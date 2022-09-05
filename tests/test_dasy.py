@@ -198,3 +198,7 @@ def test_ifelse():
     assert c.ifElse(15) == 2
     assert c.ifElse(25) == 3
     assert c.absoluteValue(10, 5) == 5
+
+def test_for_loop():
+    c = compile("examples/for_loop.dasy")
+    assert c.forLoop() == 2
