@@ -4,7 +4,7 @@
 The Dasypeltis, gansi, is considered an egg-eating snake. Their diet consists of all forms of eggs considering they have no teeth in which to eat living prey with.
 #+end_quote
 
-Dasy is a smart contract programming language in the lisp family. It is implemented by compiling to Vyper and benefits from the extensive optimizations and excellent performance of Vyper.
+Dasy is an experimental smart contract programming language in the lisp family. It is implemented by compiling to Vyper and benefits from the extensive optimizations and excellent performance of Vyper.
 
 Learn more in the [[file:docs.org][documentation]]
 
@@ -69,12 +69,33 @@ pipx install dasy
 ** Macros
 There's a lot of opportunities for macros in smart contracts. They could also be used as a proof of concept for features before implementing them at a lower level in the compiler.
 
-some example dasy macros:
+macros are written in Hy, a pythonic lisp. They allow us to transform our code at compile time, allowing the developer to tailor the language itself to their needs.
+
+A basic example is =doto=
 #+begin_src lisp
-(defmacro set-in [array index new-val] `(setv (subscript ~array ~index) ~new-val))
-(defmacro hash-map [key-type val-type] `(subscript HashMap (tuple ~key-type ~val-type)))
-(defmacro dyn-arr [type length] `(subscript DynArray (tuple ~type ~length)))
+;;raw dasy
+(do
+  (.append self/nums 10)
+  (.append self/nums 11)
+  (.append self/nums 12)
+  (.append self/nums 13)
+  (.append self/nums 14))
+
+;; macro definition
+(defmacro doto [ obj #*cmds]
+  `(do
+     ~@(lfor c cmds
+             `(~(get c 0) ~obj ~(get c 1)))))
+
+;; using macro
+(doto self/nums
+  (.append 10)
+  (.append 11)
+  (.append 12)
+  (.append 13)
+  (.append 14))
 #+end_src
 
-The macro's inner body would be made up of a pre-initialized for-loop.
+After defining the =doto= macro, we are able to write shorter, simpler code which is easier to check for correctness.
+
 ** For fun
