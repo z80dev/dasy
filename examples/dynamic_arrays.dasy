@@ -3,12 +3,12 @@
 
 (defn __init__ [] :external
   (doto self/nums
-   (.append  11)
-   (.append  22)
+    (.append  11)
+    (.append  22)
     (.append  33)
    ;; this will revert, appending to array with max 3 elements
    ;; (.append self/nums 44)
-   )
+    )
   ;; delete all elements
   (setv self/nums [])
   ;; set values
