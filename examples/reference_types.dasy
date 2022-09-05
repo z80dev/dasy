@@ -13,15 +13,13 @@
         (set-at 9 456)) ;; this updates self.nums[9]
 
   ;; copies self.nums to array in memory
-  (doto arr
-        (defvar (array :uint256 10) self/nums)
-        ;; does not modify self/nums
-        (set-at 0 123))
+  (defvar arr (array :uint256 10) self/nums)
+  (set-at arr 0 123) ;; does not modify self/nums
 
   ;; this updates self/myMap
   (doto self/myMap
-        (set-at msg/sender 1)
-        (set-at msg/sender 11))
+        (set-at msg/sender 1) ;; self.myMap[msg.sender] = 1
+        (set-at msg/sender 11)) ;; self.myMap[msg.sender] = 11
 
   ;; this updates self/person
   (doto self/person
