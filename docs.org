@@ -9,30 +9,33 @@ Tuples are signified by a quoted list such as ~'(1 2 3)~
 The vyper equivalent is ~(1, 2, 3)~
 
 * Core Macros
-** ~defcontract~
-
-~(defcontract name  [state-vars] & fns)~
-
-This special form declares and defines a smart conctract. The state-vars declaration is optional.
-
-If present, the ~state-vars~ declaration is a sequence of pairs enclosed in square brackets, mapping a name to a type. A type may be wrapped in a modifier such as ~public~, ~immutable~.
-
-#+begin_src clojure
-(defcontract example
-  [pub_num (public :uint256)
-   priv_num :uint256]
-  (defn foo [:uint256 x] :uint256 :external
-    (+ 7 (. self priv_num))))
-#+end_src
 ** ~defn~
 
-~(defn fn-name args return-type visibility & body)~
+~(defn fn-name args [return-type] visibility & body)~
 
 This special form declares and defines a function within a smart contract.
 
-The args list may be an empty list, but must be present. Returning multiple values requires declaring the return type as a tuple.
-** ~self/~
+The ~args~ list may be an empty list, but must be present. Returning multiple values requires declaring the return type as a tuple.
+
+The ~return-type~ object is optional. If present, it may be a single keyword representing the return type, or it may be a tuple of keywords for returning multiple values.
+
+The ~visibility~ object may also be a keyword or list of keywords. Valid values are:
+
+- ~:external~
+- ~:internal~
+- ~:payable~
+- ~:view~
+- ~:pure~
+- ~(nonreentrant "lock-name")~
+
+#+begin_src clojure
+(defn noArgs [] :external (pass))
+(defn setNum [:uint256 x] :external (pass))
+(defn addNums [:uint256 x y] :uint256 [:external :pure]
+  (+ x y))
+#+end_src
+** ~/~
 
 ~(setv self/foo bar)~
 
-Access contract state. Shorthand for ~(. self var-name)~
+Access object attributes. ~obj/name~ is shorthand for ~(. obj name)~
