@@ -1,0 +1,16 @@
+(defvars x (public :uint256)
+         y (public :uint256))
+
+(defn updateX [:address to :uint256 x] :external
+  (raw_call to
+            (concat
+             (method_id "updateX(uint256)")
+             (convert x :bytes32))
+            :is_delegate_call True))
+
+(defn updateY [:address to :uint256 y] :external
+  (raw_call to
+            (concat
+             (method_id "updateY(uint256)")
+             (convert y :bytes32))
+            :is_delegate_call True))

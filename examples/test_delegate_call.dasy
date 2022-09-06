@@ -1,0 +1,8 @@
+(defvars x (public :uint256)
+         y (public :uint256))
+
+(defn updateX [:uint256 x] :external
+  (setv self/x (+ x 1)))
+
+(defn updateY [:uint256 y] :external
+  (setv self/y (* y y)))

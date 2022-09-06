@@ -238,4 +238,12 @@ def testHashing():
     assert c.getMessageHash("hi") ==  b'v$w\x8d\xed\xc7_\x8b2+\x9f\xa1c*a\r@\xb8^\x10l}\x9b\xf0\xe7C\xa9\xce)\x1b\x9co'
 
 def testRawCall():
+    b = compile("examples/functions.dasy")
     c = compile("examples/raw_call.dasy")
+    assert c.testRawCall(b.address, 4, 3) == 12
+
+def testDelegateCall():
+    b = compile("examples/test_delegate_call.dasy")
+    c = compile("examples/delegate_call.dasy")
+    c.updateX(b.address, 10)
+    assert c.x() == 11

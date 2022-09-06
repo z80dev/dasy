@@ -26,6 +26,8 @@ def parse_call(expr, wrap_expr=False):
             while i < len(args):
                 cur_arg = args[i]
                 if isinstance(cur_arg, models.Keyword) and len(args) > (i + 1) and not isinstance(args[i+1], models.Keyword):
+                    # TODO: remove this ugly hack and properly check against builtin types
+                    # or reconsider whether we should be using keywords for builtin types at all
                     val_arg = args[i + 1]
                     val_node = dasy.parser.parse_node(val_arg)
                     kw_node = vy_nodes.keyword(node_id=next_nodeid(), ast_type='keyword', arg=str(cur_arg)[1:], value=val_node)
@@ -92,7 +94,9 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
             annotation_node = vy_nodes.Name(id=str(current_type.name), parent=None, node_id=next_nodeid(), ast_type='Name')
         elif isinstance(current_type, models.Expression):
             annotation_node = dasy.parse.parse_node(current_type)
-        results.append(vy_nodes.arg(arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid()))
+        arg_node = vy_nodes.arg(arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid())
+        arg_node._children.add(annotation_node)
+        results.append(arg_node)
     return results
 
 def process_body(body):
@@ -107,11 +111,13 @@ def process_body(body):
             for f2 in f.elements:
                 if isinstance(f2, vy_nodes.Call):
                     expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=f2)
+                    expr_node._children.add(f2)
                     new_body.append(expr_node)
                 else:
                     new_body.append(f2)
         elif isinstance(f, vy_nodes.Call):
             expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=f)
+            expr_node._children.add(f)
             new_body.append(expr_node)
         else:
             new_body.append(f)
@@ -210,7 +216,12 @@ def parse_declaration(var, typ, value=None):
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+    vdecl_node = vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+    vdecl_node._children.add(target)
+    vdecl_node._children.add(annotation)
+    if value is not None:
+        vdecl_node._children.add(value)
+    return vdecl_node
 
 
 def parse_defvars(expr):
@@ -239,7 +250,11 @@ def create_variabledecl_node(var, typ, value=None) -> vy_nodes.VariableDecl:
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    return vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=value)
+    vdecl_node = vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=target, annotation=annotation, value=value)
+    vdecl_node._children.add(target)
+    vdecl_node._children.add(annotation)
+    if value is not None:
+        vdecl_node._children.add(value)
 
 def parse_variabledecl(expr) -> vy_nodes.VariableDecl:
     node = create_variabledecl_node(expr[1], expr[2], value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None)

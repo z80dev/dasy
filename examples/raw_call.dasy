@@ -1,0 +1,15 @@
+(defn testRawCall [:address to :uint256 x y] :uint256 :external
+  (defvar res (bytes 32)
+    (raw_call to
+              (concat (method_id "multiply(uint256,uint256)")
+                         (convert x :bytes32)
+                         (convert y :bytes32))
+              :max_outsize 32
+              :gas 100000
+              :value 0
+              ))
+  (defvar z :uint256 (convert res :uint256))
+  z)
+
+(defn sendEth [:address to] [:external :payable]
+  (raw_call to b"" :value msg/value))

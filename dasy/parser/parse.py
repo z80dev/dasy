@@ -189,6 +189,9 @@ def parse_src(src: str):
                 is_immutable = ast.annotation.func == "immutable"
                 is_constant = ast.annotation.func == "constant"
             new_node = vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=ast.target, annotation=ast.annotation, value=ast.value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+            for child in ast.get_children():
+                new_node._children.add(child)
+                child._parent = new_node
             vars.append(new_node)
         elif ast is None:
             # macro declarations return None
