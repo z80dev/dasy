@@ -236,3 +236,6 @@ def testPayable():
 def testHashing():
     c = compile("examples/hashing.dasy")
     assert c.getMessageHash("hi") ==  b'v$w\x8d\xed\xc7_\x8b2+\x9f\xa1c*a\r@\xb8^\x10l}\x9b\xf0\xe7C\xa9\xce)\x1b\x9co'
+
+def testRawCall():
+    c = compile("examples/raw_call.dasy")

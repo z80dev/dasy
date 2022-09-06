@@ -5,7 +5,7 @@
   ;; for loop through array elements
   ;; find minimum of nums
   (defvar nums (array :uint256 5) [4 5 1 9 3])
-  (defvar x :uint256 10000 #_(max_value :uint256)) ;; (max_value currently unimplemented)
+  (defvar x :uint256 (max_value :uint256))
   (for [num nums]
        (if (< num x)
            (setv x num)))

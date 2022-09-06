@@ -132,7 +132,6 @@ def parse_defn(fn_tree):
         args_list = parse_args_list(args_node)
         args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
         decorators = [vy_nodes.Name(id="external", node_id=next_nodeid(), ast_type='Name')]
-        new_body = []
         fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
         fn_body = process_body(fn_body)
 
@@ -150,7 +149,6 @@ def parse_defn(fn_tree):
                 decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
             else:
                 decorators = []
-            new_body = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
             if not has_return(body[-1]):
                 value_node = dasy.parse.parse_node(body[-1])
@@ -162,21 +160,26 @@ def parse_defn(fn_tree):
         case models.Symbol(sym_node), models.List(args_node), decs, *body:
             args_list = parse_args_list(args_node)
             args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
+            for arg in args_list:
+                args._children.add(arg)
             if isinstance(decs, models.Keyword):
                 decorators = [vy_nodes.Name(id=str(decs.name), node_id=next_nodeid(), ast_type='Name')]
             elif isinstance(decs, models.List):
                 decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
             else:
                 decorators = []
-            new_body = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
             fn_body = process_body(fn_body)
         case _:
             raise Exception(f"Invalid fn form {fn_tree}")
+
+
     fn_node = vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=name, node_id=fn_node_id, ast_type='FunctionDef')
+
     for n in decorators:
         fn_node._children.add(n)
     fn_node._children.add(args)
+
     for n in fn_body:
         if isinstance(n, vy_nodes.Call):
             expr_node = vy_nodes.Expr(ast_type='Expr', node_id=next_nodeid(), value=n)
@@ -220,7 +223,14 @@ def create_annassign_node(var, typ, value=None) -> vy_nodes.AnnAssign:
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    return vy_nodes.AnnAssign(ast_type='AnnAssign', node_id=next_nodeid(), target=target, annotation=annotation, value=value)
+    annassign_node = vy_nodes.AnnAssign(ast_type='AnnAssign', node_id=next_nodeid(), target=target, annotation=annotation, value=value)
+    if target is not None:
+        annassign_node._children.add(target)
+    if annotation is not None:
+        annassign_node._children.add(annotation)
+    if value is not None:
+        annassign_node._children.add(value)
+    return annassign_node
 
 def create_variabledecl_node(var, typ, value=None) -> vy_nodes.VariableDecl:
     target = dasy.parse.parse_node(var)
