@@ -2,6 +2,7 @@ from ast import Expression
 
 import dasy
 import vyper.ast.nodes as vy_nodes
+from vyper.ast.utils import dict_to_ast
 from hy import models
 
 from .utils import has_return, next_nodeid, pairwise
@@ -11,16 +12,31 @@ def parse_attribute(expr):
     match expr[1:]:
         case [obj, attr]:
             value_node = dasy.parser.parse_node(obj)
-            attr_node = vy_nodes.Attribute(ast_type='Attribute', node_id=next_nodeid(), attr=str(attr), value=value_node)
+            # attr_node = vy_nodes.Attribute(ast_type='Attribute', node_id=next_nodeid(), attr=str(attr), value=value_node)
+            attr_node = dict_to_ast({'ast_type': 'Attribute', 'attr': str(attr), 'value': value_node, 'node_id': next_nodeid()})
             attr_node._children.add(value_node)
             return attr_node
 
 def parse_call(expr, wrap_expr=False):
     match expr:
         case (fn_name, *args):
-            args_list = [dasy.parser.parse_node(arg) for arg in args]
+            args_list = []
+            kw_args = []
+            i = 0
+            while i < len(args):
+                cur_arg = args[i]
+                if isinstance(cur_arg, models.Keyword) and len(args) > (i + 1) and not isinstance(args[i+1], models.Keyword):
+                    val_arg = args[i + 1]
+                    val_node = dasy.parser.parse_node(val_arg)
+                    kw_node = vy_nodes.keyword(node_id=next_nodeid(), ast_type='keyword', arg=str(cur_arg)[1:], value=val_node)
+                    kw_args.append(kw_node)
+                    i += 2
+                else:
+                    val_node = dasy.parser.parse_node(args[i])
+                    args_list.append(val_node)
+                    i += 1
             func_node = dasy.parser.parse_node(fn_name)
-            call_node = vy_nodes.Call(func=func_node, args=args_list, keywords=[], ast_type='Call', node_id=next_nodeid())
+            call_node = vy_nodes.Call(func=func_node, args=args_list, keywords=kw_args, ast_type='Call', node_id=next_nodeid())
             call_node._children.add(func_node)
             for a in args_list:
                 call_node._children.add(a)
