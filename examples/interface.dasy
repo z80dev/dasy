@@ -1,0 +1,19 @@
+(definterface TestInterface
+  (defn owner [] :address :view)
+  (defn setOwner [:address owner] :nonpayable)
+  (defn sendEth [] :payable)
+  (defn setOwnerAndSendEth [:address owner] :payable))
+
+(defvar test (public TestInterface))
+
+(defn __init__ [:address test] :external
+  (setv self/test (TestInterface test)))
+
+(defn getOwner [] :address [:external :view]
+  (.owner self/test))
+
+(defn getOwnerFromAddress [:address test] :address [:external :view]
+  (.owner (TestInterface test)))
+
+(defn setOwner [:address owner] :external
+  (.setOwner self/test owner))

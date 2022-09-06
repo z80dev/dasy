@@ -279,7 +279,6 @@ def parse_contract(expr):
             # no contract state
             expr_body = body
         case _:
-            # print(f"no match: {expr}")
             raise Exception(f"Invalid defcontract form: {expr}")
     for node in expr_body:
         mod_node.add_to_body(dasy.parse.parse_node(node))
@@ -287,7 +286,41 @@ def parse_contract(expr):
     return mod_node
 
 def parse_defstruct(expr):
-    return vy_nodes.StructDef(ast_type='StructDef', node_id=next_nodeid(), name=str(expr[1]), body=parse_structbody(expr))
+    body = parse_structbody(expr)
+    struct_node = vy_nodes.StructDef(ast_type='StructDef', node_id=next_nodeid(), name=str(expr[1]), body=body)
+    for b in body:
+        struct_node._children.add(b)
+    return struct_node
+
+def parse_definterface(expr):
+    name = str(expr[1])
+    body = []
+    for f in expr[2:]:
+        fn_node_id = next_nodeid()
+        rets = None
+        fn_name = str(f[1])
+        args = None
+        decorators = []
+
+        args_list = parse_args_list(f[2])
+        args = vy_nodes.arguments(args=args_list, defaults=list(), node_id=next_nodeid(), ast_type='arguments')
+        if len(f) == 5:
+            # have return
+            rets = dasy.parse.parse_node(f[3])
+        vis_node = dasy.parse.parse_node(f[-1])
+        expr_node = vy_nodes.Expr(node_id=next_nodeid(), ast_type='Expr', value=vis_node)
+        expr_node._children.add(vis_node)
+        fn_body = [expr_node]
+        fn_node = vy_nodes.FunctionDef(args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=fn_name, node_id=fn_node_id, ast_type='FunctionDef')
+        fn_node._children.add(expr_node)
+        for a in args_list:
+            fn_node._children.add(a)
+        body.append(fn_node)
+
+    interface_node = vy_nodes.InterfaceDef(ast_type='InterfaceDef', node_id=next_nodeid(), body=body, name=name)
+    for b in body:
+        interface_node._children.add(b)
+    return interface_node
 
 def parse_defevent(expr):
     return vy_nodes.EventDef(ast_type='EventDef', node_id=next_nodeid(), name=str(expr[1]), body=parse_structbody(expr))

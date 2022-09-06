@@ -246,4 +246,15 @@ def testDelegateCall():
     b = compile("examples/test_delegate_call.dasy")
     c = compile("examples/delegate_call.dasy")
     c.updateX(b.address, 10)
+    c.updateY(b.address, 20)
     assert c.x() == 11
+    assert c.y() == 400
+
+def testInterface():
+    b = compile("examples/test_interface.dasy")
+    c = compile("examples/interface.dasy", b.address)
+    addr1 = boa.env.generate_address()
+    addr2 = boa.env.generate_address()
+    assert b.owner() == c.getOwner()
+    c.setOwner(addr1)
+    assert b.owner() == addr1

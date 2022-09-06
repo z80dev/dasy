@@ -1,12 +1,11 @@
 import ast as py_ast
 
 import hy
-import rich
 import vyper.ast.nodes as vy_nodes
 from hy import models
 
 from .builtins import parse_builtin
-from .core import (parse_annassign, parse_attribute, parse_call, parse_contract, parse_defevent,
+from .core import (parse_annassign, parse_attribute, parse_call, parse_contract, parse_defevent, parse_definterface,
                    parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_for, parse_subscript, parse_tuple, parse_variabledecl)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
@@ -81,15 +80,12 @@ def parse_expr(expr):
             return parse_setv(expr)
         case '+=' | '-=' | '*=' | '/=':
             # hy won't let us define this as a macro >:(
-            print(expr[0])
-            print(expr[1])
-            print(expr[2])
             op = str(expr[0])[:1]
             target = expr[1]
             value = expr[2]
             if isinstance(value, hy.models.Integer):
                 value = int(value)
-            code = f"(augassign {str(expr[0])[:1]} {target} {value})"
+            code = f"(augassign {op} {target} {value})"
             parsed_code = hy.read(code)
             return parse_node(parsed_code)
         case 'augassign':
@@ -100,6 +96,8 @@ def parse_expr(expr):
             return parse_defvars(expr)
         case 'defstruct':
             return parse_defstruct(expr)
+        case 'definterface':
+            return parse_definterface(expr)
         case 'defevent':
             return parse_defevent(expr)
         case 'subscript' | 'array' | 'get-in':
@@ -172,7 +170,7 @@ def parse_src(src: str):
             mod_node = ast
         elif isinstance(ast, vy_nodes.VariableDecl):
             vars.append(ast)
-        elif isinstance(ast, vy_nodes.StructDef) or isinstance(ast, vy_nodes.EventDef):
+        elif isinstance(ast, vy_nodes.StructDef) or isinstance(ast, vy_nodes.EventDef) or isinstance(ast, vy_nodes.InterfaceDef):
             vars.append(ast)
         elif isinstance(ast, vy_nodes.FunctionDef):
             fs.append(ast)
