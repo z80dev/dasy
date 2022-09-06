@@ -1,0 +1,9 @@
+(defn getHash [:address addr :uint256 num] :bytes32 [:external :pure]
+  (keccak256
+   (concat
+    (convert addr :bytes32)
+    (convert num :bytes32)
+    (convert "THIS IS A STRING" (bytes 16)))))
+
+(defn getMessageHash [(string 100) _str] :bytes32 [:external :pure]
+  (keccak256 _str))

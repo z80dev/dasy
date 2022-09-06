@@ -1,0 +1,10 @@
+;; receive ether into the contract
+(defn __default__ [] [:external :payable]
+  (pass))
+
+(defn sendEther [:address to :uint256 amount] :external
+  ;; calls the default fn in the receiving contract
+  (send to amount))
+
+(defn sendAll [:address to] :external
+  (send to self/balance))

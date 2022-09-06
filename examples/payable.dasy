@@ -1,0 +1,16 @@
+(defevent Deposit
+  sender (indexed :address)
+  amount :uint256)
+
+(defn deposit [] [:external :payable]
+  (log (Deposit msg/sender msg/value)))
+
+(defn getBalance [] :uint256 [:external :view]
+  ;; get balance of Ether stored in this contract
+  self/balance)
+
+(defvar owner (public :address))
+
+(defn pay [] [:external :payable]
+  (assert (> msg/value 0) "msg.value = 0")
+  (setv self/owner msg/sender))

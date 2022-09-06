@@ -1,0 +1,6 @@
+(defevent Payment
+  sender (indexed :address)
+  amount :uint256)
+
+(defn __default__ [] [:external :payable]
+  (log (Payment msg/sender msg/value)))

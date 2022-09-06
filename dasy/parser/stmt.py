@@ -1,3 +1,4 @@
+from vyper.ast import Log
 from dasy import parser
 from vyper.ast.nodes import Assert, If, Assign, Raise, Return, AugAssign
 
@@ -27,3 +28,6 @@ def parse_assert(assert_tree):
 
 def parse_raise(raise_tree):
     return Raise(ast_type='Raise', node_id=next_nodeid(), exc=parser.parse_node(raise_tree[1]))
+
+def parse_log(log_tree):
+    return Log(ast_type='Log', node_id=next_nodeid(), value=parser.parse_node(log_tree[1]))

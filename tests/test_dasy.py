@@ -220,5 +220,19 @@ def testError():
     with pytest.raises(boa.contract.BoaError):
         c.setOwner("0x0000000000000000000000000000000000000000")
     c.setOwner("0xab5801a7d398351b8be11c439e05c5b3259aec9b")
-    with pytest.raises(boa.contract.BoaError):
+    # with pytest.raises(boa.contract.BoaError):
+    with boa.reverts():
         c.setOwner("0xab5801a7d398351b8be11c439e05c5b3259aec9b")
+
+
+def testEvent():
+    c = compile("examples/event.dasy")
+    c.mint(100)
+
+def testPayable():
+    c = compile("examples/payable.dasy")
+    assert c.getBalance() == 0
+
+def testHashing():
+    c = compile("examples/hashing.dasy")
+    assert c.getMessageHash("hi") ==  b'v$w\x8d\xed\xc7_\x8b2+\x9f\xa1c*a\r@\xb8^\x10l}\x9b\xf0\xe7C\xa9\xce)\x1b\x9co'

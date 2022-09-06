@@ -1,0 +1,13 @@
+(defevent Transfer
+  sender (indexed :address)
+  receiver (indexed :address)
+  amount :uint256)
+
+(defn transfer [:address receiver :uint256 amount] :external
+  (log (Transfer msg/sender receiver amount)))
+
+(defn mint [:uint256 amount] :external
+  (log (Transfer (empty :address) msg/sender amount)))
+
+(defn burn [:uint256 amount] :external
+  (log (Transfer msg/sender (empty :address) amount)))
