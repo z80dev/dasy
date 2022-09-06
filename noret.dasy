@@ -1,6 +1,0 @@
-(defmacro dyn-arr [type length] `(subscript DynArray (tuple ~type ~length)))
-
-(defvar nums (public (dyn-arr :uint256 3)))
-
-(defn __init__ [] :external
-(do ((. self/nums append) 11)))
