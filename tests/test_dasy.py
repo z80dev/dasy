@@ -258,3 +258,6 @@ def testInterface():
     assert b.owner() == c.getOwner()
     c.setOwner(addr1)
     assert b.owner() == addr1
+
+def test_reentrancy():
+    c = compile("examples/nonreentrant.dasy")

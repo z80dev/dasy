@@ -152,7 +152,8 @@ def parse_defn(fn_tree):
             if isinstance(decs, models.Keyword):
                 decorators = [vy_nodes.Name(id=str(decs.name), node_id=next_nodeid(), ast_type='Name')]
             elif isinstance(decs, models.List):
-                decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
+                # decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
+                decorators = [dasy.parse.parse_node(d) for d in decs]
             else:
                 decorators = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
@@ -171,7 +172,8 @@ def parse_defn(fn_tree):
             if isinstance(decs, models.Keyword):
                 decorators = [vy_nodes.Name(id=str(decs.name), node_id=next_nodeid(), ast_type='Name')]
             elif isinstance(decs, models.List):
-                decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
+                # decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
+                decorators = [dasy.parse.parse_node(d) for d in decs]
             else:
                 decorators = []
             fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
