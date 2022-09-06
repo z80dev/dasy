@@ -1,0 +1,8 @@
+(defn __default__ [] [:external :payable]
+  (pass))
+
+(defn kill [] :external
+  (selfdestruct msg/sender))
+
+(defn burn [] :external
+  (selfdestruct (empty :address)))
