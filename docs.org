@@ -40,6 +40,23 @@ The ~visibility~ object may also be a keyword or list of keywords. Valid values 
   '((+ x y) (- x y)))
 #+end_src
 ** ~defvar~
+~(defvar variable-name type [value])~
+
+This special form declares and optionally assigns a value to a variable.
+
+Outside of a ~defn~ form, variables are stored in ~storage~ and accessible via ~self.variable-name~.
+
+Inside a ~defn~ form, variables are stored in ~memory~ and accessible directly.
+
+The ~value~ form is optional.
+
+#+begin_src clojure
+(defvar owner (public :address))
+(defvar enabled :bool)
+
+(defn foo [] :external
+  (defvar owner_memory :address self/owner)) ;; declare copy in memory
+#+end_src
 ** ~/~
 
 ~(setv self/foo bar)~
