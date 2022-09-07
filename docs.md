@@ -1,34 +1,36 @@
-- [Current Status](#org00bb22a)
-- [Syntax](#org7678c69)
-  - [Tuples](#org2ef4f33)
-  - [Arrays](#org7120eb0)
-  - [Types](#orgbcfa084)
-- [Core Macros](#org2d1e0cd)
-  - [`defn`](#orgb08ef90)
-  - [`defvar`](#orga070630)
-  - [`setv`](#org03a8bea)
-  - [`definterface`](#orgcdd6191)
-  - [`defstruct`](#orga0f8171)
-  - [`defevent`](#orgcdac4ec)
-  - [`/`](#org9cbb6cd)
+- [Current Status](#org9073914)
+- [Syntax](#org5274328)
+  - [Tuples](#orgead55ef)
+  - [Arrays](#org1097fdb)
+  - [Types](#org3f310a6)
+- [Core Forms](#orgf8db2cd)
+  - [`defn`](#orgf31ca64)
+  - [`defvar`](#org513865e)
+  - [`setv`](#org6daef4b)
+  - [`definterface`](#org9ebd17e)
+  - [`defstruct`](#orge6113fd)
+  - [`defevent`](#org75ec200)
+  - [`defconst`](#org704612d)
+  - [`defmacro`](#org8a60145)
+  - [`/`](#org5274fb3)
 
 
 
-<a id="org00bb22a"></a>
+<a id="org9073914"></a>
 
 # Current Status
 
 Dasy is currently in pre-alpha. The language&rsquo;s core is still being designed and implemented.
 
 
-<a id="org7678c69"></a>
+<a id="org5274328"></a>
 
 # Syntax
 
 Dasy has a clojure-inspired lisp syntax with some influences from python. Some constructs are dasy-specific.
 
 
-<a id="org2ef4f33"></a>
+<a id="orgead55ef"></a>
 
 ## Tuples
 
@@ -37,7 +39,7 @@ Tuples are represented by a quoted list such as `'(1 2 3)`
 The vyper equivalent is `(1, 2, 3)`
 
 
-<a id="org7120eb0"></a>
+<a id="org1097fdb"></a>
 
 ## Arrays
 
@@ -46,7 +48,7 @@ Arrays are represented by a bracketed list, such as `[1 2 3]`
 The vyper equivalent is `[1, 2, 3]`
 
 
-<a id="orgbcfa084"></a>
+<a id="org3f310a6"></a>
 
 ## Types
 
@@ -63,12 +65,12 @@ Dasy has all of Vyper&rsquo;s types. Base types such as `uint256` are represente
 | `DynArray[uint256, 5]`   | `(dyn-array :uint256 5)`    |
 
 
-<a id="org2d1e0cd"></a>
+<a id="orgf8db2cd"></a>
 
-# Core Macros
+# Core Forms
 
 
-<a id="orgb08ef90"></a>
+<a id="orgf31ca64"></a>
 
 ## `defn`
 
@@ -102,7 +104,7 @@ The `visibility` object may also be a keyword or list of keywords. Valid values 
 ```
 
 
-<a id="orga070630"></a>
+<a id="org513865e"></a>
 
 ## `defvar`
 
@@ -125,7 +127,7 @@ The `value` form is optional.
 ```
 
 
-<a id="org03a8bea"></a>
+<a id="org6daef4b"></a>
 
 ## `setv`
 
@@ -142,7 +144,7 @@ This special form assigns a value to a name. It is roughly equivalent to the equ
 ```
 
 
-<a id="orgcdd6191"></a>
+<a id="org9ebd17e"></a>
 
 ## `definterface`
 
@@ -159,7 +161,7 @@ This special form declares an interface.
 ```
 
 
-<a id="orga0f8171"></a>
+<a id="orge6113fd"></a>
 
 ## `defstruct`
 
@@ -174,7 +176,7 @@ This special form declares a struct. Variables should be declared in pairs of `n
 ```
 
 
-<a id="orgcdac4ec"></a>
+<a id="org75ec200"></a>
 
 ## `defevent`
 
@@ -190,7 +192,44 @@ This special form declares an event. Fields should be declared in pairs of `name
 ```
 
 
-<a id="org9cbb6cd"></a>
+<a id="org704612d"></a>
+
+## `defconst`
+
+`(defconst name value)`
+
+This special form declares a constant. The value must be provided when defined. This value can never change.
+
+```clojure
+(defconst MIN_AMT 100)
+(defconst GREETING "Hello")
+```
+
+
+<a id="org8a60145"></a>
+
+## `defmacro`
+
+`(defmacro name args & body)`
+
+This special form declares a macro. Macros are functions that run at compile time. Their inputs are code, and their outputs are code. They transform your code as it is built.
+
+Macros can be used to implement convenient shorthand syntaxes. They can also be used to pull in information from the outside world into your contract at build time.
+
+In the most simple terms, macros allow you to extend the Dasy compiler yourself in whichever way you see fit.
+
+```clojure
+;; (set-at myArr 0 100) -> (setv (subscript myArr 0) 100)
+(defmacro set-at [array index new-val] `(setv (subscript ~array ~index) ~new-val))
+
+;; (doto obj (.append 10) (.append 20)) -> (do (.append obj 10) (.append obj 20))
+(defmacro doto [ obj #*cmds]
+  (lfor c cmds
+        `(~(get c 0) ~obj ~@(cut c 1 None))))
+```
+
+
+<a id="org5274fb3"></a>
 
 ## `/`
 

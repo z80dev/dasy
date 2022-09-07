@@ -25,7 +25,7 @@ Dasy has all of Vyper's types. Base types such as ~uint256~ are represented with
 | ~DynArray[uint256, 5]~   | ~(dyn-array :uint256 5)~    |
 
 
-* Core Macros
+* Core Forms
 ** ~defn~
 
 ~(defn fn-name args [return-type] visibility & body)~
@@ -117,6 +117,33 @@ This special form declares an event. Fields should be declared in pairs of ~name
   sender (indexed :address)
   receiver (indexed :address)
   amount :uint256)
+#+end_src
+** ~defconst~
+~(defconst name value)~
+
+This special form declares a constant. The value must be provided when defined. This value can never change.
+
+#+begin_src clojure
+(defconst MIN_AMT 100)
+(defconst GREETING "Hello")
+#+end_src
+** ~defmacro~
+~(defmacro name args & body)~
+
+This special form declares a macro. Macros are functions that run at compile time. Their inputs are code, and their outputs are code. They transform your code as it is built.
+
+Macros can be used to implement convenient shorthand syntaxes. They can also be used to pull in information from the outside world into your contract at build time.
+
+In the most simple terms, macros allow you to extend the Dasy compiler yourself in whichever way you see fit.
+
+#+begin_src clojure
+;; (set-at myArr 0 100) -> (setv (subscript myArr 0) 100)
+(defmacro set-at [array index new-val] `(setv (subscript ~array ~index) ~new-val))
+
+;; (doto obj (.append 10) (.append 20)) -> (do (.append obj 10) (.append obj 20))
+(defmacro doto [ obj #*cmds]
+  (lfor c cmds
+        `(~(get c 0) ~obj ~@(cut c 1 None))))
 #+end_src
 
 ** ~/~
