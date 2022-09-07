@@ -30,10 +30,16 @@ The ~visibility~ object may also be a keyword or list of keywords. Valid values 
 
 #+begin_src clojure
 (defn noArgs [] :external (pass))
+
 (defn setNum [:uint256 x] :external (pass))
+
 (defn addNums [:uint256 x y] :uint256 [:external :pure]
   (+ x y))
+
+(defn addAndSub [:uint256 x y] '(:uint256 :uint256) [:external :pure]
+  '((+ x y) (- x y)))
 #+end_src
+** ~defvar~
 ** ~/~
 
 ~(setv self/foo bar)~
