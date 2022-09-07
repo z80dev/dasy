@@ -57,6 +57,17 @@ The ~value~ form is optional.
 (defn foo [] :external
   (defvar owner_memory :address self/owner)) ;; declare copy in memory
 #+end_src
+** ~setv~
+~(setv name value)~
+
+This special form assigns a value to a name. It is roughly equivalent to the equal sign ~=~ in Vyper.
+#+begin_src clojure
+;; Create a string variable that can store maximum 100 characters
+(defvar greet (public (string 100)))
+
+(defn __init__ [] :external
+    (setv self/greet "Hello World")) ;; in vyper: self.greet = "Hello World"
+#+end_src
 ** ~/~
 
 ~(setv self/foo bar)~
