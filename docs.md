@@ -1,48 +1,44 @@
-
-# Table of Contents
-
-1.  [Current Status](#org7a0419e)
-2.  [Syntax](#org0d3f35f)
-    1.  [Tuples](#org0c572ec)
-3.  [Core Macros](#org0eb66cf)
-    1.  [`defn`](#orgaa3a527)
-    2.  [`defvar`](#org6ac187c)
-    3.  [`setv`](#orgf8b3d0c)
-    4.  [`definterface`](#orga96a2f7)
-    5.  [`defstruct`](#orge4aaa92)
-    6.  [`defevent`](#org9c0fda7)
-    7.  [`/`](#orgfc40cb1)
+- [Current Status](#org8cc4f22)
+- [Syntax](#org965f6a0)
+  - [Tuples](#orgd4c2ce3)
+- [Core Macros](#org0abdab9)
+  - [`defn`](#org804db0a)
+  - [`defvar`](#org06c726e)
+  - [`setv`](#org71e9681)
+  - [`definterface`](#orgd06a087)
+  - [`defstruct`](#orgbe9dae8)
+  - [`defevent`](#org1e5dab2)
+  - [`/`](#org79c18a4)
 
 
 
-<a id="org7a0419e"></a>
+<a id="org8cc4f22"></a>
 
 # Current Status
 
 Dasy is currently in pre-alpha. The language&rsquo;s core is still being designed and implemented.
 
 
-<a id="org0d3f35f"></a>
+<a id="org965f6a0"></a>
 
 # Syntax
 
 Dasy has a clojure-inspired lisp syntax with some influences from python. Some constructs are dasy-specific.
 
 
-<a id="org0c572ec"></a>
+<a id="orgd4c2ce3"></a>
 
 ## Tuples
 
-Tuples are signified by a quoted list such as `'(1 2 3)`
-The vyper equivalent is `(1, 2, 3)`
+Tuples are signified by a quoted list such as `'(1 2 3)` The vyper equivalent is `(1, 2, 3)`
 
 
-<a id="org0eb66cf"></a>
+<a id="org0abdab9"></a>
 
 # Core Macros
 
 
-<a id="orgaa3a527"></a>
+<a id="org804db0a"></a>
 
 ## `defn`
 
@@ -63,18 +59,20 @@ The `visibility` object may also be a keyword or list of keywords. Valid values 
 -   `:pure`
 -   `(nonreentrant "lock-name")`
 
-    (defn noArgs [] :external (pass))
-    
-    (defn setNum [:uint256 x] :external (pass))
-    
-    (defn addNums [:uint256 x y] :uint256 [:external :pure]
-      (+ x y))
-    
-    (defn addAndSub [:uint256 x y] '(:uint256 :uint256) [:external :pure]
-      '((+ x y) (- x y)))
+```clojure
+(defn noArgs [] :external (pass))
+
+(defn setNum [:uint256 x] :external (pass))
+
+(defn addNums [:uint256 x y] :uint256 [:external :pure]
+  (+ x y))
+
+(defn addAndSub [:uint256 x y] '(:uint256 :uint256) [:external :pure]
+  '((+ x y) (- x y)))
+```
 
 
-<a id="org6ac187c"></a>
+<a id="org06c726e"></a>
 
 ## `defvar`
 
@@ -88,14 +86,16 @@ Inside a `defn` form, variables are stored in `memory` and accessible directly.
 
 The `value` form is optional.
 
-    (defvar owner (public :address))
-    (defvar enabled :bool)
-    
-    (defn foo [] :external
-      (defvar owner_memory :address self/owner)) ;; declare copy in memory
+```clojure
+(defvar owner (public :address))
+(defvar enabled :bool)
+
+(defn foo [] :external
+  (defvar owner_memory :address self/owner)) ;; declare copy in memory
+```
 
 
-<a id="orgf8b3d0c"></a>
+<a id="org71e9681"></a>
 
 ## `setv`
 
@@ -103,14 +103,16 @@ The `value` form is optional.
 
 This special form assigns a value to a name. It is roughly equivalent to the equal sign `=` in Vyper.
 
-    ;; Create a string variable that can store maximum 100 characters
-    (defvar greet (public (string 100)))
-    
-    (defn __init__ [] :external
-        (setv self/greet "Hello World")) ;; in vyper: self.greet = "Hello World"
+```clojure
+;; Create a string variable that can store maximum 100 characters
+(defvar greet (public (string 100)))
+
+(defn __init__ [] :external
+    (setv self/greet "Hello World")) ;; in vyper: self.greet = "Hello World"
+```
 
 
-<a id="orga96a2f7"></a>
+<a id="orgd06a087"></a>
 
 ## `definterface`
 
@@ -118,14 +120,16 @@ This special form assigns a value to a name. It is roughly equivalent to the equ
 
 This special form declares an interface.
 
-    (definterface TestInterface
-      (defn owner [] :address :view)
-      (defn setOwner [:address owner] :nonpayable)
-      (defn sendEth [] :payable)
-      (defn setOwnerAndSendEth [:address owner] :payable))
+```clojure
+(definterface TestInterface
+  (defn owner [] :address :view)
+  (defn setOwner [:address owner] :nonpayable)
+  (defn sendEth [] :payable)
+  (defn setOwnerAndSendEth [:address owner] :payable))
+```
 
 
-<a id="orge4aaa92"></a>
+<a id="orgbe9dae8"></a>
 
 ## `defstruct`
 
@@ -133,12 +137,14 @@ This special form declares an interface.
 
 This special form declares a struct. Variables should be declared in pairs of `name` and `type`
 
-    (defstruct Person
-      name (string 100)
-      age :uint256)
+```clojure
+(defstruct Person
+  name (string 100)
+  age :uint256)
+```
 
 
-<a id="org9c0fda7"></a>
+<a id="org1e5dab2"></a>
 
 ## `defevent`
 
@@ -146,17 +152,18 @@ This special form declares a struct. Variables should be declared in pairs of `n
 
 This special form declares an event. Fields should be declared in pairs of `name` and `type`
 
-    (defevent Transfer
-      sender (indexed :address)
-      receiver (indexed :address)
-      amount :uint256)
+```clojure
+(defevent Transfer
+  sender (indexed :address)
+  receiver (indexed :address)
+  amount :uint256)
+```
 
 
-<a id="orgfc40cb1"></a>
+<a id="org79c18a4"></a>
 
 ## `/`
 
 `(setv self/foo bar)`
 
 Access object attributes. `obj/name` is shorthand for `(. obj name)`
-
