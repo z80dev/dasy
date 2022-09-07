@@ -68,6 +68,40 @@ This special form assigns a value to a name. It is roughly equivalent to the equ
 (defn __init__ [] :external
     (setv self/greet "Hello World")) ;; in vyper: self.greet = "Hello World"
 #+end_src
+** ~definterface~
+~(definterface name & fns)~
+
+This special form declares an interface.
+
+#+begin_src clojure
+(definterface TestInterface
+  (defn owner [] :address :view)
+  (defn setOwner [:address owner] :nonpayable)
+  (defn sendEth [] :payable)
+  (defn setOwnerAndSendEth [:address owner] :payable))
+#+end_src
+** ~defstruct~
+~(defstruct name & variables)~
+
+This special form declares a struct. Variables should be declared in pairs of ~name~ and ~type~
+
+#+begin_src clojure
+(defstruct Person
+  name (string 100)
+  age :uint256)
+#+end_src
+** ~defevent~
+~(defevent name & fields)~
+
+This special form declares an event. Fields should be declared in pairs of ~name~ and ~type~
+
+#+begin_src clojure
+(defevent Transfer
+  sender (indexed :address)
+  receiver (indexed :address)
+  amount :uint256)
+#+end_src
+
 ** ~/~
 
 ~(setv self/foo bar)~
