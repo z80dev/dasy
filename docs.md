@@ -1,44 +1,74 @@
-- [Current Status](#org8cc4f22)
-- [Syntax](#org965f6a0)
-  - [Tuples](#orgd4c2ce3)
-- [Core Macros](#org0abdab9)
-  - [`defn`](#org804db0a)
-  - [`defvar`](#org06c726e)
-  - [`setv`](#org71e9681)
-  - [`definterface`](#orgd06a087)
-  - [`defstruct`](#orgbe9dae8)
-  - [`defevent`](#org1e5dab2)
-  - [`/`](#org79c18a4)
+- [Current Status](#org00bb22a)
+- [Syntax](#org7678c69)
+  - [Tuples](#org2ef4f33)
+  - [Arrays](#org7120eb0)
+  - [Types](#orgbcfa084)
+- [Core Macros](#org2d1e0cd)
+  - [`defn`](#orgb08ef90)
+  - [`defvar`](#orga070630)
+  - [`setv`](#org03a8bea)
+  - [`definterface`](#orgcdd6191)
+  - [`defstruct`](#orga0f8171)
+  - [`defevent`](#orgcdac4ec)
+  - [`/`](#org9cbb6cd)
 
 
 
-<a id="org8cc4f22"></a>
+<a id="org00bb22a"></a>
 
 # Current Status
 
 Dasy is currently in pre-alpha. The language&rsquo;s core is still being designed and implemented.
 
 
-<a id="org965f6a0"></a>
+<a id="org7678c69"></a>
 
 # Syntax
 
 Dasy has a clojure-inspired lisp syntax with some influences from python. Some constructs are dasy-specific.
 
 
-<a id="orgd4c2ce3"></a>
+<a id="org2ef4f33"></a>
 
 ## Tuples
 
-Tuples are signified by a quoted list such as `'(1 2 3)` The vyper equivalent is `(1, 2, 3)`
+Tuples are represented by a quoted list such as `'(1 2 3)`
+
+The vyper equivalent is `(1, 2, 3)`
 
 
-<a id="org0abdab9"></a>
+<a id="org7120eb0"></a>
+
+## Arrays
+
+Arrays are represented by a bracketed list, such as `[1 2 3]`
+
+The vyper equivalent is `[1, 2, 3]`
+
+
+<a id="orgbcfa084"></a>
+
+## Types
+
+Dasy has all of Vyper&rsquo;s types. Base types such as `uint256` are represented with a dasy &rsquo;keyword&rsquo;, which uses a colon and an identifier. Complex types are represented with a function-call syntax. Arrays are created with `array`, or `dyn-array` for dynamic arrays.
+
+| Vyper                    | Dasy                        |
+|------------------------ |--------------------------- |
+| `uint256`                | `:uint256`                  |
+| `bool`                   | `:bool`                     |
+| `bytes32`                | `:bytes32`                  |
+| `String[10]`             | `(string 10)`               |
+| `uint256[10]`            | `(array :uint256 10)`       |
+| `HashMap[uint256, bool]` | `(hash-map :uint256 :bool)` |
+| `DynArray[uint256, 5]`   | `(dyn-array :uint256 5)`    |
+
+
+<a id="org2d1e0cd"></a>
 
 # Core Macros
 
 
-<a id="org804db0a"></a>
+<a id="orgb08ef90"></a>
 
 ## `defn`
 
@@ -72,7 +102,7 @@ The `visibility` object may also be a keyword or list of keywords. Valid values 
 ```
 
 
-<a id="org06c726e"></a>
+<a id="orga070630"></a>
 
 ## `defvar`
 
@@ -95,7 +125,7 @@ The `value` form is optional.
 ```
 
 
-<a id="org71e9681"></a>
+<a id="org03a8bea"></a>
 
 ## `setv`
 
@@ -112,7 +142,7 @@ This special form assigns a value to a name. It is roughly equivalent to the equ
 ```
 
 
-<a id="orgd06a087"></a>
+<a id="orgcdd6191"></a>
 
 ## `definterface`
 
@@ -129,7 +159,7 @@ This special form declares an interface.
 ```
 
 
-<a id="orgbe9dae8"></a>
+<a id="orga0f8171"></a>
 
 ## `defstruct`
 
@@ -144,7 +174,7 @@ This special form declares a struct. Variables should be declared in pairs of `n
 ```
 
 
-<a id="org1e5dab2"></a>
+<a id="orgcdac4ec"></a>
 
 ## `defevent`
 
@@ -160,7 +190,7 @@ This special form declares an event. Fields should be declared in pairs of `name
 ```
 
 
-<a id="org79c18a4"></a>
+<a id="org9cbb6cd"></a>
 
 ## `/`
 

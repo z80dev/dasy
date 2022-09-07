@@ -5,8 +5,25 @@ Dasy is currently in pre-alpha. The language's core is still being designed and 
 * Syntax
 Dasy has a clojure-inspired lisp syntax with some influences from python. Some constructs are dasy-specific.
 ** Tuples
-Tuples are signified by a quoted list such as ~'(1 2 3)~
+Tuples are represented by a quoted list such as ~'(1 2 3)~
+
 The vyper equivalent is ~(1, 2, 3)~
+** Arrays
+Arrays are represented by a bracketed list, such as ~[1 2 3]~
+
+The vyper equivalent is ~[1, 2, 3]~
+** Types
+Dasy has all of Vyper's types. Base types such as ~uint256~ are represented with a dasy 'keyword', which uses a colon and an identifier. Complex types are represented with a function-call syntax. Arrays are created with ~array~, or ~dyn-array~ for dynamic arrays.
+| Vyper                    | Dasy                        |
+|--------------------------+-----------------------------|
+| ~uint256~                | ~:uint256~                  |
+| ~bool~                   | ~:bool~                     |
+| ~bytes32~                | ~:bytes32~                  |
+| ~String[10]~             | ~(string 10)~               |
+| ~uint256[10]~            | ~(array :uint256 10)~       |
+| ~HashMap[uint256, bool]~ | ~(hash-map :uint256 :bool)~ |
+| ~DynArray[uint256, 5]~   | ~(dyn-array :uint256 5)~    |
+
 
 * Core Macros
 ** ~defn~
