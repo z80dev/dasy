@@ -1,4 +1,6 @@
 #+title: Dasy
+#+EXPORT_FILE_NAME: index
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
 
 #+begin_quote
 The Dasypeltis, gansi, is considered an egg-eating snake. Their diet consists of all forms of eggs considering they have no teeth in which to eat living prey with.
@@ -9,7 +11,7 @@ Dasy is an experimental smart contract programming language in the lisp family. 
 Learn more in the [[file:docs.org][documentation]]
 
 * Examples
-[[file:dasybyexample.md][More examples]]
+[[https://dasy-by-example.github.io][More examples at Dasy By Example]]
 #+begin_src clojure
 (defvars myMap (public (hash-map :address :uint256))
         nums (public (dyn-arr :uint256 3))
@@ -36,20 +38,6 @@ c.setBase(10)
 print(c.addToBase(10)) # outputs 20
 #+end_src
 
-via hy (lisp based on python)
-#+begin_src hy
-(import rich [print]
-        boa.contract [VyperContract]
-        dasy)
-
-(let [src (with [f (open "hello_world.dasy" "r")]
-            (.read f))
-      compilation_data (.compile dasy src)
-      contract (VyperContract compilation_data)]
-  (print f"calling (.addUints contract 10 20): {(.addUints contract 10 20)}")
-  (print f"calling (.subUints contract 10 20): {(.subUints contract 100 20)}"))
-#+end_src
-
 Command line compilation
 #+begin_src shell
 > dasy hello_world.dasy
@@ -58,12 +46,12 @@ Command line compilation
 * Installation
 For use as a library
 #+begin_src bash
-pip install dasy
+pip install git+https://github.com/dasylang/dasy.git
 #+end_src
 
-For use as an executable
+For use as an executable via =pipx=
 #+begin_src bash
-pipx install dasy
+pipx install git+https://github.com/dasylang/dasy.git
 #+end_src
 * Motivation
 ** Macros

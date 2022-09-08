@@ -1,4 +1,5 @@
 from vyper.ast import Log
+from hy import models
 from dasy import parser
 from vyper.ast.nodes import Assert, If, Assign, Raise, Return, AugAssign
 
@@ -6,6 +7,9 @@ from dasy.parser.core import process_body
 from .utils import next_nodeid
 
 def parse_if(expr):
+    if expr[1] == models.Symbol('True'):
+        if expr[3] == models.Symbol('None'):
+            return parser.parse_node(expr[2])
     body_nodes = [parser.parse_node(expr[2])]
     body = process_body(body_nodes)
     else_nodes = [parser.parse_node(expr[3])] if len(expr) == 4 else []

@@ -16,7 +16,7 @@ BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
 
 NAME_CONSTS = ["True", "False"]
 
-MACROS = []
+MACROS = ["cond"]
 
 CONSTS = {}
 

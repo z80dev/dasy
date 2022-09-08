@@ -1,9 +1,11 @@
 #+title: Dasy Docs
-#+options: toc: t
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
 * Current Status
 Dasy is currently in pre-alpha. The language's core is still being designed and implemented.
 * Syntax
 Dasy has a clojure-inspired lisp syntax with some influences from python. Some constructs are dasy-specific.
+Most vyper code can be translated by wrapping in parentheses properly. For example, you can assume that for =arr.append(10)= in Vyper, the equivalent Dasy is =(.append arr 10)=
+
 ** Tuples
 Tuples are represented by a quoted list such as ~'(1 2 3)~
 
@@ -23,6 +25,18 @@ Dasy has all of Vyper's types. Base types such as ~uint256~ are represented with
 | ~uint256[10]~            | ~(array :uint256 10)~       |
 | ~HashMap[uint256, bool]~ | ~(hash-map :uint256 :bool)~ |
 | ~DynArray[uint256, 5]~   | ~(dyn-array :uint256 5)~    |
+
+** Operators
+Dasy has mostly identical operators and builtins as Vyper. There are a few small differences.
+*** Built-in chaining
+Binary operations are chained by default in Dasy. This allows you to specify more than two arguments at at time.
+
+Because of this, in Dasy, ~+~ functions like a ~sum~ operator.
+
+| Vyper                       | Dasy          |
+|-----------------------------+---------------|
+| =2 + 3 + 4 + 5=             | =(+ 2 3 4 5)= |
+| =x < y and y < z and z < a= | =(< x y z a)= |
 
 
 * Core Forms
@@ -121,7 +135,7 @@ This special form declares an event. Fields should be declared in pairs of ~name
 ** ~defconst~
 ~(defconst name value)~
 
-This special form declares a constant. The value must be provided when defined. This value can never change.
+This special form defines a constant. The value must be provided when defined. This value can never change.
 
 #+begin_src clojure
 (defconst MIN_AMT 100)
@@ -130,7 +144,7 @@ This special form declares a constant. The value must be provided when defined. 
 ** ~defmacro~
 ~(defmacro name args & body)~
 
-This special form declares a macro. Macros are functions that run at compile time. Their inputs are code, and their outputs are code. They transform your code as it is built.
+This special form defines a macro. Macros are functions that run at compile time. Their inputs are code, and their outputs are code. They transform your code as it is built.
 
 Macros can be used to implement convenient shorthand syntaxes. They can also be used to pull in information from the outside world into your contract at build time.
 
@@ -145,9 +159,125 @@ In the most simple terms, macros allow you to extend the Dasy compiler yourself 
   (lfor c cmds
         `(~(get c 0) ~obj ~@(cut c 1 None))))
 #+end_src
+* Control Structures
+** If
+~(if test body else-body)~
+If executes a test, and depending on the result, either executes the ~body~ or the ~else-body~.
+
+#+begin_src clojure
+(if (x < 100)
+*** (return 1) (return 0))
+#+end_src
+** Loops
+*** For Loops
+~for~ loops can operate on arrays directly, or on a ~range~
+#+begin_src clojure
+(for [i nums]
+  (+= sum i))
+
+(for [i [1 2 3 4 5]]
+  (+= sum i))
+
+(for [i (range 10)]
+  (+= sum i))
+#+end_src
+
+In a ~for~ loop's body, ~continue~ and ~break~ behave the same as they do in Vyper.
+#+begin_src clojure
+(for [i (range 10)]
+  (if (== i 5)
+    (continue))
+  (+= sum i))
+
+#+end_src
+* Errors
+** ~assert~
+~assert~ behaves as it does in Vyper. It expects a test and an optional error message.
+#+begin_src clojure
+(assert (< x 100) "x must be less than 100")
+#+end_src
+** ~raise~
+~raise~ behaves as it does in Vyper. It expects a message.
+#+begin_src clojure
+(if (>= x 100)
+  (raise "x must be less than 100"))
+#+end_src
+
+* Built-in Macros
 
 ** ~/~
 
 ~(setv self/foo bar)~
 
 Access object attributes. ~obj/name~ is shorthand for ~(. obj name)~
+** ~cond~
+~(cond & body)~
+
+~cond~ saves you from having too many nested if/elses
+
+#+begin_src clojure
+(if (< x 100)
+  100
+  (if (< x 1000)
+      1000
+      (if (< x 10000)
+          10000)))
+
+;; this is equivalent
+(cond
+  (< x 100) 100
+  (< x 1000) 1000
+  (< x 10000) 10000)
+
+#+end_src
+** ~set-at~
+
+~(set-at obj index val)~
+
+Sets a value at an index within an object. This object can be an array, dynamic array, or hashmap.
+
+This expands to ~(setv (subscript array index) new-val)~
+
+The vyper equivalent looks like ~obj[index] = val~
+
+#+begin_src clojure
+(defvar arr (array :uint256 10)
+        myMap (hash-map :addr :bool))
+(set-at arr 0 100) ;; arr[0] = 100
+(set-at myMap 0x1234.... True) ;; myMap[0x1234....] = True
+#+end_src
+** ~set-in~
+
+~(set-in obj attr val)~
+
+Sets the value of an attribute of an object. This object is usually a struct.
+
+This expands to ~(setv (. obj attr) val)~
+
+#+begin_src clojure
+(defstruct Person
+  name (string 10)
+  age :uint256)
+
+(defvar p Person)
+(set-in p age 40)
+(set-in p name "Vitalik")
+#+end_src
+** ~doto~
+~(doto obj & body)~
+
+Call multiple functions on the same object. Allows for shorter code.
+
+~(doto obj (.foo 10) (.bar 100))~ expands to ~(do (.foo obj 10) (.bar obj 100))~
+
+#+begin_src clojure
+;; above example rewritten with doto
+(defstruct Person
+  name (string 10)
+  age :uint256)
+
+(doto p
+  (defvar Person)
+  (set-in age 40)
+  (set-in name "Vitalik"))
+#+end_src
