@@ -268,6 +268,13 @@ def test_auction():
 
 def test_token():
     a = boa.env.generate_address()
+    b = boa.env.generate_address()
     with boa.env.prank(a):
         t = compile("examples/ERC20.dasy", "Dasy Token", "DASY", 18, 100)
     assert t.minter() == a
+    assert t.name() == "Dasy Token"
+    assert t.symbol() == "DASY"
+    assert t.balanceOf(a) == 100 * 10 ** 18
+    with boa.env.prank(a):
+        t.transfer(b, 1 * 10 ** 18)
+    assert t.balanceOf(b) == 1 * 10 ** 18

@@ -26,6 +26,14 @@
   (setv self/minter msg/sender)
   (log (Transfer (empty address) msg/sender totalSupply)))
 
+(defn transfer [:address to :uint256 val] :bool :external
+  (doto (get-at self/balanceOf msg/sender)
+        (-= val))
+  (doto (get-at self/balanceOf to)
+        (+= val))
+  (log (Transfer msg/sender to val))
+  True)
+
 (defn transferFrom [:address from to :uint256 val] :bool :external
   (doto (get-at self/balanceOf from)
         (-= val))
