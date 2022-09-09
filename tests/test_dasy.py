@@ -277,4 +277,6 @@ def test_token():
     assert t.balanceOf(a) == 100 * 10 ** 18
     with boa.env.prank(a):
         t.transfer(b, 1 * 10 ** 18)
+        t.burn(1 * 10 ** 18)
     assert t.balanceOf(b) == 1 * 10 ** 18
+    assert t.totalSupply() == 99 * 10 ** 18

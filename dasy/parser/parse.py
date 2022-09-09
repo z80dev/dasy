@@ -21,6 +21,8 @@ MACROS = ["cond"]
 
 CONSTS = {}
 
+SRC = ""
+
 def parse_expr(expr):
 
     cmd_str = str(expr[0])
@@ -117,56 +119,89 @@ def parse_expr(expr):
         case _:
             return parse_call(expr)
 
+def add_src_map(element, ast_node):
+    if ast_node is None:
+        return None
+    if isinstance(ast_node, list):
+        for n in ast_node:
+            n.full_source_code = SRC
+            n.lineno = element.start_line
+            n.end_lineno = element.end_line
+            n.col_offset = element.start_column
+            n.end_col_offset = element.end_column
+    else:
+        ast_node.full_source_code = SRC
+        if hasattr(element, "start_line"):
+            ast_node.lineno = element.start_line
+            ast_node.end_lineno = element.end_line
+            ast_node.col_offset = element.start_column
+            ast_node.end_col_offset = element.end_column
+    return ast_node
 
 def parse_node(node):
+    ast_node = None
     match node:
         case models.Expression(node):
-            return parse_expr(node)
+            ast_node = parse_expr(node)
         case models.Integer(node):
-            return vy_nodes.Int(value=int(node), node_id=next_nodeid(), ast_type='Int')
+            ast_node = vy_nodes.Int(value=int(node), node_id=next_nodeid(), ast_type='Int')
         case models.Float(node):
             raise Exception("Floating point not supported (yet)")
             # value_node = vy_nodes.Decimal(value=Decimal(float(node)), node_id=next_nodeid(), ast_type='Decimal')
-            # return value_node
+            # ast_node = value_node
         case models.String(node):
-            return vy_nodes.Str(value=str(node), node_id=next_nodeid(), ast_type='Str')
+            ast_node = vy_nodes.Str(value=str(node), node_id=next_nodeid(), ast_type='Str')
         case models.Symbol(node) if str(node) in CONSTS.keys():
-            return parse_node(CONSTS[str(node)])
+            ast_node = parse_node(CONSTS[str(node)])
         case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
-            return parse_builtin(node)
+            ast_node = parse_builtin(node)
         case models.Symbol(node) if str(node) in NAME_CONSTS:
-            return vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), id=next_nodeid(), ast_type='NameConstant')
+            ast_node = vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), id=next_nodeid(), ast_type='NameConstant')
         case models.Symbol(node) if str(node).startswith('0x'):
-            return vy_nodes.Hex(id=next_nodeid(), ast_type='Hex', value=str(node))
+            ast_node = vy_nodes.Hex(id=next_nodeid(), ast_type='Hex', value=str(node))
         case models.Symbol(node) if "/" in str(node):
             target, attr = str(node).split('/')
             replacement_node = models.Expression((models.Symbol('.'), models.Symbol(target), models.Symbol(attr)))
-            return parse_node(replacement_node)
+            ast_node = parse_node(replacement_node)
         case models.Symbol(node) | models.Keyword(node):
             name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
-            return name_node
+            ast_node = name_node
         case models.Bytes(byt):
             bytes_node = vy_nodes.Bytes(node_id=next_nodeid(), ast_type='Byte', value=byt)
-            return bytes_node
+            ast_node = bytes_node
         case models.List(lst):
             list_node = vy_nodes.List(node_id=next_nodeid(), ast_type='List', elements=[])
             for elmt in lst:
                 node = parse_node(elmt)
                 list_node._children.add(node)
                 list_node.elements.append(node)
-            return list_node
+                node._parent = list_node
+            ast_node = list_node
         case None:
-            return None
+            ast_node = None
         case _:
             raise Exception(f"No match for node {node}")
+    return add_src_map(node, ast_node)
 
 def parse_src(src: str):
+    global SRC
+    SRC = src
     mod_node = vy_nodes.Module(body=[], name="", doc_string="", ast_type='Module', node_id=next_nodeid())
 
     vars = []
     fs = []
     for element in hy.read_many(src):
         ast = parse_node(element)
+
+        if isinstance(ast, list):
+            for v in ast:
+                v.full_source_code = src
+        elif ast is not None:
+            ast.full_source_code = src
+            ast.lineno = element.start_line
+            ast.end_lineno = element.end_line
+            ast.col_offset = element.start_column
+            ast.end_col_offset = element.end_column
 
         if isinstance(ast, vy_nodes.Module):
             mod_node = ast
@@ -202,6 +237,7 @@ def parse_src(src: str):
     for e in vars + fs:
         mod_node.add_to_body(e)
         mod_node._children.add(e)
+        e._parent = mod_node
 
 
     return mod_node
