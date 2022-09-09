@@ -1,0 +1,63 @@
+;; Open Auction
+
+(defvars
+  ;; Auction params
+  ;; beneficiary receives money from highest bidder
+  beneficiary (public :address)
+  auctionStart (public :uint256)
+  auctionEnd (public :uint256)
+
+  ;; current state of auction
+  highestBidder (public :address)
+  highestBid (public :uint256)
+
+  ;; set to true at the end, disallows any change
+  ended (public :bool)
+
+  ;; keep track of refunded bids so we can follow the entire withdraw pattern
+  pendingReturns (public (hash-map :address :uint256)))
+
+;; create a simple auction with auction_start and
+;; bidding_time seconds bidding time on behalf of
+;; the beneficiary address beneficiary
+(defn __init__ [:address beneficiary :uint256 auction_start bidding_time] :external
+  (setv self/beneficiary beneficiary)
+  ;; auction start time can be in the past, present, or future
+  (setv self/auctionStart auction_start)
+  ;; auction end time should be in the future
+  (setv self/auctionEnd (+ self/auctionStart bidding_time)))
+
+;; Bid on the auction with the value sent with the transaction
+;; the value will only be refunded if the auction is not won
+(defn bid [] [:external :payable]
+  ;; check if bidding period has started
+  (assert (>= block/timestamp self/auctionStart))
+  ;; Check if bidding period is over
+  (assert (< block/timestamp self/auctionEnd))
+  ;; Check if bid is high enough
+  (assert (> msg/value self/highestBid))
+  ;; Track the refund for the previous highest bidder
+  (+= (subscript self/pendingReturns self/highestBidder) self/highestBid)
+  ;; (setv (subscript self/pendingReturns self/highestBidder) (+ 1 (subscript self/pendingReturns self/highestBidder)))
+  ;; Track new high bid
+  (setv self/highestBidder msg/sender)
+  (setv self/highestBid msg/value))
+
+;; withdraw a previously refunded bid
+(defn withdraw [] :external
+  (defvar pending_amount :uint256 (get-at self/pendingReturns msg/sender))
+  (set-at self/pendingReturns msg/sender 0)
+  (send msg/sender pending_amount))
+
+;; end the auction and send the highest bid
+(defn endAuction [] :external
+  ;; check if auction end time has been reached)
+  (assert (>= block/timestamp self/auctionEnd))
+  ;; check if this function has already been called
+  (assert (not self/ended))
+
+  ;; effects
+  (setv self/ended True)
+
+  ;; interactions
+  (send self/beneficiary self/highestBid))
