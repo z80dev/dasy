@@ -3,7 +3,7 @@ from dasy import parser
 from vyper.ast.nodes import BinOp, Compare, UnaryOp, BoolOp
 from .utils import next_nodeid
 
-BIN_FUNCS = ['+', '-', '/', '*']
+BIN_FUNCS = ['+', '-', '/', '*', '**']
 COMP_FUNCS = ['<', '<=', '>', '>=', '==', '!=']
 UNARY_OPS = ['not']
 BOOL_OPS = ['and', 'or']

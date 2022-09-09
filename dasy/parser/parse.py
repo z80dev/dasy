@@ -97,7 +97,7 @@ def parse_expr(expr):
             return parse_definterface(expr)
         case 'defevent':
             return parse_defevent(expr)
-        case 'subscript' | 'array' | 'get-at':
+        case 'subscript' | 'array':
             return parse_subscript(expr)
         case 'log':
             return parse_log(expr)

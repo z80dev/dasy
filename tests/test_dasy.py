@@ -265,3 +265,9 @@ def test_reentrancy():
 def test_auction():
     a = boa.env.generate_address()
     c = compile("examples/simple_auction.dasy", a, 100, 10000000)
+
+def test_token():
+    a = boa.env.generate_address()
+    with boa.env.prank(a):
+        t = compile("examples/ERC20.dasy", "Dasy Token", "DASY", 18, 100)
+    assert t.minter() == a

@@ -15,3 +15,15 @@
                      (get body i)
                      `(~op ~obj ~(get body i)))
                  (get body i)))))
+(defmacro inc [target]
+  `(+= ~target 1))
+(defmacro dec [target]
+  `(-= ~target 1))
+(defmacro set-self [#* keys]
+  (lfor k keys
+        `(setv (. self ~k) ~k)))
+(defmacro get-at [obj #* keys]
+  (let [body `(subscript ~obj ~(get keys 0))]
+    (for [k (cut keys 1 None)]
+      (setv body `(subscript ~body ~k)))
+    body))
