@@ -2,6 +2,7 @@ import ast as py_ast
 
 import hy
 import vyper.ast.nodes as vy_nodes
+from vyper.compiler import phases
 from hy import models
 
 from .builtins import parse_builtin
@@ -44,6 +45,8 @@ def parse_expr(expr):
         case "defimmutable" | "defimm":
             CONSTS[str(expr[1])] = None
             return None
+        case "vyper":
+            return phases.generate_ast(str(expr[1]), 0, "").body[0]
         case "continue":
             return vy_nodes.Continue(ast_type='Continue', node_id=next_nodeid())
         case "pass":
@@ -56,6 +59,8 @@ def parse_expr(expr):
             return None
         case str(cmd) if cmd in MACROS:
             new_node = hy.macroexpand(expr)
+            if isinstance(new_node, vy_nodes.VyperNode):
+                return new_node
             return parse_node(new_node)
         case str(cmd) if cmd.startswith('.') and len(cmd) > 1:
             inner_node = models.Expression((models.Symbol('.'), expr[1], (cmd[1:])))

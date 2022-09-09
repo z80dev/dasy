@@ -60,8 +60,7 @@
 (defn _burn [:address to :uint256 val] :internal
   (assert (!= to (empty :address)))
   (-= self/totalSupply val)
-  (doto (get-at self/balanceOf to)
-        (-= val))
+  (vyper "self.balanceOf[to] -= val")
   (log (Transfer to (empty :address) val)))
 
 (defn burn [:uint256 val] :external

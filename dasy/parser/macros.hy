@@ -26,7 +26,6 @@
     (for [k (cut keys 1 None)]
       (setv body `(subscript ~body ~k)))
     body))
-
 (defmacro set-at [obj #* keys]
   (let [body `(subscript ~obj ~(get keys 0))]
     (for [k (cut keys 1 -1)]
