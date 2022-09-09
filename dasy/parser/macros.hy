@@ -7,3 +7,11 @@
 (defmacro doto [ obj #*cmds]
   (lfor c cmds
         `(~(get c 0) ~obj ~@(cut c 1 None))))
+(defmacro condp [op obj #*body]
+  `(cond
+     ~@(lfor i (range 0 (len body))
+             (if (= 0 (% i 2))
+                 (if (= :else (get body i))
+                     (get body i)
+                     `(~op ~obj ~(get body i)))
+                 (get body i)))))

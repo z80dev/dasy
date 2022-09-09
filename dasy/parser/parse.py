@@ -80,14 +80,11 @@ def parse_expr(expr):
             return parse_setv(expr)
         case '+=' | '-=' | '*=' | '/=':
             # hy won't let us define this as a macro >:(
-            op = str(expr[0])[:1]
+            op = hy.models.Symbol(str(expr[0])[:1])
             target = expr[1]
             value = expr[2]
-            if isinstance(value, hy.models.Integer):
-                value = int(value)
-            code = f"(augassign {op} {target} {value})"
-            parsed_code = hy.read(code)
-            return parse_node(parsed_code)
+            parsed_code = vy_nodes.AugAssign(node_id=next_nodeid(), ast_type='AugAssign', op=parse_node(op), target=parse_node(target), value=parse_node(value))
+            return parsed_code
         case 'augassign':
             return parse_augassign(expr)
         case 'if':
@@ -100,7 +97,7 @@ def parse_expr(expr):
             return parse_definterface(expr)
         case 'defevent':
             return parse_defevent(expr)
-        case 'subscript' | 'array' | 'get-in':
+        case 'subscript' | 'array' | 'get-at':
             return parse_subscript(expr)
         case 'log':
             return parse_log(expr)

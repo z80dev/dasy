@@ -114,7 +114,7 @@ def test_map():
       (setv self/owner msg/sender)
       (set-at self/myMap msg/sender 10))
     (defn getOwnerNum [] :uint256 :external
-     (get-in self/myMap msg/sender))
+     (get-at self/myMap msg/sender))
     """)
     assert c.myMap("0x8B4de256180CFEC54c436A470AF50F9EE2813dbB") == 0
     assert c.myMap(c.owner()) == 10
@@ -137,7 +137,7 @@ def test_reference_types():
     (defn memoryArrayVal [] '(:uint256 :uint256) :external
       (defvar arr (array :uint256 10) self/nums)
       (set-at arr 1 12)
-      '((get-in arr 0) (get-in arr 1)))
+      '((get-at arr 0) (get-at arr 1)))
     """)
     assert c.memoryArrayVal() == (0, 12)
 
@@ -195,9 +195,9 @@ def test_immutables():
 
 def test_ifelse():
     c = compile("examples/if_else.dasy")
-    assert c.ifElse(5) == 1
-    assert c.ifElse(15) == 2
-    assert c.ifElse(25) == 3
+    assert c.useCond(5) == 1
+    assert c.useCond(15) == 2
+    assert c.useCond(25) == 3
     assert c.absoluteValue(10, 5) == 5
 
 def test_for_loop():
@@ -261,3 +261,7 @@ def testInterface():
 
 def test_reentrancy():
     c = compile("examples/nonreentrant.dasy")
+
+def test_auction():
+    a = boa.env.generate_address()
+    c = compile("examples/simple_auction.dasy", a, 100, 10000000)

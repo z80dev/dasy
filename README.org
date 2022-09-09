@@ -24,7 +24,7 @@ Learn more in the [[file:docs.org][documentation]]
     (.append self/nums 11)))
 
 (defn getOwnerNum [] :uint256 :external
-  (get-in self/myMap self/owner))
+  (get-at self/myMap self/owner))
 #+end_src
 
 via [[https://github.com/z80dev/titanoboa][this fork of titanoboa]]

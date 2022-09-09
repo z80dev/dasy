@@ -7,7 +7,7 @@ from dasy.parser.core import process_body
 from .utils import next_nodeid
 
 def parse_if(expr):
-    if expr[1] == models.Symbol('True'):
+    if expr[1] == models.Keyword('else'):
         if expr[3] == models.Symbol('None'):
             return parser.parse_node(expr[2])
     body_nodes = [parser.parse_node(expr[2])]
@@ -28,7 +28,8 @@ def parse_return(return_tree):
     return Return(value=parser.parse_node(return_tree[1]), ast_type='Return', node_id=next_nodeid())
 
 def parse_assert(assert_tree):
-    return Assert(ast_type='Assert', node_id=next_nodeid(), test=parser.parse_node(assert_tree[1]), msg=parser.parse_node(assert_tree[2]))
+    msg = parser.parse_node(assert_tree[2]) if len(assert_tree) > 2 else None
+    return Assert(ast_type='Assert', node_id=next_nodeid(), test=parser.parse_node(assert_tree[1]), msg=msg)
 
 def parse_raise(raise_tree):
     return Raise(ast_type='Raise', node_id=next_nodeid(), exc=parser.parse_node(raise_tree[1]))
