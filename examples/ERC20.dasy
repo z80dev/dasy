@@ -45,7 +45,7 @@
   True)
 
 (defn approve [:address spender :uint256 val] :bool :external
-  (setv (subscript (subscript self/allowance msg/sender) spender) val)
+  (set-at self/allowance msg/sender spender val)
   (log (Approval msg/sender spender val))
   True)
 
