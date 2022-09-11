@@ -52,23 +52,6 @@ def parse_call(expr, wrap_expr=False):
                 return expr_node
             return call_node
 
-def parse_for(expr):
-    # (for [x xs] (.append self/nums x))
-    # (for [target iter] *body)
-    target, iter_ = expr[1]
-    target_node = dasy.parser.parse_node(target)
-    iter_node = dasy.parser.parse_node(iter_)
-    body_nodes = [dasy.parser.parse_node(b) for b in expr[2:]]
-    body = process_body(body_nodes)
-    for_node = vy_nodes.For(ast_type='For', node_id=next_nodeid(), body=body, iter=iter_node, target=target_node)
-    for_node._children.add(target_node)
-    for_node._children.add(iter_node)
-    iter_node._parent = for_node
-    for n in body:
-        for_node._children.add(n)
-        n._parent = for_node
-    return for_node
-
 
 def parse_tuple(tuple_tree):
     match tuple_tree:
@@ -106,7 +89,7 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
         results.append(arg_node)
     return results
 
-def process_body(body):
+def process_body(body, parent=None):
     # flatten list if necessary
     # wrap raw Call in Expr if needed
     new_body = []
@@ -130,6 +113,10 @@ def process_body(body):
             new_body.append(expr_node)
         else:
             new_body.append(f)
+    if parent is not None:
+        for e in new_body:
+            parent._children.add(e)
+            e._parent = parent
     return new_body
 
 

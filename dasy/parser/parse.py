@@ -1,5 +1,7 @@
 import ast as py_ast
 
+from . import nodes
+
 import hy
 import vyper.ast.nodes as vy_nodes
 from vyper.compiler import phases
@@ -7,10 +9,9 @@ from hy import models
 
 from .builtins import parse_builtin
 from .core import (parse_annassign, parse_attribute, parse_call, parse_contract, parse_defevent, parse_definterface,
-                   parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_for, parse_subscript, parse_tuple, parse_variabledecl)
+                   parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_subscript, parse_tuple, parse_variabledecl)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
-from .stmt import parse_assert, parse_augassign, parse_log, parse_raise, parse_setv, parse_if, parse_return
 from .utils import next_node_id_maker, next_nodeid
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
@@ -36,6 +37,11 @@ def parse_expr(expr):
     if cmd_str in BOOL_OPS:
         return parse_boolop(expr)
 
+    node_fn = f"parse_{cmd_str}"
+
+    if hasattr(nodes, node_fn):
+        return getattr(nodes, node_fn)(expr)
+
     match cmd_str:
         case "defcontract":
             return parse_contract(expr)
@@ -49,12 +55,6 @@ def parse_expr(expr):
             return None
         case "vyper":
             return phases.generate_ast(str(expr[1]), 0, "").body[0]
-        case "continue":
-            return vy_nodes.Continue(ast_type='Continue', node_id=next_nodeid())
-        case "pass":
-            return vy_nodes.Pass(ast_type='Pass', node_id=next_nodeid())
-        case "break":
-            return vy_nodes.Break(ast_type='Break', node_id=next_nodeid())
         case "defmacro":
             hy.eval(expr)
             MACROS.append(str(expr[1]))
@@ -73,8 +73,6 @@ def parse_expr(expr):
             return fn_node
         case 'return':
             return parse_return(expr)
-        case 'assert':
-            return parse_assert(expr)
         case 'quote' | 'tuple':
             return parse_tuple(expr)
         case 'raise':
@@ -94,8 +92,6 @@ def parse_expr(expr):
             return parsed_code
         case 'augassign':
             return parse_augassign(expr)
-        case 'if':
-            return parse_if(expr)
         case 'defvars':
             return parse_defvars(expr)
         case 'defstruct':
@@ -156,7 +152,7 @@ def parse_node(node):
         case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
             ast_node = parse_builtin(node)
         case models.Symbol(node) if str(node) in NAME_CONSTS:
-            ast_node = vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), id=next_nodeid(), ast_type='NameConstant')
+            ast_node = vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), node_id=next_nodeid(), ast_type='NameConstant')
         case models.Symbol(node) if str(node).startswith('0x'):
             ast_node = vy_nodes.Hex(id=next_nodeid(), ast_type='Hex', value=str(node))
         case models.Symbol(node) if "/" in str(node):

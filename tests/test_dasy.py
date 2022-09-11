@@ -1,5 +1,4 @@
 import dasy
-import hy
 from boa.contract import VyperContract
 import boa
 import pytest
