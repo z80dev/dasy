@@ -20,7 +20,7 @@ from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .utils import next_node_id_maker, next_nodeid
 
-BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
+BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS + ["in", "notin"]
 
 NAME_CONSTS = ["True", "False"]
 
@@ -42,6 +42,10 @@ def parse_expr(expr):
         return parse_unary(expr)
     if cmd_str in BOOL_OPS:
         return parse_boolop(expr)
+
+    if cmd_str in nodes.handlers.keys():
+        print(f"using {cmd_str} handler")
+        return nodes.handlers[cmd_str](expr)
 
     node_fn = f"parse_{cmd_str}"
 
@@ -96,15 +100,12 @@ def parse_expr(expr):
         case 'defn':
             fn_node = parse_defn(expr)
             return fn_node
-        case 'return':
-            return parse_return(expr)
         case 'quote' | 'tuple':
             return parse_tuple(expr)
-        case 'raise':
-            return parse_raise(expr)
         case '.':
             return parse_attribute(expr)
         case 'setv':
+            # TODO: This doesn't get hit
             if str(expr[1]) in CONSTS.keys():
                 CONSTS[str(expr[1])] = expr[2]
             return parse_setv(expr)
@@ -115,8 +116,6 @@ def parse_expr(expr):
             value = expr[2]
             parsed_code = vy_nodes.AugAssign(node_id=next_nodeid(), ast_type='AugAssign', op=parse_node(op), target=parse_node(target), value=parse_node(value))
             return parsed_code
-        case 'augassign':
-            return parse_augassign(expr)
         case 'defvars':
             return parse_defvars(expr)
         case 'defstruct':
@@ -127,12 +126,8 @@ def parse_expr(expr):
             return parse_defevent(expr)
         case 'subscript' | 'array':
             return parse_subscript(expr)
-        case 'log':
-            return parse_log(expr)
         case 'for':
             return parse_for(expr)
-        case 'annassign' | 'defvar':
-            return parse_annassign(expr)
         case 'variabledecl':
             return parse_variabledecl(expr)
         case 'do':

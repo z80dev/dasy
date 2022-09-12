@@ -279,3 +279,12 @@ def test_token():
         t.burn(1 * 10 ** 18)
     assert t.balanceOf(b) == 1 * 10 ** 18
     assert t.totalSupply() == 99 * 10 ** 18
+
+def test_in():
+    c = compile_src("""
+    (defn foo [] :bool :external
+      (return (in 3 [1 2 3])))
+    (defn bar [] :bool :external
+      (return (notin 3 [1 2 3])))""")
+    assert c.foo()
+    assert not c.bar()
