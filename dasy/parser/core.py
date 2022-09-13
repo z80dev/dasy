@@ -7,6 +7,12 @@ from hy import models
 
 from .utils import has_return, next_nodeid, pairwise
 
+def parse_augop(expr):
+    op = models.Symbol(str(expr[0])[:1])
+    target = expr[1]
+    value = expr[2]
+    parsed_code = vy_nodes.AugAssign(node_id=next_nodeid(), ast_type='AugAssign', op=dasy.parser.parse_node(op), target=dasy.parser.parse_node(target), value=dasy.parser.parse_node(value))
+    return parsed_code
 
 def parse_attribute(expr):
     match expr[1:]:
@@ -279,7 +285,7 @@ def parse_annassign(expr) -> vy_nodes.AnnAssign:
 def parse_structbody(expr):
     return [create_annassign_node(var, typ) for var, typ in pairwise(expr[2:])]
 
-def parse_contract(expr):
+def parse_defcontract(expr):
     mod_node = vy_nodes.Module(body=[], name=str(expr[1]), doc_string="", ast_type='Module', node_id=next_nodeid())
     expr_body = []
     match expr[1:]:

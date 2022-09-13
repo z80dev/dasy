@@ -20,11 +20,6 @@ def get_node(node_class, *args, **kwargs):
     set_parent_children(new_node, args_dict.values())
     return new_node
 
-for node_type in [Break, Pass, Continue, Log, Raise, Return, AugAssign, Assert, Index]:
-    k = node_type.__name__.lower()
-    print(f"{node_type} {k}")
-    handlers[k] = lambda expr, node_type=node_type: get_node(node_type, *[parser.parse_node(arg) for arg in expr[1:]])
-
 def set_parent_children(parent, children):
     for n in children:
         if n is not None:
@@ -33,6 +28,10 @@ def set_parent_children(parent, children):
             else:
                 parent._children.add(n)
                 n._parent = parent
+
+for node_type in [Break, Pass, Continue, Log, Raise, Return, AugAssign, Assert, Index]:
+    k = node_type.__name__.lower()
+    handlers[k] = lambda expr, node_type=node_type: get_node(node_type, *[parser.parse_node(arg) for arg in expr[1:]])
 
 def parse_for(expr):
     # (for [x xs] (.append self/nums x))
@@ -61,15 +60,9 @@ def parse_if(expr):
     set_parent_children(if_node, body + else_ + [test])
     return if_node
 
-def parse_setv(expr):
+def parse_assign(expr):
     # needs some slight massaging due to the way targets/target is treated
     # the Assign class has a target slot, but it uses the first value in the
     # targets arg to fill it instead of using the target kwarg
     args = [parser.parse_node(arg) for arg in expr[1:]]
     return get_node(vy_nodes.Assign, *args, targets=[args[0]])
-
-def parse_assign(expr):
-    return parse_setv(expr)
-
-def parse_defvar(expr):
-    return parse_annassign(expr)

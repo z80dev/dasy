@@ -14,11 +14,12 @@ from vyper.codegen.ir_node import IRnode
 from vyper.builtin_functions import STMT_DISPATCH_TABLE, BuiltinFunction
 
 from .builtins import parse_builtin
-from .core import (parse_annassign, parse_attribute, parse_call, parse_contract, parse_defevent, parse_definterface,
+from .core import (parse_annassign, parse_attribute, parse_augop, parse_call, parse_defcontract, parse_defevent, parse_definterface,
                    parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_subscript, parse_tuple, parse_variabledecl)
 from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
                   parse_boolop, parse_comparison, parse_unary)
 from .utils import next_node_id_maker, next_nodeid
+from dasy.parser import core
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS + ["in", "notin"]
 
@@ -28,11 +29,19 @@ MACROS = ["cond"]
 
 CONSTS = {}
 
+ALIASES= {
+    '.': 'attribute',
+    'quote': 'tuple',
+    'array': 'subscript',
+    'defvar': 'annassign',
+    'setv': 'assign'
+}
+
 SRC = ""
 
 def parse_expr(expr):
 
-    cmd_str = str(expr[0])
+    cmd_str = ALIASES.get(str(expr[0]), str(expr[0]))
 
     if cmd_str in BIN_FUNCS:
         return parse_binop(expr)
@@ -44,7 +53,6 @@ def parse_expr(expr):
         return parse_boolop(expr)
 
     if cmd_str in nodes.handlers.keys():
-        print(f"using {cmd_str} handler")
         return nodes.handlers[cmd_str](expr)
 
     node_fn = f"parse_{cmd_str}"
@@ -52,11 +60,21 @@ def parse_expr(expr):
     if hasattr(nodes, node_fn):
         return getattr(nodes, node_fn)(expr)
 
+    if hasattr(core, node_fn):
+        return getattr(core, node_fn)(expr)
+
+    if cmd_str in MACROS:
+        new_node = hy.macroexpand(expr)
+        if isinstance(new_node, vy_nodes.VyperNode):
+            return new_node
+        return parse_node(new_node)
+
+    if cmd_str.startswith('.') and len(cmd_str) > 1:
+        inner_node = models.Expression((models.Symbol('.'), expr[1], (cmd_str[1:])))
+        outer_node = models.Expression((inner_node, *expr[2:]))
+        return parse_node(outer_node)
+
     match cmd_str:
-        case "defcontract":
-            return parse_contract(expr)
-        case "defevent":
-            return parse_defevent(expr)
         case "defconst":
             CONSTS[str(expr[1])] = expr[2]
             return None
@@ -88,48 +106,8 @@ def parse_expr(expr):
             hy.eval(expr)
             MACROS.append(str(expr[1]))
             return None
-        case str(cmd) if cmd in MACROS:
-            new_node = hy.macroexpand(expr)
-            if isinstance(new_node, vy_nodes.VyperNode):
-                return new_node
-            return parse_node(new_node)
-        case str(cmd) if cmd.startswith('.') and len(cmd) > 1:
-            inner_node = models.Expression((models.Symbol('.'), expr[1], (cmd[1:])))
-            outer_node = models.Expression((inner_node, *expr[2:]))
-            return parse_node(outer_node)
-        case 'defn':
-            fn_node = parse_defn(expr)
-            return fn_node
-        case 'quote' | 'tuple':
-            return parse_tuple(expr)
-        case '.':
-            return parse_attribute(expr)
-        case 'setv':
-            # TODO: This doesn't get hit
-            if str(expr[1]) in CONSTS.keys():
-                CONSTS[str(expr[1])] = expr[2]
-            return parse_setv(expr)
         case '+=' | '-=' | '*=' | '/=':
-            # hy won't let us define this as a macro >:(
-            op = hy.models.Symbol(str(expr[0])[:1])
-            target = expr[1]
-            value = expr[2]
-            parsed_code = vy_nodes.AugAssign(node_id=next_nodeid(), ast_type='AugAssign', op=parse_node(op), target=parse_node(target), value=parse_node(value))
-            return parsed_code
-        case 'defvars':
-            return parse_defvars(expr)
-        case 'defstruct':
-            return parse_defstruct(expr)
-        case 'definterface':
-            return parse_definterface(expr)
-        case 'defevent':
-            return parse_defevent(expr)
-        case 'subscript' | 'array':
-            return parse_subscript(expr)
-        case 'for':
-            return parse_for(expr)
-        case 'variabledecl':
-            return parse_variabledecl(expr)
+            return parse_augop(expr)
         case 'do':
             return parse_do_body(expr)
         case _:
@@ -207,6 +185,7 @@ def parse_src(src: str):
     vars = []
     fs = []
     for element in hy.read_many(src):
+        # parse each top-level form
         ast = parse_node(element)
 
         if isinstance(ast, list):
