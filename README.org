@@ -61,27 +61,26 @@ macros are written in Hy, a pythonic lisp. They allow us to transform our code a
 
 A basic example is =doto=
 #+begin_src lisp
-;;raw dasy
-(do
-  (.append self/nums 10)
-  (.append self/nums 11)
-  (.append self/nums 12)
-  (.append self/nums 13)
-  (.append self/nums 14))
+(defn useIf [:uint256 x] :uint256 :external
+  (if (<= x 10)
+      (return 1)
+      (if (<= x 20)
+          (return 2)
+          (return 3))))
 
-;; macro definition
-(defmacro doto [ obj #*cmds]
-  `(do
-     ~@(lfor c cmds
-             `(~(get c 0) ~obj ~(get c 1)))))
+;; cond macro helps prevent deeply nested ifs
+(defn useCond [:uint256 x] :uint256 :external
+  (cond
+    (<= x 10) (return 1)
+    (<= x 20) (return 2)
+    :else     (return 3)))
 
-;; using macro
-(doto self/nums
-  (.append 10)
-  (.append 11)
-  (.append 12)
-  (.append 13)
-  (.append 14))
+;; condp saves you from repeating the same operation
+(defn useCondp [:uint256 x] :uint256 :external
+  (condp <= x
+    10 (return 1)
+    20 (return 2)
+    :else (return 3)))
 #+end_src
 
 After defining the =doto= macro, we are able to write shorter, simpler code which is easier to check for correctness.
