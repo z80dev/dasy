@@ -1,5 +1,4 @@
 import ast as py_ast
-import os
 from dasy.parser import macros
 
 from dasy.parser.macros import handle_macro, is_macro
@@ -214,12 +213,3 @@ def parse_src(src: str):
 
 
     return mod_node
-
-def install_builtin_macros():
-    macro_file = os.path.join(os.path.dirname(__file__), 'macros.hy')
-    with open(macro_file, encoding="utf-8") as f:
-        code = f.read()
-        for expr in hy.read_many(code):
-            parse_node(expr)
-
-install_builtin_macros()
