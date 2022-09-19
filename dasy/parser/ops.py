@@ -8,6 +8,20 @@ COMP_FUNCS = ['<', '<=', '>', '>=', '==', '!=', 'in', 'notin']
 UNARY_OPS = ['not']
 BOOL_OPS = ['and', 'or']
 
+def is_op(cmd_str):
+    return cmd_str in BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
+
+def parse_op(expr, alias=None):
+    cmd_str = alias or str(expr[0])
+    if cmd_str in BIN_FUNCS:
+        return parse_binop(expr)
+    if cmd_str in COMP_FUNCS:
+        return parse_comparison(expr)
+    if cmd_str in UNARY_OPS:
+        return parse_unary(expr)
+    if cmd_str in BOOL_OPS:
+        return parse_boolop(expr)
+
 def chain_comps(expr):
     new_node = models.Expression()
     new_expr = [models.Symbol("and")]

@@ -1,5 +1,8 @@
 import ast as py_ast
 import os
+from dasy.parser import macros
+
+from dasy.parser.macros import handle_macro, is_macro
 
 from . import nodes
 
@@ -16,16 +19,14 @@ from vyper.builtin_functions import STMT_DISPATCH_TABLE, BuiltinFunction
 from .builtins import parse_builtin
 from .core import (parse_annassign, parse_attribute, parse_augop, parse_call, parse_defcontract, parse_defevent, parse_definterface,
                    parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_subscript, parse_tuple, parse_variabledecl)
-from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, parse_binop,
-                  parse_boolop, parse_comparison, parse_unary)
-from .utils import next_node_id_maker, next_nodeid
+from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, is_op, parse_binop,
+                  parse_boolop, parse_comparison, parse_op, parse_unary)
+from .utils import next_node_id_maker, next_nodeid, add_src_map
 from dasy.parser import core
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS + ["in", "notin"]
 
 NAME_CONSTS = ["True", "False"]
-
-MACROS = ["cond"]
 
 CONSTS = {}
 
@@ -43,33 +44,22 @@ def parse_expr(expr):
 
     cmd_str = ALIASES.get(str(expr[0]), str(expr[0]))
 
-    if cmd_str in BIN_FUNCS:
-        return parse_binop(expr)
-    if cmd_str in COMP_FUNCS:
-        return parse_comparison(expr)
-    if cmd_str in UNARY_OPS:
-        return parse_unary(expr)
-    if cmd_str in BOOL_OPS:
-        return parse_boolop(expr)
+    if is_op(cmd_str):
+        return parse_op(expr, cmd_str)
 
     if cmd_str in nodes.handlers.keys():
         return nodes.handlers[cmd_str](expr)
 
     node_fn = f"parse_{cmd_str}"
 
-    if hasattr(nodes, node_fn):
-        return getattr(nodes, node_fn)(expr)
+    for ns in [nodes, core, macros]:
+        if hasattr(ns, node_fn):
+            return getattr(ns, node_fn)(expr)
 
-    if hasattr(core, node_fn):
-        return getattr(core, node_fn)(expr)
+    if is_macro(cmd_str):
+        return handle_macro(expr)
 
-    if cmd_str in MACROS:
-        new_node = hy.macroexpand(expr)
-        if isinstance(new_node, vy_nodes.VyperNode):
-            return new_node
-        return parse_node(new_node)
-
-    if cmd_str.startswith('.') and len(cmd_str) > 1:
+    if cmd_str.startswith('.'):
         inner_node = models.Expression((models.Symbol('.'), expr[1], (cmd_str[1:])))
         outer_node = models.Expression((inner_node, *expr[2:]))
         return parse_node(outer_node)
@@ -112,25 +102,6 @@ def parse_expr(expr):
             return parse_do_body(expr)
         case _:
             return parse_call(expr)
-
-def add_src_map(element, ast_node):
-    if ast_node is None:
-        return None
-    if isinstance(ast_node, list):
-        for n in ast_node:
-            n.full_source_code = SRC
-            n.lineno = element.start_line
-            n.end_lineno = element.end_line
-            n.col_offset = element.start_column
-            n.end_col_offset = element.end_column
-    else:
-        ast_node.full_source_code = SRC
-        if hasattr(element, "start_line"):
-            ast_node.lineno = element.start_line
-            ast_node.end_lineno = element.end_line
-            ast_node.col_offset = element.start_column
-            ast_node.end_col_offset = element.end_column
-    return ast_node
 
 def parse_node(node):
     ast_node = None
@@ -175,7 +146,7 @@ def parse_node(node):
             ast_node = None
         case _:
             raise Exception(f"No match for node {node}")
-    return add_src_map(node, ast_node)
+    return add_src_map(SRC, node, ast_node)
 
 def parse_src(src: str):
     global SRC
@@ -198,36 +169,43 @@ def parse_src(src: str):
             ast.col_offset = element.start_column
             ast.end_col_offset = element.end_column
 
-        if isinstance(ast, vy_nodes.Module):
-            mod_node = ast
-        elif isinstance(ast, vy_nodes.VariableDecl):
-            vars.append(ast)
-        elif isinstance(ast, vy_nodes.StructDef) or isinstance(ast, vy_nodes.EventDef) or isinstance(ast, vy_nodes.InterfaceDef):
-            vars.append(ast)
-        elif isinstance(ast, vy_nodes.FunctionDef):
-            fs.append(ast)
-        elif isinstance(ast, list):
-            for v in ast:
-                vars.append(v)
-        elif isinstance(ast, vy_nodes.AnnAssign):
-            # top-level AnnAssign nodes should be replaced with a VariableDecl
-            is_public = False
-            is_immutable = False
-            is_constant = False
-            if isinstance(ast.annotation, vy_nodes.Call):
-                is_public = ast.annotation.func == "public"
-                is_immutable = ast.annotation.func == "immutable"
-                is_constant = ast.annotation.func == "constant"
-            new_node = vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=ast.target, annotation=ast.annotation, value=ast.value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
-            for child in ast.get_children():
-                new_node._children.add(child)
-                child._parent = new_node
-            vars.append(new_node)
-        elif ast is None:
-            # macro declarations return None
-            pass
-        else:
-            raise Exception(f"Unrecognized top-level form {element} {ast}")
+        match ast:
+            case vy_nodes.Module:
+                mod_node = ast
+                continue
+            case vy_nodes.VariableDecl() |  vy_nodes.StructDef() | vy_nodes.EventDef() | vy_nodes.InterfaceDef():
+                vars.append(ast)
+                continue
+            case vy_nodes.FunctionDef():
+                fs.append(ast)
+                continue
+            case list():
+                for v in ast:
+                    vars.append(v)
+                continue
+            case vy_nodes.AnnAssign():
+                # top-level AnnAssign nodes should be replaced with a VariableDecl
+                is_public = False
+                is_immutable = False
+                is_constant = False
+                if isinstance(ast.annotation, vy_nodes.Call):
+                    match ast.annotation.func:
+                        case "public":
+                            is_public = True
+                        case "immutable":
+                            is_immutable = True
+                        case "constant":
+                            is_constant = True
+                new_node = vy_nodes.VariableDecl(ast_type='VariableDecl', node_id=next_nodeid(), target=ast.target, annotation=ast.annotation, value=ast.value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+                for child in ast.get_children():
+                    new_node._children.add(child)
+                    child._parent = new_node
+                vars.append(new_node)
+                continue
+            case None:
+                continue
+            case _:
+                raise Exception(f"Unrecognized top-level form {element} {ast}")
 
     for e in vars + fs:
         mod_node.add_to_body(e)
