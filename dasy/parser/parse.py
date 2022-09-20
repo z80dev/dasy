@@ -149,17 +149,13 @@ def parse_src(src: str):
         match ast:
             case vy_nodes.Module:
                 mod_node = ast
-                continue
             case vy_nodes.VariableDecl() |  vy_nodes.StructDef() | vy_nodes.EventDef() | vy_nodes.InterfaceDef():
                 vars.append(ast)
-                continue
             case vy_nodes.FunctionDef():
                 fs.append(ast)
-                continue
             case list():
                 for v in ast:
                     vars.append(v)
-                continue
             case vy_nodes.AnnAssign():
                 # top-level AnnAssign nodes should be replaced with a VariableDecl
                 is_public = False
@@ -178,9 +174,8 @@ def parse_src(src: str):
                     new_node._children.add(child)
                     child._parent = new_node
                 vars.append(new_node)
-                continue
             case None:
-                continue
+                pass
             case _:
                 raise Exception(f"Unrecognized top-level form {element} {ast}")
 
