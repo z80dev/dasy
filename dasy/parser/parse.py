@@ -75,6 +75,8 @@ def parse_expr(expr):
 
 def parse_node(node):
     ast_node = None
+
+    # dispatch on type of parsed model
     match node:
         case models.Expression(node):
             ast_node = parse_expr(node)
@@ -86,19 +88,24 @@ def parse_node(node):
             # ast_node = value_node
         case models.String(node):
             ast_node = vy_nodes.Str(value=str(node), node_id=next_nodeid(), ast_type='Str')
-        case models.Symbol(node) if str(node) in CONSTS.keys():
-            ast_node = parse_node(CONSTS[str(node)])
-        case models.Symbol(node) if str(node) in BUILTIN_FUNCS:
-            ast_node = parse_builtin(node)
-        case models.Symbol(node) if str(node) in NAME_CONSTS:
-            ast_node = vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), node_id=next_nodeid(), ast_type='NameConstant')
-        case models.Symbol(node) if str(node).startswith('0x'):
-            ast_node = vy_nodes.Hex(id=next_nodeid(), ast_type='Hex', value=str(node))
-        case models.Symbol(node) if "/" in str(node):
-            target, attr = str(node).split('/')
-            replacement_node = models.Expression((models.Symbol('.'), models.Symbol(target), models.Symbol(attr)))
-            ast_node = parse_node(replacement_node)
-        case models.Symbol(node) | models.Keyword(node):
+        case models.Symbol(node):
+            str_node = str(node)
+            if str_node in CONSTS:
+                ast_node = parse_node(CONSTS[str(node)])
+            elif str_node in BUILTIN_FUNCS:
+                ast_node = parse_builtin(node)
+            elif str_node in NAME_CONSTS:
+                ast_node = vy_nodes.NameConstant(value=py_ast.literal_eval(str(node)), node_id=next_nodeid(), ast_type='NameConstant')
+            elif str_node.startswith('0x'):
+                ast_node = vy_nodes.Hex(id=next_nodeid(), ast_type='Hex', value=str_node)
+            elif "/" in str_node:
+                target, attr = str(node).split('/')
+                replacement_node = models.Expression((models.Symbol('.'), models.Symbol(target), models.Symbol(attr)))
+                ast_node = parse_node(replacement_node)
+            else:
+                name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
+                ast_node = name_node
+        case models.Keyword(node):
             name_node = vy_nodes.Name(id=str(node), node_id=next_nodeid(), ast_type='Name')
             ast_node = name_node
         case models.Bytes(byt):
