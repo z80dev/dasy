@@ -349,7 +349,7 @@ def parse_definterface(expr):
 def parse_defevent(expr):
     return vy_nodes.EventDef(ast_type='EventDef', node_id=next_nodeid(), name=str(expr[1]), body=parse_structbody(expr))
 
-def parse_do_body(expr):
+def parse_do(expr):
     calls = [dasy.parse.parse_node(x) for x in expr[1:]]
     exprs = []
     for call_node in calls:

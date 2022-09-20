@@ -1,4 +1,5 @@
 import ast as py_ast
+from dasy.builtin.functions import parse_venom
 from dasy.parser import macros
 
 from dasy.parser.macros import handle_macro, is_macro
@@ -10,18 +11,15 @@ import vyper.ast.nodes as vy_nodes
 from vyper.compiler import phases
 from hy import models
 
-# for handling venom
-from vyper.ir.s_expressions import parse_s_exp
-from vyper.codegen.ir_node import IRnode
-from vyper.builtin_functions import STMT_DISPATCH_TABLE, BuiltinFunction
-
 from .builtins import parse_builtin
-from .core import (parse_annassign, parse_attribute, parse_augop, parse_call, parse_defcontract, parse_defevent, parse_definterface,
-                   parse_defvars, parse_do_body, parse_defn, parse_defstruct, parse_subscript, parse_tuple, parse_variabledecl)
-from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, is_op, parse_binop,
-                  parse_boolop, parse_comparison, parse_op, parse_unary)
-from .utils import next_node_id_maker, next_nodeid, add_src_map
+from .core import (parse_augop, parse_call,
+                   parse_do)
+from .ops import (BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, is_op,
+                  parse_op)
+from .utils import next_nodeid, add_src_map
 from dasy.parser import core
+
+from dasy.builtin import functions
 
 BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS + ["in", "notin"]
 
@@ -46,12 +44,12 @@ def parse_expr(expr):
     if is_op(cmd_str):
         return parse_op(expr, cmd_str)
 
-    if cmd_str in nodes.handlers.keys():
+    if cmd_str in nodes.handlers:
         return nodes.handlers[cmd_str](expr)
 
     node_fn = f"parse_{cmd_str}"
 
-    for ns in [nodes, core, macros]:
+    for ns in [nodes, core, macros, functions]:
         if hasattr(ns, node_fn):
             return getattr(ns, node_fn)(expr)
 
@@ -70,35 +68,8 @@ def parse_expr(expr):
         case "defimmutable" | "defimm":
             CONSTS[str(expr[1])] = None
             return None
-        case "vyper":
-            return phases.generate_ast(str(expr[1]), 0, "").body[0]
-        case "venom":
-            s_expr = str(expr[1])
-            ir = IRnode.from_list((parse_s_exp(expr[1]))[0])
-            # generate some vyper code to patch in.
-            IDENTIFIER = f"__DASY_VENOM_BUILTIN_{next_nodeid()}__"
-            insert_code = f"{IDENTIFIER}()"
-
-            # dynamically generate a class on the fly
-            class generated_builtin(BuiltinFunction):
-                _id = IDENTIFIER
-                _inputs = ()
-                _return_type = None
-                def build_IR(self, expr, context):
-                    return ir
-
-            STMT_DISPATCH_TABLE[IDENTIFIER] = generated_builtin()
-
-            return phases.generate_ast(insert_code, 0, "").body[0]
-
-        case "defmacro":
-            hy.eval(expr)
-            MACROS.append(str(expr[1]))
-            return None
         case '+=' | '-=' | '*=' | '/=':
             return parse_augop(expr)
-        case 'do':
-            return parse_do_body(expr)
         case _:
             return parse_call(expr)
 
