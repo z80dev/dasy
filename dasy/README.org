@@ -1,0 +1,5 @@
+#+title: Dasy Compiler
+* Compilation Flow
+The compilation process kicks off by obtaining a string of source code. Once this is done, the source code string should be passed to [[file:compiler.py::def compile(src: str) -> CompilerData:][compiler.compile()]]
+
+Code is parsed into a Vyper AST, which is then used to create a CompilerData object. This object contains deployment and runtime bytecode, ABI, and other metadata.

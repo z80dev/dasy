@@ -1,3 +1,6 @@
 /dasy/__pycache__/
 *.pyc
 /dist/
+*DS_STORE*
+.hypothesis
+poetry.lock
