@@ -1,10 +1,12 @@
 from hy import models
 
+
 def counter_gen():
     _counter = 0
     while True:
         yield _counter
         _counter += 1
+
 
 def next_node_id_maker():
     counter = counter_gen()
@@ -14,10 +16,12 @@ def next_node_id_maker():
 
     return next_num
 
+
 def pairwise(iterable):
     "s -> (s0, s1), (s2, s3), (s4, s5), ..."
     a = iter(iterable)
     return zip(a, a)
+
 
 def has_return(tree):
     match tree:
@@ -33,6 +37,7 @@ def has_return(tree):
 
 
 next_nodeid = next_node_id_maker()
+
 
 def add_src_map(src_code, element, ast_node):
     if ast_node is None:

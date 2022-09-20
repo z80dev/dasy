@@ -3,7 +3,8 @@ from dasy import parser
 from .utils import next_nodeid
 import vyper.ast.nodes as vy_nodes
 
-COMP_FUNCS = ['<', '<=', '>', '>=', '==', '!=']
+COMP_FUNCS = ["<", "<=", ">", ">=", "==", "!="]
+
 
 def chain_comps(expr):
     new_node = models.Expression()
@@ -15,9 +16,17 @@ def chain_comps(expr):
 
 
 def parse_comparison(comp_tree):
-    if len(comp_tree[1:]) > 2: # comparing more than 2 things; chain comps for (< 2 3 4 )
+    if (
+        len(comp_tree[1:]) > 2
+    ):  # comparing more than 2 things; chain comps for (< 2 3 4 )
         return parser.parse_node(chain_comps(comp_tree))
     left = parser.parse_node(comp_tree[1])
     right = parser.parse_node(comp_tree[2])
     op = parser.parse_node(comp_tree[0])
-    return vy_nodes.Compare(left=left, ops=[op], comparators=[right], node_id=next_nodeid(), ast_type='Compare')
+    return vy_nodes.Compare(
+        left=left,
+        ops=[op],
+        comparators=[right],
+        node_id=next_nodeid(),
+        ast_type="Compare",
+    )

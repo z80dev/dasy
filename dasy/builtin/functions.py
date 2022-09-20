@@ -17,12 +17,14 @@ def parse_venom(expr):
         _id = IDENTIFIER
         _inputs = ()
         _return_type = None
+
         def build_IR(self, expr, context):
             return ir
 
     STMT_DISPATCH_TABLE[IDENTIFIER] = generated_builtin()
 
     return phases.generate_ast(insert_code, 0, "").body[0]
+
 
 def parse_vyper(expr):
     return phases.generate_ast(str(expr[1]), 0, "").body[0]

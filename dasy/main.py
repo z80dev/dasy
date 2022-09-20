@@ -2,16 +2,17 @@ from dasy import compiler
 import argparse
 import sys
 
+
 def main():
     parser = argparse.ArgumentParser(prog="dasy")
-    parser.add_argument('filename', type=str, nargs='?', default="")
+    parser.add_argument("filename", type=str, nargs="?", default="")
 
     src = ""
 
     args = parser.parse_args()
 
     if args.filename != "":
-        with open(args.filename, 'r') as f:
+        with open(args.filename, "r") as f:
             src = f.read()
     else:
         for line in sys.stdin:

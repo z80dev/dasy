@@ -1,0 +1,2 @@
+(defn absoluteValue [] :external
+   (venom "(seq (mstore (add 32 31) 5945936342127) (mstore 0 20) (return 0 0))"))
