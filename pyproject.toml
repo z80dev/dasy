@@ -6,7 +6,7 @@ authors = ["z80 <z80@ophy.xyz>"]
 
 [tool.poetry.dependencies]
 python = ">=3.10, <3.11"
-vyper = "^0.3.6"
+vyper = {path = "../vyper"}
 argparse = "^1.4.0"
 dasy-hy = "0.24.1"
 titanoboa = "^0.1.5"

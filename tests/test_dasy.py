@@ -5,7 +5,7 @@ import pytest
 
 
 def compile_src(src: str, *args) -> VyperContract:
-    return VyperContract(dasy.compile(src), *args)
+    return VyperContract(dasy.compile(src, include_abi=False), *args)
 
 
 def compile(filename: str, *args) -> VyperContract:
@@ -349,6 +349,6 @@ def test_in():
 
 
 def test_venom():
-    pass
-    # c = compile("examples/venom.dasy")
+    # pass
+    c = compile("examples/venom.dasy")
     # assert c.absoluteValue()
