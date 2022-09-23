@@ -3,9 +3,9 @@ from boa.contract import VyperContract
 import boa
 import pytest
 
-
 def compile_src(src: str, *args) -> VyperContract:
-    return VyperContract(dasy.compile(src, include_abi=False), *args)
+    ast = dasy.compile(src, include_abi=True)
+    return VyperContract(ast, *args)
 
 
 def compile(filename: str, *args) -> VyperContract:
@@ -13,6 +13,10 @@ def compile(filename: str, *args) -> VyperContract:
         src = f.read()
         return compile_src(src, *args)
 
+def test_venom():
+    # pass
+    c = compile("examples/venom.dasy")
+    # assert c.absoluteValue()
 
 def test_binops():
     src = """
@@ -325,7 +329,7 @@ def test_token():
     b = boa.env.generate_address()
     with boa.env.prank(a):
         t = compile("examples/ERC20.dasy", "Dasy Token", "DASY", 18, 100)
-    assert t.minter() == a
+    assert t.minter() == a.lower()
     assert t.name() == "Dasy Token"
     assert t.symbol() == "DASY"
     assert t.balanceOf(a) == 100 * 10**18
@@ -346,9 +350,3 @@ def test_in():
     )
     assert c.foo()
     assert not c.bar()
-
-
-def test_venom():
-    # pass
-    c = compile("examples/venom.dasy")
-    # assert c.absoluteValue()
