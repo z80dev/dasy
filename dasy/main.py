@@ -1,4 +1,5 @@
 from dasy import compiler
+from vyper.compiler import OUTPUT_FORMATS
 import argparse
 import sys
 
@@ -6,35 +7,30 @@ format_help = """Format to print, one or more of:
 bytecode (default) - Deployable bytecode
 bytecode_runtime   - Bytecode at runtime
 abi                - ABI in JSON format
-layout             - Storage layout of a Dasy contract
+abi_python         - ABI in python format
+source_map         - Vyper source map
+method_identifiers - Dictionary of method signature to method identifier
+userdoc            - Natspec user documentation
+devdoc             - Natspec developer documentation
+combined_json      - All of the above format options combined as single JSON output
+layout             - Storage layout of a Vyper contract
 ast                - AST in JSON format
 interface          - Vyper interface of a contract
 external_interface - External interface of a contract, used for outside contract calls
 opcodes            - List of opcodes as a string
 opcodes_runtime    - List of runtime opcodes as a string
 ir                 - Intermediate representation in list format
+ir_json            - Intermediate representation in JSON format
+hex-ir             - Output IR and assembly constants in hex instead of decimal
+no-optimize        - Do not optimize (don't use this for production code)
 """
 
-
-OUTPUT_HANDLERS = {
-    "bytecode": lambda data: print("0x" + data.bytecode.hex()),
-    "runtime_bytecode": lambda data: print(data.runtime_bytecode),
-    "abi": lambda data: print(data.abi),
-    "interface": lambda data: print(data.interface),
-    "ir": lambda data: print(data.ir),
-    "runtime_ir": lambda data: print(data.runtime_ir),
-    "asm": lambda data: print(data.asm),
-    "opcodes": lambda data: print(data.opcodes),
-    "runtime_opcodes": lambda data: print(data.runtime_opcodes),
-    "external_interface": lambda data: print(data.external_interface),
-    "layout": lambda data: print(data.layout)
-}
-
 def main():
-    parser = argparse.ArgumentParser(prog="dasy",
-                                        description="Lispy Smart Contract Language for the EVM",
-    formatter_class=argparse.RawTextHelpFormatter,
- )
+    parser = argparse.ArgumentParser(
+        prog="dasy",
+        description="Lispy Smart Contract Language for the EVM",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument("filename", type=str, nargs="?", default="")
     parser.add_argument("-f", help=format_help, default="bytecode", dest="format")
 
@@ -49,11 +45,16 @@ def main():
         for line in sys.stdin:
             src += line
 
-    data = compiler.compile(src, name=args.filename.split('.')[0])
-    if args.format in OUTPUT_HANDLERS:
-        OUTPUT_HANDLERS[args.format](data)
+    data = compiler.compile(src, name=args.filename.split(".")[0])
+
+    translate_map = {"abi_python": "abi", "json": "abi", "ast": "ast_dict", "ir_json": "ir_dict"}
+    output_format = translate_map.get(args.format, args.format)
+    if output_format in OUTPUT_FORMATS:
+        print(OUTPUT_FORMATS[output_format](data))
     else:
-        raise Exception(f"Unrecognized Output Format {args.format}. Must be one of {OUTPUT_HANDLERS.keys()}")
+        raise Exception(
+            f"Unrecognized Output Format {args.format}. Must be one of {OUTPUT_HANDLERS.keys()}"
+        )
 
 
 if __name__ == "__main__":

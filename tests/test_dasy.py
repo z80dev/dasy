@@ -3,6 +3,7 @@ from boa.contract import VyperContract
 import boa
 import pytest
 
+
 def compile_src(src: str, *args) -> VyperContract:
     ast = dasy.compile(src, include_abi=True)
     return VyperContract(ast, *args)
@@ -13,10 +14,12 @@ def compile(filename: str, *args) -> VyperContract:
         src = f.read()
         return compile_src(src, *args)
 
+
 def test_venom():
     # pass
     c = compile("examples/venom.dasy")
     # assert c.absoluteValue()
+
 
 def test_binops():
     src = """

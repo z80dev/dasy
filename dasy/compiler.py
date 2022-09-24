@@ -1,9 +1,19 @@
 from vyper.compiler.phases import CompilerData as VyperCompilerData
-from vyper.compiler.output import build_abi_output, build_asm_output, build_bytecode_runtime_output, build_external_interface_output, build_interface_output, build_ir_output, build_ir_runtime_output, build_layout_output, build_opcodes_output
+from vyper.compiler.output import (
+    build_abi_output,
+    build_asm_output,
+    build_bytecode_runtime_output,
+    build_external_interface_output,
+    build_interface_output,
+    build_ir_output,
+    build_ir_runtime_output,
+    build_layout_output,
+    build_opcodes_output,
+)
 from dasy.parser import parse_src
 
-class CompilerData(VyperCompilerData):
 
+class CompilerData(VyperCompilerData):
     def __init__(self, *args, **kwargs):
         VyperCompilerData.__init__(self, *args, **kwargs)
 
@@ -60,7 +70,6 @@ class CompilerData(VyperCompilerData):
         return build_layout_output(self)
 
 
-
 def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
     ast = parse_src(src)
     data = CompilerData(
@@ -76,6 +85,7 @@ def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
 def compile(src: str, name="DasyContract", include_abi=True) -> CompilerData:
     data = generate_compiler_data(src, name)
     return data
+
 
 def generate_abi(src: str) -> list:
     return compile(src).abi
