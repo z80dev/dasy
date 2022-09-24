@@ -61,11 +61,11 @@ class CompilerData(VyperCompilerData):
 
 
 
-def generate_compiler_data(src: str) -> CompilerData:
+def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
     ast = parse_src(src)
     data = CompilerData(
         "",
-        ast.name,
+        ast.name or name,
         None,
         source_id=0,
     )
@@ -73,8 +73,8 @@ def generate_compiler_data(src: str) -> CompilerData:
     return data
 
 
-def compile(src: str, include_abi=True) -> CompilerData:
-    data = generate_compiler_data(src)
+def compile(src: str, name="DasyContract", include_abi=True) -> CompilerData:
+    data = generate_compiler_data(src, name)
     return data
 
 def generate_abi(src: str) -> list:

@@ -49,7 +49,7 @@ def main():
         for line in sys.stdin:
             src += line
 
-    data = compiler.compile(src)
+    data = compiler.compile(src, name=args.filename.split('.')[0])
     if args.format in OUTPUT_HANDLERS:
         OUTPUT_HANDLERS[args.format](data)
     else:
