@@ -2,7 +2,7 @@ import hy
 import os
 from .parse import parse_src, parse_node
 from .utils import next_node_id_maker
-from . import utils
+from . import utils, output
 from pathlib import Path
 
 

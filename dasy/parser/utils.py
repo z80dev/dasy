@@ -57,3 +57,6 @@ def add_src_map(src_code, element, ast_node):
             ast_node.col_offset = element.start_column
             ast_node.end_col_offset = element.end_column
     return ast_node
+
+def filename_to_contract_name(fname: str) -> str:
+    return "".join([x.capitalize() for x in fname.split("/")[-1].split(".")[0].split("_")])

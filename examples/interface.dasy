@@ -1,8 +1,4 @@
-(definterface TestInterface
-  (defn owner [] :address :view)
-  (defn setOwner [:address owner] :nonpayable)
-  (defn sendEth [] :payable)
-  (defn setOwnerAndSendEth [:address owner] :payable))
+(interface! "examples/test_interface.vy")
 
 (defvar test (public TestInterface))
 

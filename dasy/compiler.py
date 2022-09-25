@@ -1,4 +1,6 @@
+from vyper.compiler import compile_code
 from vyper.compiler.phases import CompilerData as VyperCompilerData
+from pathlib import Path
 from vyper.compiler.output import (
     build_abi_output,
     build_asm_output,
@@ -11,6 +13,7 @@ from vyper.compiler.output import (
     build_opcodes_output,
 )
 from dasy.parser import parse_src
+from dasy.parser.utils import filename_to_contract_name
 
 
 class CompilerData(VyperCompilerData):
@@ -85,6 +88,16 @@ def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
 def compile(src: str, name="DasyContract", include_abi=True) -> CompilerData:
     data = generate_compiler_data(src, name)
     return data
+
+def compile_file(filepath: str) -> CompilerData:
+    path = Path(filepath)
+    name = path.stem
+    # name = ''.join(x.capitalize() for x in name.split('_'))
+    with path.open() as f:
+        src = f.read()
+        if filepath.endswith('.vy'):
+            return CompilerData(src, contract_name=filename_to_contract_name(filepath))
+        return compile(src, name=name)
 
 
 def generate_abi(src: str) -> list:

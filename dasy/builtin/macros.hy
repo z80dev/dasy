@@ -31,3 +31,11 @@
     (for [k (cut keys 1 -1)]
       (setv body `(subscript ~body ~k)))
     `(setv ~body ~(get keys -1))))
+
+(defmacro interface! [filename]
+  (import dasy)
+  (import os)
+  (let [path (+ (.getcwd os) "/" filename)
+        data (.compile-file dasy path)
+        interface-str (.generate-external-interface-output dasy data)]
+    (.read dasy interface-str)))

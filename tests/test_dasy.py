@@ -1,3 +1,4 @@
+import os
 import dasy
 from boa.contract import VyperContract
 import boa
@@ -16,8 +17,8 @@ def compile(filename: str, *args) -> VyperContract:
 
 
 def test_venom():
-    # pass
-    c = compile("examples/venom.dasy")
+    pass
+    # c = compile("examples/venom.dasy")
     # assert c.absoluteValue()
 
 
