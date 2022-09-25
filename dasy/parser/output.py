@@ -14,7 +14,7 @@ def convert_type(vyper_type: str) -> str:
             return f"(array {base.lower()} {size})"
     return f":{vyper_type}"
 
-def generate_external_interface_output(compiler_data: CompilerData) -> str:
+def get_external_interface(compiler_data: CompilerData) -> str:
     interface = compiler_data.vyper_module_folded._metadata["type"]
     stem = Path(compiler_data.contract_name).stem
     # capitalize words separated by '_'

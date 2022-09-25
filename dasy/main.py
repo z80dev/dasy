@@ -4,7 +4,7 @@ from vyper import compiler as vyper_compiler
 import argparse
 import sys
 
-from dasy.parser.output import generate_external_interface_output
+from dasy.parser.output import get_external_interface
 
 format_help = """Format to print, one or more of:
 bytecode (default) - Deployable bytecode
@@ -31,7 +31,7 @@ no-optimize        - Do not optimize (don't use this for production code)
 OUTPUT_FORMATS = VYPER_OUTPUT_FORMATS.copy()
 
 OUTPUT_FORMATS["vyper_interface"] = OUTPUT_FORMATS["external_interface"]
-OUTPUT_FORMATS["external_interface"] = generate_external_interface_output
+OUTPUT_FORMATS["external_interface"] = get_external_interface
 
 def main():
     parser = argparse.ArgumentParser(

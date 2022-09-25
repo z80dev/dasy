@@ -37,5 +37,5 @@
   (import os)
   (let [path (+ (.getcwd os) "/" filename)
         data (.compile-file dasy path)
-        interface-str (.generate-external-interface-output dasy data)]
+        interface-str (.get-external-interface dasy data)]
     (.read dasy interface-str)))
