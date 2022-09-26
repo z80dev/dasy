@@ -291,7 +291,7 @@ def parse_defn(fn_tree):
             expr_node._children.add(n)
             n._parent = expr_node
             fn_node._children.add(expr_node)
-            expr_node.parent = fn_node
+            expr_node._parent = fn_node
         else:
             fn_node._children.add(n)
             n._parent = fn_node

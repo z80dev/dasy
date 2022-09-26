@@ -28,3 +28,7 @@ def parse_venom(expr):
 
 def parse_vyper(expr):
     return phases.generate_ast(str(expr[1]), 0, "").body[0]
+
+def parse_splice(expr):
+    from dasy import parse_node
+    return [parse_node(n) for n in expr[1:]]

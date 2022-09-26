@@ -64,6 +64,12 @@ def test_hello_world():
     c.setGreet("yo yo")
     assert c.greet() == "yo yo"
 
+def test_include():
+    c = compile("examples/mutable_hello.dasy")
+    assert c.greet() == "Hello World"
+    c.setGreeting("yo yo")
+    assert c.greet() == "yo yo"
+
 
 def test_call_internal():
     c = compile_src(

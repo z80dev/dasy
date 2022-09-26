@@ -32,6 +32,35 @@ ALIASES = {
 
 SRC = ""
 
+def convert_annassign(ast):
+    # top-level AnnAssign nodes should be replaced with a VariableDecl
+    is_public = False
+    is_immutable = False
+    is_constant = False
+    if isinstance(ast.annotation, vy_nodes.Call):
+        match ast.annotation.func:
+            case "public":
+                is_public = True
+            case "immutable":
+                is_immutable = True
+            case "constant":
+                is_constant = True
+    new_node = vy_nodes.VariableDecl(
+        ast_type="VariableDecl",
+        node_id=next_nodeid(),
+        target=ast.target,
+        annotation=ast.annotation,
+        value=ast.value,
+        is_constant=is_constant,
+        is_public=is_public,
+        is_immutable=is_immutable,
+    )
+    for child in ast.get_children():
+        new_node._children.add(child)
+        child._parent = new_node
+    return new_node
+
+
 
 def parse_expr(expr):
 
@@ -174,34 +203,13 @@ def parse_src(src: str):
             case vy_nodes.FunctionDef():
                 fs.append(ast)
             case list():
-                for v in ast:
-                    vars.append(v)
+                for var in ast:
+                    var_node = var
+                    if isinstance(var, vy_nodes.AnnAssign):
+                        var_node = convert_annassign(var)
+                    vars.append(var_node)
             case vy_nodes.AnnAssign():
-                # top-level AnnAssign nodes should be replaced with a VariableDecl
-                is_public = False
-                is_immutable = False
-                is_constant = False
-                if isinstance(ast.annotation, vy_nodes.Call):
-                    match ast.annotation.func:
-                        case "public":
-                            is_public = True
-                        case "immutable":
-                            is_immutable = True
-                        case "constant":
-                            is_constant = True
-                new_node = vy_nodes.VariableDecl(
-                    ast_type="VariableDecl",
-                    node_id=next_nodeid(),
-                    target=ast.target,
-                    annotation=ast.annotation,
-                    value=ast.value,
-                    is_constant=is_constant,
-                    is_public=is_public,
-                    is_immutable=is_immutable,
-                )
-                for child in ast.get_children():
-                    new_node._children.add(child)
-                    child._parent = new_node
+                new_node = convert_annassign(ast)
                 vars.append(new_node)
             case None:
                 pass

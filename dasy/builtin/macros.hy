@@ -39,3 +39,14 @@
         data (.compile-file dasy path)
         interface-str (.get-external-interface dasy data)]
     (.read dasy interface-str)))
+
+(defmacro include! [filename]
+  (import dasy os)
+  (let [path (+ (.getcwd os) "/" filename)
+        stream (open path)
+        forms []]
+    (while True
+      (try
+        (.append forms (.read dasy stream))
+        (except [EOFError] (break))))
+    `(splice ~@forms)))

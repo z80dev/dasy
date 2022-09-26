@@ -49,7 +49,10 @@ def main():
     if args.filename != "":
         with open(args.filename, "r") as f:
             src = f.read()
-            data = compiler.compile(src, name=args.filename.split(".")[0])
+            if args.filename.endswith('.vy'):
+                data = compiler.CompilerData(src, contract_name=args.filename.split('/')[-1].split('.')[0])
+            else:
+                data = compiler.compile(src, name=args.filename.split(".")[0])
     else:
         for line in sys.stdin:
             src += line
