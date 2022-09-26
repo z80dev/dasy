@@ -1,4 +1,5 @@
 # for handling venom
+from vyper.ast import Call, Expr
 from vyper.ir.s_expressions import parse_s_exp
 from vyper.codegen.ir_node import IRnode
 from vyper.builtin_functions import STMT_DISPATCH_TABLE, BuiltinFunction
@@ -29,6 +30,22 @@ def parse_venom(expr):
 def parse_vyper(expr):
     return phases.generate_ast(str(expr[1]), 0, "").body[0]
 
+def wrap_calls(nodes):
+    new_nodes = []
+    for call_node in nodes:
+        if isinstance(call_node, Call):
+            expr_node = Expr(
+                ast_type="Expr", node_id=next_nodeid(), value=call_node
+            )
+            expr_node._children.add(call_node)
+            call_node._parent = expr_node
+            new_nodes.append(expr_node)
+        else:
+            new_nodes.append(call_node)
+    return new_nodes
+
+
 def parse_splice(expr):
     from dasy import parse_node
-    return [parse_node(n) for n in expr[1:]]
+    return_val = wrap_calls([parse_node(n) for n in expr[1:]])
+    return return_val

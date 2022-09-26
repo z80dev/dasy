@@ -53,16 +53,8 @@ def test_defvars():
 
 
 def test_hello_world():
-    c = compile_src(
-        """
-    (defvars greet (public (string 100)))
-    (defn __init__ [] :external (setv self/greet "Hello World"))
-    (defn setGreet [(string 100) x] :external (setv self/greet x))
-    """
-    )
+    c = compile("examples/hello_world.dasy")
     assert c.greet() == "Hello World"
-    c.setGreet("yo yo")
-    assert c.greet() == "yo yo"
 
 def test_include():
     c = compile("examples/mutable_hello.dasy")

@@ -4,8 +4,8 @@
 (defmacro string [length] `(subscript String ~length))
 (defmacro bytes [length] `(subscript Bytes ~length))
 (defmacro doto [ obj #*cmds]
-  (lfor c cmds
-        `(~(get c 0) ~obj ~@(cut c 1 None))))
+  `(splice ~@(lfor c cmds
+         `(~(get c 0) ~obj ~@(cut c 1 None)))))
 (defmacro condp [op obj #*body]
   `(cond
      ~@(lfor i (range 0 (len body))
