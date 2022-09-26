@@ -1,0 +1,4 @@
+(include! "examples/hello_world.dasy")
+
+(defn setGreeting [(string 100) newGreeting] :external
+  (setv self/greet newGreeting))
