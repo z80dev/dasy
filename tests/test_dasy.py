@@ -143,9 +143,9 @@ def test_map():
             owner (public :address))
     (defn __init__ [] :external
       (setv self/owner msg/sender)
-      (set-at self/myMap msg/sender 10))
+      (set-at! self/myMap [msg/sender] 10))
     (defn getOwnerNum [] :uint256 :external
-     (get-at self/myMap msg/sender))
+     (get-at! self/myMap [msg/sender]))
     """
     )
     assert c.myMap("0x8B4de256180CFEC54c436A470AF50F9EE2813dbB") == 0
