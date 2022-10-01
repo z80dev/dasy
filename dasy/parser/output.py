@@ -3,23 +3,27 @@ from pathlib import Path
 from vyper.compiler import CompilerData
 from vyper.semantics.types.function import FunctionVisibility
 
+
 def convert_type(vyper_type: str) -> str:
     vyper_type = str(vyper_type)
     if "[" in vyper_type:
-        base = re.search(r'[A-Za-z]+', vyper_type).group()
-        size = re.search(r'\d+', vyper_type).group()
+        base = re.search(r"[A-Za-z]+", vyper_type).group()
+        size = re.search(r"\d+", vyper_type).group()
         if base in ["String", "Bytes"]:
             return f"({base.lower()} {size})"
         else:
             return f"(array {base.lower()} {size})"
     return f":{vyper_type}"
 
+
 def get_external_interface(compiler_data: CompilerData) -> str:
     interface = compiler_data.vyper_module_folded._metadata["type"]
     stem = Path(compiler_data.contract_name).stem
     # capitalize words separated by '_'
     # ex: test_interface.vy -> TestInterface
-    contract_name = "".join([x.capitalize() for x in stem.split("_")]) if "_" in stem else str(stem)
+    contract_name = (
+        "".join([x.capitalize() for x in stem.split("_")]) if "_" in stem else str(stem)
+    )
 
     out = ";; External Interface\n"
     funcs = []
@@ -33,7 +37,7 @@ def get_external_interface(compiler_data: CompilerData) -> str:
                 args += convert_type(typ) + " "
                 cur_type = str(typ)
             args += f"{name} "
-        args = "[" + args[:-1] + "]" # remove trailing space
+        args = "[" + args[:-1] + "]"  # remove trailing space
         return_type = ""
         if func.return_type is not None:
             return_type = convert_type(func.return_type)

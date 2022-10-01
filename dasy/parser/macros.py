@@ -7,6 +7,7 @@ MACROS = ["cond"]
 def is_macro(cmd_str):
     return cmd_str in MACROS
 
+
 def macroexpand(code_str):
     return hy.macroexpand(hy.read(code_str))
 

@@ -32,6 +32,7 @@ ALIASES = {
 
 SRC = ""
 
+
 def convert_annassign(ast):
     # top-level AnnAssign nodes should be replaced with a VariableDecl
     is_public = False
@@ -59,7 +60,6 @@ def convert_annassign(ast):
         new_node._children.add(child)
         child._parent = new_node
     return new_node
-
 
 
 def parse_expr(expr):

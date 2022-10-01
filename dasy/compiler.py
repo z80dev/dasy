@@ -89,13 +89,14 @@ def compile(src: str, name="DasyContract", include_abi=True) -> CompilerData:
     data = generate_compiler_data(src, name)
     return data
 
+
 def compile_file(filepath: str) -> CompilerData:
     path = Path(filepath)
     name = path.stem
     # name = ''.join(x.capitalize() for x in name.split('_'))
     with path.open() as f:
         src = f.read()
-        if filepath.endswith('.vy'):
+        if filepath.endswith(".vy"):
             return CompilerData(src, contract_name=filename_to_contract_name(filepath))
         return compile(src, name=name)
 

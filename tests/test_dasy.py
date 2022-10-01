@@ -56,6 +56,7 @@ def test_hello_world():
     c = compile("examples/hello_world.dasy")
     assert c.greet() == "Hello World"
 
+
 def test_include():
     c = compile("examples/mutable_hello.dasy")
     assert c.greet() == "Hello World"
