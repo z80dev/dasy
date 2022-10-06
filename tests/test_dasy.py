@@ -342,6 +342,9 @@ def test_token():
     assert t.balanceOf(b) == 1 * 10**18
     assert t.totalSupply() == 99 * 10**18
 
+def test_enums():
+    c = compile("examples/enum.dasy")
+    assert c.getPrice() == 10
 
 def test_in():
     c = compile_src(
