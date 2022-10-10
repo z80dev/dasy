@@ -346,6 +346,7 @@ def test_token():
 def test_enums():
     c = compile("examples/enum.dasy")
     assert c.getPrice() == 10
+    assert c.getPriceUsingCondp() == 10
 
 
 def test_in():
