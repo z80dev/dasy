@@ -1,4 +1,3 @@
-import os
 import dasy
 from boa.contract import VyperContract
 import boa
@@ -55,6 +54,7 @@ def test_defvars():
 def test_hello_world():
     c = compile("examples/hello_world.dasy")
     assert c.greet() == "Hello World"
+
 
 def test_include():
     c = compile("examples/mutable_hello.dasy")
@@ -143,9 +143,9 @@ def test_map():
             owner (public :address))
     (defn __init__ [] :external
       (setv self/owner msg/sender)
-      (set-at self/myMap msg/sender 10))
+      (set-at! self/myMap [msg/sender] 10))
     (defn getOwnerNum [] :uint256 :external
-     (get-at self/myMap msg/sender))
+     (get-at! self/myMap [msg/sender]))
     """
     )
     assert c.myMap("0x8B4de256180CFEC54c436A470AF50F9EE2813dbB") == 0
@@ -340,6 +340,12 @@ def test_token():
         t.burn(1 * 10**18)
     assert t.balanceOf(b) == 1 * 10**18
     assert t.totalSupply() == 99 * 10**18
+
+
+def test_enums():
+    c = compile("examples/enum.dasy")
+    assert c.getPrice() == 10
+    assert c.getPriceUsingCondp() == 10
 
 
 def test_in():

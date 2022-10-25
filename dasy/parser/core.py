@@ -513,6 +513,28 @@ def parse_defevent(expr):
     )
 
 
+def parse_enumbody(expr):
+    return [
+        vy_nodes.Expr(
+            ast_type="Expr", node_id=next_nodeid(), value=dasy.parse.parse_node(x)
+        )
+        for x in expr[2:]
+    ]
+
+
+def parse_defenum(expr):
+    enum_node = vy_nodes.EnumDef(
+        ast_type="EnumDef",
+        node_id=next_nodeid(),
+        name=str(expr[1]),
+        body=parse_enumbody(expr),
+    )
+    for node in enum_node.body:
+        node._parent = enum_node
+        enum_node._children.add(node)
+    return enum_node
+
+
 def parse_do(expr):
     calls = [dasy.parse.parse_node(x) for x in expr[1:]]
     exprs = []

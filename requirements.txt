@@ -1,0 +1,6 @@
+vyper
+titanoboa==0.1.5
+dasy-hy
+hyrule
+black
+pytest

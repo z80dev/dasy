@@ -33,6 +33,7 @@ OUTPUT_FORMATS = VYPER_OUTPUT_FORMATS.copy()
 OUTPUT_FORMATS["vyper_interface"] = OUTPUT_FORMATS["external_interface"]
 OUTPUT_FORMATS["external_interface"] = get_external_interface
 
+
 def main():
     parser = argparse.ArgumentParser(
         prog="dasy",
@@ -49,8 +50,10 @@ def main():
     if args.filename != "":
         with open(args.filename, "r") as f:
             src = f.read()
-            if args.filename.endswith('.vy'):
-                data = compiler.CompilerData(src, contract_name=args.filename.split('/')[-1].split('.')[0])
+            if args.filename.endswith(".vy"):
+                data = compiler.CompilerData(
+                    src, contract_name=args.filename.split("/")[-1].split(".")[0]
+                )
             else:
                 data = compiler.compile(src, name=args.filename.split(".")[0])
     else:
@@ -58,7 +61,13 @@ def main():
             src += line
         data = compiler.compile(src, name="StdIn")
 
-    translate_map = {"abi_python": "abi", "json": "abi", "ast": "ast_dict", "ir_json": "ir_dict", "interface": "external_interface"}
+    translate_map = {
+        "abi_python": "abi",
+        "json": "abi",
+        "ast": "ast_dict",
+        "ir_json": "ir_dict",
+        "interface": "external_interface",
+    }
     output_format = translate_map.get(args.format, args.format)
     if output_format in OUTPUT_FORMATS:
         print(OUTPUT_FORMATS[output_format](data))

@@ -1,0 +1,22 @@
+(defenum Roles
+    ADMIN
+    USER)
+
+(defvar roles (public (hash-map :address Roles)))
+
+(defn __init__ [] :external
+  (set-at self/roles msg/sender Roles/ADMIN))
+
+(defn getPrice [] :uint256 [:external :view]
+      (if (== (get-at self/roles msg/sender) Roles/ADMIN)
+          (return 10)
+          (if (== (get-at self/roles msg/sender) Roles/USER)
+              (return 20)
+              (return 30))))
+
+(defn getPriceUsingCondp [] :uint256 [:external :view]
+      (defvar role Roles (get-at self/roles msg/sender))
+      (condp == role
+             Roles/ADMIN (return 10)
+             Roles/USER (return 20)
+             :else (return 30)))

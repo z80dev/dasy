@@ -27,39 +27,27 @@ Learn more in the [[file:docs.org][documentation]]
   (get-at self/myMap self/owner))
 #+end_src
 
-via [[https://github.com/z80dev/titanoboa][this fork of titanoboa]]
-#+begin_src python
-import boa
-
-c = boa.load("hello_world.dasy")
-print(c.addUints(10, 20)) # outputs 30
-print(c.subUints(100, 20)) # outputs 80
-c.setBase(10)
-print(c.addToBase(10)) # outputs 20
-#+end_src
-
-Command line compilation
-#+begin_src shell
-> dasy hello_world.dasy
-0x61004f61000f60003961004f6000f36003361161000c57610037565b60003560e01c3461003d5763c29855788118610035576004361861003d57600860405260206040f35b505b60006000fd5b600080fda165767970657283000306000b
-#+end_src
 * Installation
-For use as a library
+** For use as a library
 #+begin_src bash
 pip install git+https://github.com/dasylang/dasy.git
 #+end_src
-
-For use as an executable via =pipx=
+** For use as an executable via =pipx=
 #+begin_src bash
 pipx install git+https://github.com/dasylang/dasy.git
 #+end_src
+** [[https://github.com/dasylang/ape-dasy][Ape Plugin]]
+#+begin_src bash
+pip install ape-dasy
+#+end_src
+** [[https://github.com/dasylang/foundry-dasy][Foundry plugin]]
 * Motivation
 ** Macros
-There's a lot of opportunities for macros in smart contracts. They could also be used as a proof of concept for features before implementing them at a lower level in the compiler.
+There are a lot of opportunities for macros in smart contracts. They can also be used to prototype features before implementing them at a lower level in the vyper compiler.
 
 macros are written in Hy, a pythonic lisp. They allow us to transform our code at compile time, allowing the developer to tailor the language itself to their needs.
 
-A basic example is =doto=
+=cond= and =condp= are examples of useful macros that help make your code shorter, yet easier to understand.
 #+begin_src lisp
 (defn useIf [:uint256 x] :uint256 :external
   (if (<= x 10)
@@ -82,7 +70,5 @@ A basic example is =doto=
     20 (return 2)
     :else (return 3)))
 #+end_src
-
-After defining the =doto= macro, we are able to write shorter, simpler code which is easier to check for correctness.
 
 ** For fun

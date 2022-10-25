@@ -8,6 +8,10 @@ def is_macro(cmd_str):
     return cmd_str in MACROS
 
 
+def macroexpand(code_str):
+    return hy.macroexpand(hy.read(code_str))
+
+
 def handle_macro(expr):
     new_node = hy.macroexpand(expr)
     return dasy.parser.parse_node(new_node)

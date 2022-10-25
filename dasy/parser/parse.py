@@ -32,6 +32,7 @@ ALIASES = {
 
 SRC = ""
 
+
 def convert_annassign(ast):
     # top-level AnnAssign nodes should be replaced with a VariableDecl
     is_public = False
@@ -59,7 +60,6 @@ def convert_annassign(ast):
         new_node._children.add(child)
         child._parent = new_node
     return new_node
-
 
 
 def parse_expr(expr):
@@ -198,7 +198,7 @@ def parse_src(src: str):
         match ast:
             case vy_nodes.Module:
                 mod_node = ast
-            case vy_nodes.VariableDecl() | vy_nodes.StructDef() | vy_nodes.EventDef() | vy_nodes.InterfaceDef():
+            case vy_nodes.VariableDecl() | vy_nodes.StructDef() | vy_nodes.EventDef() | vy_nodes.InterfaceDef() | vy_nodes.EnumDef():
                 vars.append(ast)
             case vy_nodes.FunctionDef():
                 fs.append(ast)
