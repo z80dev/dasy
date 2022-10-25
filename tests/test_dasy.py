@@ -1,4 +1,3 @@
-import os
 import dasy
 from boa.contract import VyperContract
 import boa
