@@ -36,11 +36,11 @@ pip install git+https://github.com/dasylang/dasy.git
 #+begin_src bash
 pipx install git+https://github.com/dasylang/dasy.git
 #+end_src
-** [[github:dasylang/ape-dasy][Ape plugin]]
+** [[https:github.com/dasylang/ape-dasy][Ape Plugin]]
 #+begin_src bash
 pip install ape-dasy
 #+end_src
-** [[github:dasylang/foundry-dasy][Foundry plugin]]
+** [[https:github.com/dasylang/foundry-dasy][Foundry plugin]]
 * Motivation
 ** Macros
 There are a lot of opportunities for macros in smart contracts. They can also be used to prototype features before implementing them at a lower level in the vyper compiler.
