@@ -2,7 +2,7 @@
 from vyper.ast import Call, Expr
 from vyper.ir.s_expressions import parse_s_exp
 from vyper.codegen.ir_node import IRnode
-from vyper.builtin_functions import STMT_DISPATCH_TABLE, BuiltinFunction
+from vyper.builtins.functions import STMT_DISPATCH_TABLE, BuiltinFunction
 from dasy.parser.utils import next_nodeid
 from vyper.compiler import phases
 

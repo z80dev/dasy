@@ -1,5 +1,5 @@
 import dasy
-from boa.contract import VyperContract
+from boa.vyper.contract import VyperContract
 import boa
 import pytest
 
@@ -256,20 +256,19 @@ def test_for_loop():
 
 def testError():
     c = compile("examples/error.dasy")
-    with pytest.raises(boa.contract.BoaError):
+    with boa.reverts():
         # TODO: implement checking error msg
         c.testAssert(0)
     c.testAssert(10)
-    with pytest.raises(boa.contract.BoaError):
+    with boa.reverts():
         c.testRaise(0)
     c.testRaise(10)
-    with pytest.raises(boa.contract.BoaError):
+    with boa.reverts():
         c.testErrorBubblesUp(0)
     c.testErrorBubblesUp(10)
-    with pytest.raises(boa.contract.BoaError):
+    with boa.reverts():
         c.setOwner("0x0000000000000000000000000000000000000000")
     c.setOwner("0xab5801a7d398351b8be11c439e05c5b3259aec9b")
-    # with pytest.raises(boa.contract.BoaError):
     with boa.reverts():
         c.setOwner("0xab5801a7d398351b8be11c439e05c5b3259aec9b")
 
@@ -314,7 +313,8 @@ def testInterface():
     addr2 = boa.env.generate_address()
     assert b.owner() == c.getOwner()
     c.setOwner(addr1)
-    assert b.owner() == addr1
+    # convert addr1 to 0x formatted hex string
+    assert b.owner() == '0x' + addr1.hex()
 
 
 def test_reentrancy():
@@ -331,7 +331,7 @@ def test_token():
     b = boa.env.generate_address()
     with boa.env.prank(a):
         t = compile("examples/ERC20.dasy", "Dasy Token", "DASY", 18, 100)
-    assert t.minter() == a.lower()
+    assert t.minter() == a
     assert t.name() == "Dasy Token"
     assert t.symbol() == "DASY"
     assert t.balanceOf(a) == 100 * 10**18
