@@ -1,44 +1,26 @@
-
 import dasy
 import vyper.ast.nodes as vy_nodes
-from vyper.ast.utils import dict_to_ast
+from .builtins import build_node
 from hy import models
 
 from .utils import has_return, next_nodeid, pairwise
 
 
 def parse_attribute(expr):
-    match expr[1:]:
-        case [obj, attr]:
-            value_node = dasy.parser.parse_node(obj)
-            # attr_node = vy_nodes.Attribute(ast_type='Attribute', node_id=next_nodeid(), attr=str(attr), value=value_node)
-            attr_node = dict_to_ast(
-                {
-                    "ast_type": "Attribute",
-                    "attr": str(attr),
-                    "value": value_node,
-                    "node_id": next_nodeid(),
-                }
-            )
-            attr_node._children.add(value_node)
-            value_node._parent = attr_node
-            return attr_node
+    """Parses an attribute and builds a node."""
+    if len(expr) < 2:
+        raise ValueError("Expression too short to parse attribute.")
+    _, obj, attr = expr
+    attr_node = build_node(vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node(obj))
+    return attr_node
 
 
 def parse_tuple(tuple_tree):
     match tuple_tree:
         case models.Symbol(q), elements if str(q) == "quote":
-            elts = [dasy.parser.parse_node(e) for e in elements]
-            tuple_node = vy_nodes.Tuple(
-                elements=elts, node_id=next_nodeid(), ast_type="Tuple"
-            )
-            return tuple_node
+            return build_node(vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements])
         case models.Symbol(q), *elements if str(q) == "tuple":
-            elts = [dasy.parser.parse_node(e) for e in elements]
-            tuple_node = vy_nodes.Tuple(
-                elements=elts, node_id=next_nodeid(), ast_type="Tuple"
-            )
-            return tuple_node
+            return build_node(vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements])
         case _:
             raise Exception(
                 "Invalid tuple declaration; requires quoted list or tuple-fn ex: '(2 3 4)/(tuple 2 3 4)"
@@ -61,19 +43,12 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
             continue
         # get annotation and name
         if isinstance(current_type, models.Keyword):
-            annotation_node = vy_nodes.Name(
-                id=str(current_type.name),
-                parent=None,
-                node_id=next_nodeid(),
-                ast_type="Name",
-            )
+            annotation_node = build_node(vy_nodes.Name, id=str(current_type.name), parent=None)
         elif isinstance(current_type, models.Expression):
             annotation_node = dasy.parse.parse_node(current_type)
-        arg_node = vy_nodes.arg(
-            arg=str(arg), parent=None, annotation=annotation_node, node_id=next_nodeid()
-        )
-        arg_node._children.add(annotation_node)
-        annotation_node._parent = arg_node
+        else:
+            raise Exception("Invalid type annotation")
+        arg_node = build_node(vy_nodes.arg, arg=str(arg), parent=None, annotation=annotation_node)
         results.append(arg_node)
     return results
 
@@ -89,25 +64,17 @@ def process_body(body, parent=None):
         elif isinstance(f, vy_nodes.List):
             for f2 in f.elements:
                 if isinstance(f2, vy_nodes.Call):
-                    expr_node = vy_nodes.Expr(
-                        ast_type="Expr", node_id=next_nodeid(), value=f2
-                    )
-                    expr_node._children.add(f2)
-                    f2._parent = expr_node
+                    expr_node = build_node(vy_nodes.Expr, value=f2)
                     new_body.append(expr_node)
                 else:
                     new_body.append(f2)
         elif isinstance(f, vy_nodes.Call):
-            expr_node = vy_nodes.Expr(ast_type="Expr", node_id=next_nodeid(), value=f)
+            expr_node = build_node(vy_nodes.Expr, value=f)
             expr_node._children.add(f)
             f._parent = expr_node
             new_body.append(expr_node)
         else:
             new_body.append(f)
-    if parent is not None:
-        for e in new_body:
-            parent._children.add(e)
-            e._parent = parent
     return new_body
 
 
@@ -256,23 +223,7 @@ def parse_declaration(var, typ, value=None):
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    vdecl_node = vy_nodes.VariableDecl(
-        ast_type="VariableDecl",
-        node_id=next_nodeid(),
-        target=target,
-        annotation=annotation,
-        value=value,
-        is_constant=is_constant,
-        is_public=is_public,
-        is_immutable=is_immutable,
-    )
-    vdecl_node._children.add(target)
-    target._parent = vdecl_node
-    vdecl_node._children.add(annotation)
-    annotation._parent = vdecl_node
-    if value is not None:
-        vdecl_node._children.add(value)
-        value._parent = vdecl_node
+    vdecl_node = build_node(vy_nodes.VariableDecl, target=target, annotation=annotation, value=value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
     return vdecl_node
 
 
@@ -287,13 +238,7 @@ def create_annassign_node(var, typ, value=None) -> vy_nodes.AnnAssign:
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    annassign_node = vy_nodes.AnnAssign(
-        ast_type="AnnAssign",
-        node_id=next_nodeid(),
-        target=target,
-        annotation=annotation,
-        value=value,
-    )
+    annassign_node = build_node(vy_nodes.AnnAssign, target=target, annotation=annotation, value=value)
     if target is not None:
         annassign_node._children.add(target)
         target._parent = annassign_node
@@ -313,13 +258,7 @@ def create_variabledecl_node(var, typ, value=None) -> vy_nodes.VariableDecl:
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    vdecl_node = vy_nodes.VariableDecl(
-        ast_type="VariableDecl",
-        node_id=next_nodeid(),
-        target=target,
-        annotation=annotation,
-        value=value,
-    )
+    vdecl_node = build_node(vy_nodes.VariableDecl, target=target, annotation=annotation, value=value)
     vdecl_node._children.add(target)
     target._parent = vdecl_node
     vdecl_node._children.add(annotation)
@@ -327,6 +266,7 @@ def create_variabledecl_node(var, typ, value=None) -> vy_nodes.VariableDecl:
     if value is not None:
         vdecl_node._children.add(value)
         value._parent = vdecl_node
+    return vdecl_node
 
 
 def parse_variabledecl(expr) -> vy_nodes.VariableDecl:
@@ -377,11 +317,8 @@ def parse_defcontract(expr):
 
 
 def parse_defstruct(expr):
-    body = parse_structbody(expr)
-    struct_node = vy_nodes.StructDef(
-        ast_type="StructDef", node_id=next_nodeid(), name=str(expr[1]), body=body
-    )
-    for b in body:
+    struct_node = build_node(vy_nodes.StructDef, name=str(expr[1]), body=parse_structbody(expr))
+    for b in struct_node.body:
         struct_node._children.add(b)
         b._parent = struct_node
     return struct_node
@@ -398,29 +335,16 @@ def parse_definterface(expr):
         decorators = []
 
         args_list = parse_args_list(f[2])
-        args = vy_nodes.arguments(
-            args=args_list, defaults=list(), node_id=next_nodeid(), ast_type="arguments"
-        )
+        args = build_node(vy_nodes.arguments, args=args_list, defaults=list())
         if len(f) == 5:
             # have return
             rets = dasy.parse.parse_node(f[3])
         vis_node = dasy.parse.parse_node(f[-1])
-        expr_node = vy_nodes.Expr(
-            node_id=next_nodeid(), ast_type="Expr", value=vis_node
-        )
+        expr_node = build_node(vy_nodes.Expr, value=vis_node)
         expr_node._children.add(vis_node)
         vis_node._parent = expr_node
         fn_body = [expr_node]
-        fn_node = vy_nodes.FunctionDef(
-            args=args,
-            returns=rets,
-            decorator_list=decorators,
-            pos=None,
-            body=fn_body,
-            name=fn_name,
-            node_id=fn_node_id,
-            ast_type="FunctionDef",
-        )
+        fn_node = build_node(vy_nodes.FunctionDef, args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=fn_name)
         fn_node._children.add(expr_node)
         expr_node._parent = fn_node
         for a in args_list:
@@ -428,9 +352,7 @@ def parse_definterface(expr):
             a._parent = fn_node
         body.append(fn_node)
 
-    interface_node = vy_nodes.InterfaceDef(
-        ast_type="InterfaceDef", node_id=next_nodeid(), body=body, name=name
-    )
+    interface_node = build_node(vy_nodes.InterfaceDef, body=body, name=name)
     for b in body:
         interface_node._children.add(b)
         b._parent = interface_node
@@ -438,30 +360,16 @@ def parse_definterface(expr):
 
 
 def parse_defevent(expr):
-    return vy_nodes.EventDef(
-        ast_type="EventDef",
-        node_id=next_nodeid(),
-        name=str(expr[1]),
-        body=parse_structbody(expr),
-    )
-
+    return build_node(vy_nodes.EventDef, name=str(expr[1]), body=parse_structbody(expr))
 
 def parse_enumbody(expr):
     return [
-        vy_nodes.Expr(
-            ast_type="Expr", node_id=next_nodeid(), value=dasy.parse.parse_node(x)
-        )
-        for x in expr[2:]
+        build_node(vy_nodes.Expr, value=dasy.parse.parse_node(x)) for x in expr[2:]
     ]
 
 
 def parse_defenum(expr):
-    enum_node = vy_nodes.EnumDef(
-        ast_type="EnumDef",
-        node_id=next_nodeid(),
-        name=str(expr[1]),
-        body=parse_enumbody(expr),
-    )
+    enum_node = build_node(vy_nodes.EnumDef, name=str(expr[1]), body=parse_enumbody(expr))
     for node in enum_node.body:
         node._parent = enum_node
         enum_node._children.add(node)
@@ -472,9 +380,7 @@ def parse_do(expr):
     calls = [dasy.parse.parse_node(x) for x in expr[1:]]
     exprs = []
     for call_node in calls:
-        expr_node = vy_nodes.Expr(
-            ast_type="Expr", node_id=next_nodeid(), value=call_node
-        )
+        expr_node=build_node(vy_nodes.Expr, value=call_node)
         expr_node._children.add(call_node)
         call_node._parent = expr_node
         exprs.append(expr_node)
@@ -484,16 +390,12 @@ def parse_do(expr):
 def parse_subscript(expr):
     """(subscript value slice)"""
     index_value_node = dasy.parse.parse_node(expr[2])
-    index_node = vy_nodes.Index(
-        ast_type="Index", node_id=next_nodeid(), value=index_value_node
-    )
+    index_node = build_node(vy_nodes.Index, value=index_value_node)
     if isinstance(index_value_node, vy_nodes.Tuple):
         index_node._children.add(index_value_node)
         index_value_node._parent = index_node
     value_node = dasy.parse.parse_node(expr[1])
-    subscript_node = vy_nodes.Subscript(
-        ast_type="Subscript", node_id=next_nodeid(), slice=index_node, value=value_node
-    )
+    subscript_node = build_node(vy_nodes.Subscript, slice=index_node, value=value_node)
     subscript_node._children.add(index_node)
     index_node._parent = subscript_node
     subscript_node._children.add(value_node)
