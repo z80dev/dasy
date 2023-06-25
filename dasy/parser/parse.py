@@ -9,7 +9,7 @@ import hy
 import vyper.ast.nodes as vy_nodes
 from hy import models
 
-from .builtins import parse_builtin
+from .builtins import parse_builtin, build_node
 from .ops import BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, is_op, parse_op
 from .utils import next_nodeid, add_src_map
 
@@ -47,16 +47,7 @@ def convert_annassign(ast):
                 is_immutable = True
             case "constant":
                 is_constant = True
-    new_node = vy_nodes.VariableDecl(
-        ast_type="VariableDecl",
-        node_id=next_nodeid(),
-        target=ast.target,
-        annotation=ast.annotation,
-        value=ast.value,
-        is_constant=is_constant,
-        is_public=is_public,
-        is_immutable=is_immutable,
-    )
+    new_node = build_node(vy_nodes.VariableDecl, target=ast.target, annotation=ast.annotation, value=ast.value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
     for child in ast.get_children():
         new_node._children.add(child)
         child._parent = new_node
@@ -101,15 +92,8 @@ def parse_expr(expr):
 
 def parse_augop(expr):
     op = models.Symbol(str(expr[0])[:1])
-    target = expr[1]
-    value = expr[2]
-    parsed_code = vy_nodes.AugAssign(
-        node_id=next_nodeid(),
-        ast_type="AugAssign",
-        op=parse_node(op),
-        target=parse_node(target),
-        value=parse_node(value),
-    )
+    target, value = expr[1:]
+    parsed_code = build_node(vy_nodes.AugAssign, op=parse_node(op), target=parse_node(target), value=parse_node(value))
     return parsed_code
 
 
@@ -130,12 +114,7 @@ def parse_call(expr, wrap_expr=False):
                     # or reconsider whether we should be using keywords for builtin types at all
                     val_arg = args[i + 1]
                     val_node = parse_node(val_arg)
-                    kw_node = vy_nodes.keyword(
-                        node_id=next_nodeid(),
-                        ast_type="keyword",
-                        arg=str(cur_arg)[1:],
-                        value=val_node,
-                    )
+                    kw_node = build_node(vy_nodes.keyword, arg=str(cur_arg)[1:], value=val_node)
                     kw_args.append(kw_node)
                     i += 2
                 else:
@@ -143,22 +122,14 @@ def parse_call(expr, wrap_expr=False):
                     args_list.append(val_node)
                     i += 1
             func_node = parse_node(fn_name)
-            call_node = vy_nodes.Call(
-                func=func_node,
-                args=args_list,
-                keywords=kw_args,
-                ast_type="Call",
-                node_id=next_nodeid(),
-            )
+            call_node = build_node(vy_nodes.Call, func=func_node, args=args_list, keywords=kw_args)
             call_node._children.add(func_node)
             func_node._parent = call_node
             for a in args_list:
                 call_node._children.add(a)
                 a._parent = call_node
             if wrap_expr:
-                expr_node = vy_nodes.Expr(
-                    ast_type="Expr", node_id=next_nodeid(), value=call_node
-                )
+                expr_node = build_node(vy_nodes.Expr, value=call_node)
                 expr_node._children.add(call_node)
                 call_node._parent = expr_node
                 return expr_node
@@ -170,12 +141,6 @@ def parse_node(node: Union[models.Expression, models.Integer, models.String, mod
     :param node: A node of the parsed model
     :return: Corresponding AST node, if the node type is supported. Raises exception otherwise.
     """
-    # Helper function to handle repeated name node creation logic
-    def create_name_node(node, ast_type="Name"):
-        return vy_nodes.Name(
-            id=str(node), node_id=next_nodeid(), ast_type=ast_type
-        )
-
     # Initialize ast_node to None
     ast_node = None
 
@@ -184,15 +149,11 @@ def parse_node(node: Union[models.Expression, models.Integer, models.String, mod
         case models.Expression(node):
             ast_node = parse_expr(node)
         case models.Integer(node):
-            ast_node = vy_nodes.Int(
-                value=int(node), node_id=next_nodeid(), ast_type="Int"
-            )
+            ast_node = build_node(vy_nodes.Int, value=int(node))
         case models.Float(node):
             raise NotImplementedError("Floating point not supported (yet)")
         case models.String(node):
-            ast_node = vy_nodes.Str(
-                value=str(node), node_id=next_nodeid(), ast_type="Str"
-            )
+            ast_node = build_node(vy_nodes.Str, value=str(node))
         case models.Symbol(node):
             str_node = str(node)
             if str_node in CONSTS:
@@ -200,15 +161,9 @@ def parse_node(node: Union[models.Expression, models.Integer, models.String, mod
             elif str_node in BUILTIN_FUNCS:
                 ast_node = parse_builtin(node)
             elif str_node in NAME_CONSTS:
-                ast_node = vy_nodes.NameConstant(
-                    value=py_ast.literal_eval(str(node)),
-                    node_id=next_nodeid(),
-                    ast_type="NameConstant",
-                )
+                ast_node = build_node(vy_nodes.NameConstant, value=py_ast.literal_eval(str(node)))
             elif str_node.startswith("0x"):
-                ast_node = vy_nodes.Hex(
-                    id=next_nodeid(), ast_type="Hex", value=str_node
-                )
+                ast_node = build_node(vy_nodes.Hex, value=str_node)
             elif "/" in str_node:
                 target, attr = str(node).split("/")
                 replacement_node = models.Expression(
@@ -216,23 +171,13 @@ def parse_node(node: Union[models.Expression, models.Integer, models.String, mod
                 )
                 ast_node = parse_node(replacement_node)
             else:
-                ast_node = create_name_node(node)
+                ast_node = build_node(vy_nodes.Name, id=str(node))
         case models.Keyword(node):
-            ast_node = create_name_node(node)
+            ast_node = build_node(vy_nodes.Name, id=str(node))
         case models.Bytes(byt):
-            ast_node = vy_nodes.Bytes(
-                node_id=next_nodeid(), ast_type="Byte", value=byt
-            )
+            ast_node = build_node(vy_nodes.Bytes, value=byt)
         case models.List(lst):
-            list_node = vy_nodes.List(
-                node_id=next_nodeid(), ast_type="List", elements=[]
-            )
-            for elmt in lst:
-                node = parse_node(elmt)
-                list_node._children.add(node)
-                list_node.elements.append(node)
-                node._parent = list_node
-            ast_node = list_node
+            ast_node = build_node(vy_nodes.List, elements=[parse_node(elmt) for elmt in lst])
         case None:
             ast_node = None
         case _:
