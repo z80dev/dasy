@@ -1,4 +1,3 @@
-from ast import Expression
 
 import dasy
 import vyper.ast.nodes as vy_nodes
@@ -6,20 +5,6 @@ from vyper.ast.utils import dict_to_ast
 from hy import models
 
 from .utils import has_return, next_nodeid, pairwise
-
-
-def parse_augop(expr):
-    op = models.Symbol(str(expr[0])[:1])
-    target = expr[1]
-    value = expr[2]
-    parsed_code = vy_nodes.AugAssign(
-        node_id=next_nodeid(),
-        ast_type="AugAssign",
-        op=dasy.parser.parse_node(op),
-        target=dasy.parser.parse_node(target),
-        value=dasy.parser.parse_node(value),
-    )
-    return parsed_code
 
 
 def parse_attribute(expr):
@@ -38,58 +23,6 @@ def parse_attribute(expr):
             attr_node._children.add(value_node)
             value_node._parent = attr_node
             return attr_node
-
-
-def parse_call(expr, wrap_expr=False):
-    match expr:
-        case (fn_name, *args):
-            args_list = []
-            kw_args = []
-            i = 0
-            while i < len(args):
-                cur_arg = args[i]
-                if (
-                    isinstance(cur_arg, models.Keyword)
-                    and len(args) > (i + 1)
-                    and not isinstance(args[i + 1], models.Keyword)
-                ):
-                    # TODO: remove this ugly hack and properly check against builtin types
-                    # or reconsider whether we should be using keywords for builtin types at all
-                    val_arg = args[i + 1]
-                    val_node = dasy.parser.parse_node(val_arg)
-                    kw_node = vy_nodes.keyword(
-                        node_id=next_nodeid(),
-                        ast_type="keyword",
-                        arg=str(cur_arg)[1:],
-                        value=val_node,
-                    )
-                    kw_args.append(kw_node)
-                    i += 2
-                else:
-                    val_node = dasy.parser.parse_node(args[i])
-                    args_list.append(val_node)
-                    i += 1
-            func_node = dasy.parser.parse_node(fn_name)
-            call_node = vy_nodes.Call(
-                func=func_node,
-                args=args_list,
-                keywords=kw_args,
-                ast_type="Call",
-                node_id=next_nodeid(),
-            )
-            call_node._children.add(func_node)
-            func_node._parent = call_node
-            for a in args_list:
-                call_node._children.add(a)
-                a._parent = call_node
-            if wrap_expr:
-                expr_node = vy_nodes.Expr(
-                    ast_type="Expr", node_id=next_nodeid(), value=call_node
-                )
-                expr_node._children.add(call_node)
-                call_node._parent = expr_node
-                return expr_node
-            return call_node
 
 
 def parse_tuple(tuple_tree):
