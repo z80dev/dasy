@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 from vyper.compiler import CompilerData
-from vyper.semantics.types.function import FunctionVisibility
+from vyper.semantics.types.function import ContractFunctionT, FunctionVisibility
 
 
 def convert_type(vyper_type: str) -> str:
@@ -27,16 +27,16 @@ def get_external_interface(compiler_data: CompilerData) -> str:
 
     out = ";; External Interface\n"
     funcs = []
-    for func in interface.members.values():
+    for func in [func for func in interface.members.values() if type(func) == ContractFunctionT]:
         if func.visibility == FunctionVisibility.INTERNAL or func.name == "__init__":
             continue
         args = ""
         cur_type = ""
-        for name, typ in func.arguments.items():
-            if str(typ) != cur_type:
-                args += convert_type(typ) + " "
-                cur_type = str(typ)
-            args += f"{name} "
+        for arg in func.arguments:
+            if str(arg.typ) != cur_type:
+                args += convert_type(arg.typ) + " "
+                cur_type = str(arg.typ)
+            args += f"{arg.name} "
         args = "[" + args[:-1] + "]"  # remove trailing space
         return_type = ""
         if func.return_type is not None:

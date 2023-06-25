@@ -34,14 +34,14 @@
   (log (Transfer msg/sender to val))
   True)
 
-(defn transferFrom [:address from to :uint256 val] :bool :external
-  (doto (get-at self/balanceOf from)
+(defn transferFrom [:address _from _to :uint256 val] :bool :external
+  (doto (get-at self/balanceOf _from)
         (-= val))
-  (doto (get-at self/balanceOf to)
+  (doto (get-at self/balanceOf _to)
         (+= val))
-  (doto (get-at self/allowance from msg/sender)
+  (doto (get-at self/allowance _from msg/sender)
         (-= val))
-  (log (Transfer from to val))
+  (log (Transfer _from _to val))
   True)
 
 (defn approve [:address spender :uint256 val] :bool :external
@@ -66,7 +66,7 @@
 (defn burn [:uint256 val] :external
   (self/_burn msg/sender val))
 
-(defn burnFrom [:address from :uint256 val] :external
-  (doto (get-at self/allowance from msg/sender)
+(defn burnFrom [:address _from :uint256 val] :external
+  (doto (get-at self/allowance _from msg/sender)
         (-= val))
-  (self/_burn from val))
+  (self/_burn _from val))
