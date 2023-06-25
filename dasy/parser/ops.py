@@ -1,7 +1,8 @@
+from typing import List, Union
 from hy import models
 from dasy import parser
 from vyper.ast.nodes import BinOp, Compare, UnaryOp, BoolOp
-from .utils import next_nodeid
+from .builtins import build_node
 
 BIN_FUNCS = ["+", "-", "/", "*", "**", "%"]
 COMP_FUNCS = ["<", "<=", ">", ">=", "==", "!=", "in", "notin"]
@@ -27,7 +28,7 @@ def parse_op(expr, alias=None):
 
 def chain_comps(expr):
     new_node = models.Expression()
-    new_expr = [models.Symbol("and")]
+    new_expr: List[Union[models.Symbol, models.Expression]] = [models.Symbol("and")]
     for vals in zip(expr[1:], expr[2:]):
         new_expr.append(models.Expression((expr[0], vals[0], vals[1])))
     new_node += tuple(new_expr)
@@ -42,25 +43,19 @@ def parse_comparison(comp_tree):
     left = parser.parse_node(comp_tree[1])
     right = parser.parse_node(comp_tree[2])
     op = parser.parse_node(comp_tree[0])
-    return Compare(
-        left=left,
-        ops=[op],
-        comparators=[right],
-        node_id=next_nodeid(),
-        ast_type="Compare",
-    )
+    return build_node(Compare, left=left, ops=[op], comparators=[right])
 
 
 def parse_unary(expr):
     operand = parser.parse_node(expr[1])
     op = parser.parse_node(expr[0])
-    return UnaryOp(operand=operand, op=op, node_id=next_nodeid(), ast_type="UnaryOp")
+    return build_node(UnaryOp, operand=operand, op=op)
 
 
 def parse_boolop(expr):
     op = parser.parse_node(expr[0])
     values = [parser.parse_node(e) for e in expr[1:]]
-    return BoolOp(op=op, values=values, node_id=next_nodeid(), ast_type="BoolOp")
+    return build_node(BoolOp, op=op, values=values)
 
 
 def chain_binops(expr):
@@ -82,4 +77,4 @@ def parse_binop(binop_tree):
     left = parser.parse_node(binop_tree[1])
     right = parser.parse_node(binop_tree[2])
     op = parser.parse_node(binop_tree[0])
-    return BinOp(left=left, right=right, op=op, node_id=next_nodeid(), ast_type="BinOp")
+    return build_node(BinOp, left=left, right=right, op=op)
