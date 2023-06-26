@@ -1,5 +1,5 @@
 vyper
-titanoboa==0.1.5
+titanoboa
 dasy-hy
 hyrule
 black

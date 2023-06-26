@@ -2,7 +2,7 @@
         hy.models [Symbol Sequence]
         )
 (require
-  hyrule.control [case]
+  hyrule.control [case branch]
   hyrule.argmove [->])
 
 ;; (defn build-node [t #* args #** kw-args]
@@ -59,12 +59,11 @@
 
 (defn set-parent-children [parent children]
   (for [n children]
-    (when n
-      (if (isinstance n list)
-        (set-parent-children parent n)
-        (when (isinstance n VyperNode)
-          (.add (. parent _children) n)
-          (setv (. n _parent) parent))))))
+    (branch (isinstance n it)
+          list (set-parent-children parent n)
+          VyperNode (do
+                      (.add (. parent _children) n)
+                      (setv (. n _parent) parent)))))
 
 
 (defn parse-builtin [node]
