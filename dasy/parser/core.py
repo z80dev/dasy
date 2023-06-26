@@ -70,8 +70,6 @@ def process_body(body, parent=None):
                     new_body.append(f2)
         elif isinstance(f, vy_nodes.Call):
             expr_node = build_node(vy_nodes.Expr, value=f)
-            expr_node._children.add(f)
-            f._parent = expr_node
             new_body.append(expr_node)
         else:
             new_body.append(f)
@@ -141,22 +139,11 @@ def parse_defn(fn_tree):
             else:
                 fn_body.append(dasy.parse.parse_node(body[-1]))
             fn_body = process_body(fn_body)
-        case models.Symbol(sym_node), models.List(args_node), decs, *body:
-            args_list = parse_args_list(args_node)
-            args = vy_nodes.arguments(
-                args=args_list,
-                defaults=list(),
-                node_id=next_nodeid(),
-                ast_type="arguments",
-            )
-            for arg in args_list:
-                args._children.add(arg)
-                arg._parent = args
+        case models.Symbol(), models.List(args_node), decs, *body:
+            args = build_node(vy_nodes.arguments, args=parse_args_list(args_node), defaults=list())
             if isinstance(decs, models.Keyword):
                 decorators = [
-                    vy_nodes.Name(
-                        id=str(decs.name), node_id=next_nodeid(), ast_type="Name"
-                    )
+                    build_node(vy_nodes.Name, id=str(decs.name))
                 ]
             elif isinstance(decs, models.List):
                 # decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
@@ -179,17 +166,13 @@ def parse_defn(fn_tree):
         ast_type="FunctionDef",
     )
 
-    for n in decorators:
-        fn_node._children.add(n)
-        n._parent = fn_node
-    fn_node._children.add(args)
-    args._parent = fn_node
-
     for n in fn_body:
         if isinstance(n, vy_nodes.Call):
-            expr_node = vy_nodes.Expr(ast_type="Expr", node_id=next_nodeid(), value=n)
-            expr_node._children.add(n)
-            n._parent = expr_node
+            # TODO: We don't replace the node in fn_node.body
+            # why not? and is it a bug?
+            # none of the test cases hit this path
+            # when would this node be a Call and not an expr?
+            expr_node = build_node(vy_nodes.Expr, value=n)
             fn_node._children.add(expr_node)
             expr_node._parent = fn_node
         else:
@@ -239,15 +222,6 @@ def create_annassign_node(var, typ, value=None) -> vy_nodes.AnnAssign:
         case _:
             raise Exception(f"Invalid declaration type {typ}")
     annassign_node = build_node(vy_nodes.AnnAssign, target=target, annotation=annotation, value=value)
-    if target is not None:
-        annassign_node._children.add(target)
-        target._parent = annassign_node
-    if annotation is not None:
-        annassign_node._children.add(annotation)
-        annotation._parent = annassign_node
-    if value is not None:
-        annassign_node._children.add(value)
-        value._parent = annassign_node
     return annassign_node
 
 
@@ -259,13 +233,6 @@ def create_variabledecl_node(var, typ, value=None) -> vy_nodes.VariableDecl:
         case _:
             raise Exception(f"Invalid declaration type {typ}")
     vdecl_node = build_node(vy_nodes.VariableDecl, target=target, annotation=annotation, value=value)
-    vdecl_node._children.add(target)
-    target._parent = vdecl_node
-    vdecl_node._children.add(annotation)
-    annotation._parent = vdecl_node
-    if value is not None:
-        vdecl_node._children.add(value)
-        value._parent = vdecl_node
     return vdecl_node
 
 
@@ -318,9 +285,6 @@ def parse_defcontract(expr):
 
 def parse_defstruct(expr):
     struct_node = build_node(vy_nodes.StructDef, name=str(expr[1]), body=parse_structbody(expr))
-    for b in struct_node.body:
-        struct_node._children.add(b)
-        b._parent = struct_node
     return struct_node
 
 
@@ -341,21 +305,11 @@ def parse_definterface(expr):
             rets = dasy.parse.parse_node(f[3])
         vis_node = dasy.parse.parse_node(f[-1])
         expr_node = build_node(vy_nodes.Expr, value=vis_node)
-        expr_node._children.add(vis_node)
-        vis_node._parent = expr_node
         fn_body = [expr_node]
         fn_node = build_node(vy_nodes.FunctionDef, args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=fn_name)
-        fn_node._children.add(expr_node)
-        expr_node._parent = fn_node
-        for a in args_list:
-            fn_node._children.add(a)
-            a._parent = fn_node
         body.append(fn_node)
 
     interface_node = build_node(vy_nodes.InterfaceDef, body=body, name=name)
-    for b in body:
-        interface_node._children.add(b)
-        b._parent = interface_node
     return interface_node
 
 
@@ -369,21 +323,12 @@ def parse_enumbody(expr):
 
 
 def parse_defenum(expr):
-    enum_node = build_node(vy_nodes.EnumDef, name=str(expr[1]), body=parse_enumbody(expr))
-    for node in enum_node.body:
-        node._parent = enum_node
-        enum_node._children.add(node)
-    return enum_node
+    return build_node(vy_nodes.EnumDef, name=str(expr[1]), body=parse_enumbody(expr))
 
 
 def parse_do(expr):
     calls = [dasy.parse.parse_node(x) for x in expr[1:]]
-    exprs = []
-    for call_node in calls:
-        expr_node=build_node(vy_nodes.Expr, value=call_node)
-        expr_node._children.add(call_node)
-        call_node._parent = expr_node
-        exprs.append(expr_node)
+    exprs = [build_node(vy_nodes.Expr, value=call_node) for call_node in calls]
     return exprs
 
 
@@ -391,13 +336,6 @@ def parse_subscript(expr):
     """(subscript value slice)"""
     index_value_node = dasy.parse.parse_node(expr[2])
     index_node = build_node(vy_nodes.Index, value=index_value_node)
-    if isinstance(index_value_node, vy_nodes.Tuple):
-        index_node._children.add(index_value_node)
-        index_value_node._parent = index_node
     value_node = dasy.parse.parse_node(expr[1])
     subscript_node = build_node(vy_nodes.Subscript, slice=index_node, value=value_node)
-    subscript_node._children.add(index_node)
-    index_node._parent = subscript_node
-    subscript_node._children.add(value_node)
-    value_node._parent = subscript_node
     return subscript_node

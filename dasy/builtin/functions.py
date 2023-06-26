@@ -6,6 +6,7 @@ from vyper.builtins.functions import STMT_DISPATCH_TABLE, BuiltinFunction
 from dasy.parser.utils import next_nodeid
 from vyper.compiler import phases
 
+from dasy import parser
 
 def parse_venom(expr):
     ir = IRnode.from_list((parse_s_exp(expr[1]))[0])
@@ -35,9 +36,7 @@ def wrap_calls(nodes):
     new_nodes = []
     for call_node in nodes:
         if isinstance(call_node, Call):
-            expr_node = Expr(ast_type="Expr", node_id=next_nodeid(), value=call_node)
-            expr_node._children.add(call_node)
-            call_node._parent = expr_node
+            expr_node = parser.build_node(Expr, value=call_node)
             new_nodes.append(expr_node)
         else:
             new_nodes.append(call_node)
@@ -45,7 +44,5 @@ def wrap_calls(nodes):
 
 
 def parse_splice(expr):
-    from dasy import parse_node
-
-    return_val = wrap_calls([parse_node(n) for n in expr[1:]])
+    return_val = wrap_calls([parser.parse_node(n) for n in expr[1:]])
     return return_val

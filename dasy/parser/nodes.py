@@ -7,15 +7,12 @@ from vyper.ast.nodes import (
     Raise,
     Return,
     AugAssign,
-    Assign,
     Assert,
-    AnnAssign,
     Index,
 )
 from hy import models
 from dasy import parser
-import dasy
-from .core import parse_annassign, process_body
+from .core import process_body
 from .utils import next_nodeid
 
 handlers = {}

@@ -123,15 +123,8 @@ def parse_call(expr, wrap_expr=False):
                     i += 1
             func_node = parse_node(fn_name)
             call_node = build_node(vy_nodes.Call, func=func_node, args=args_list, keywords=kw_args)
-            call_node._children.add(func_node)
-            func_node._parent = call_node
-            for a in args_list:
-                call_node._children.add(a)
-                a._parent = call_node
             if wrap_expr:
                 expr_node = build_node(vy_nodes.Expr, value=call_node)
-                expr_node._children.add(call_node)
-                call_node._parent = expr_node
                 return expr_node
             return call_node
 
