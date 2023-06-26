@@ -231,7 +231,6 @@ def test_view_pure():
 
 def test_constants():
     c = compile("examples/constants.dasy")
-    print(c.getMyConstants()[2])
     assert c.getMyConstants() == (1, 10, "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B")
     assert c.test(5) == 6
 
@@ -316,8 +315,6 @@ def testInterface():
     c.setOwner(addr1)
     # convert addr1 to 0x formatted hex string
     assert b.owner() == addr1
-    print(addr1)
-    print(b.owner())
 
 
 def test_reentrancy():

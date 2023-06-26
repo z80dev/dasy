@@ -183,9 +183,7 @@ def parse_node(node: Union[models.Expression, models.Integer, models.String, mod
 def parse_src(src: str):
     global SRC
     SRC = src
-    mod_node = vy_nodes.Module(
-        body=[], name="", doc_string="", ast_type="Module", node_id=next_nodeid()
-    )
+    mod_node = build_node(vy_nodes.Module, body=[], name="", doc_string="")
 
     vars = []
     fs = []
@@ -226,7 +224,5 @@ def parse_src(src: str):
 
     for e in vars + fs:
         mod_node.add_to_body(e)
-        mod_node._children.add(e)
-        e._parent = mod_node
 
     return mod_node

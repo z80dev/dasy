@@ -13,7 +13,7 @@ from vyper.compiler.output import (
     build_opcodes_output,
 )
 from dasy.parser import parse_src
-from dasy.parser.utils import filename_to_contract_name
+from dasy.parser.builtins import filename_to_contract_name
 
 
 class CompilerData(VyperCompilerData):

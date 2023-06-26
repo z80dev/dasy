@@ -1,6 +1,10 @@
 /dasy/__pycache__/
+__pycache__
+.pytest_cache
 *.pyc
 /dist/
 *DS_STORE*
 .hypothesis
 poetry.lock
+.build
+frenv

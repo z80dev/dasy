@@ -1,7 +1,9 @@
 (import vyper.ast.nodes *
+        hy.models [Symbol Sequence]
         )
 (require
-  hyrule.control [case])
+  hyrule.control [case]
+  hyrule.argmove [->])
 
 ;; (defn build-node [t #* args #** kw-args]
   ;; (t :node-id (next_nodeid) :ast-type (. t __name__) #* args #** kw-args))
@@ -18,6 +20,29 @@
     (next counter)))
 
 (setv next_nodeid (next-node-id-maker))
+
+(defn pairwise [iterable]
+  (setv a (iter iterable))
+        (zip a a))
+
+(defn has-return [tree]
+  (cond
+    (isinstance tree Symbol) (= (str tree) "return")
+    (isinstance tree Sequence) (for [el tree] (when (has-return el) (return True)))
+    True (return False)))
+
+(defn filename-to-contract-name [fname]
+  ;; converts a filename to a contract name
+  ;; e.g. "contracts/my_contract.vy" -> "MyContract"
+  (let [words (-> fname
+                    (.split "/")
+                    (get -1)
+                    (.split ".")
+                    (get 0)
+                    (.split "_"))
+        capitalized_words (map (fn [word] (.capitalize word)) words)]
+    (.join "" capitalized_words)))
+
 
 (defn build-node [node-class #* args #** kwargs]
   (setv args-dict kwargs)
@@ -44,16 +69,16 @@
 
 (defn parse-builtin [node]
   (case (str node)
-        "+" (build-node Add  :-pretty "+" :-description "addition")
-        "-" (build-node Sub :-pretty "-" :-description "subtraction")
-        "*" (build-node Mult :-pretty "*" :-description "multiplication")
-        "**" (build-node Pow :-pretty "**" :-description "exponentiation")
-        "%" (build-node Mod :-pretty "%" :-description "modulus")
-        "^" (build-node BitXor :-pretty "^" :-description "bitwise xor")
-        "|" (build-node BitOr :-pretty "|" :-description "bitwise or")
-        "&" (build-node BitAnd :-pretty "&" :-description "bitwise and")
-        "~" (build-node Invert :-pretty "~" :-description "bitwise not")
-        "/" (build-node Div :-pretty "/" :-description "division")
+        "+" (build-node Add)
+        "-" (build-node Sub)
+        "*" (build-node Mult)
+        "**" (build-node Pow)
+        "%" (build-node Mod)
+        "^" (build-node BitXor)
+        "|" (build-node BitOr)
+        "&" (build-node BitAnd)
+        "~" (build-node Invert)
+        "/" (build-node Div)
         "<" (build-node Lt :-pretty "<" :-description "less than")
         ">" (build-node Gt :-pretty ">" :-description "greater than")
         "<=" (build-node LtE :-pretty "<=" :-description "less than equal")
