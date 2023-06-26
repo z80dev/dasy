@@ -12,16 +12,22 @@ def parse_attribute(expr):
     if len(expr) < 2:
         raise ValueError("Expression too short to parse attribute.")
     _, obj, attr = expr
-    attr_node = build_node(vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node(obj))
+    attr_node = build_node(
+        vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node(obj)
+    )
     return attr_node
 
 
 def parse_tuple(tuple_tree):
     match tuple_tree:
         case models.Symbol(q), elements if str(q) == "quote":
-            return build_node(vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements])
+            return build_node(
+                vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements]
+            )
         case models.Symbol(q), *elements if str(q) == "tuple":
-            return build_node(vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements])
+            return build_node(
+                vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements]
+            )
         case _:
             raise Exception(
                 "Invalid tuple declaration; requires quoted list or tuple-fn ex: '(2 3 4)/(tuple 2 3 4)"
@@ -44,14 +50,19 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
             continue
         # get annotation and name
         if isinstance(current_type, models.Keyword):
-            annotation_node = build_node(vy_nodes.Name, id=str(current_type.name), parent=None)
+            annotation_node = build_node(
+                vy_nodes.Name, id=str(current_type.name), parent=None
+            )
         elif isinstance(current_type, models.Expression):
             annotation_node = dasy.parse.parse_node(current_type)
         else:
             raise Exception("Invalid type annotation")
-        arg_node = build_node(vy_nodes.arg, arg=str(arg), parent=None, annotation=annotation_node)
+        arg_node = build_node(
+            vy_nodes.arg, arg=str(arg), parent=None, annotation=annotation_node
+        )
         results.append(arg_node)
     return results
+
 
 def parse_defn(fn_tree):
     fn_node_id = next_nodeid()
@@ -117,11 +128,11 @@ def parse_defn(fn_tree):
                 fn_body.append(dasy.parse.parse_node(body[-1]))
             fn_body = process_body(fn_body)
         case models.Symbol(), models.List(args_node), decs, *body:
-            args = build_node(vy_nodes.arguments, args=parse_args_list(args_node), defaults=list())
+            args = build_node(
+                vy_nodes.arguments, args=parse_args_list(args_node), defaults=list()
+            )
             if isinstance(decs, models.Keyword):
-                decorators = [
-                    build_node(vy_nodes.Name, id=str(decs.name))
-                ]
+                decorators = [build_node(vy_nodes.Name, id=str(decs.name))]
             elif isinstance(decs, models.List):
                 # decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
                 decorators = [dasy.parse.parse_node(d) for d in decs]
@@ -183,7 +194,15 @@ def parse_declaration(var, typ, value=None):
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    vdecl_node = build_node(vy_nodes.VariableDecl, target=target, annotation=annotation, value=value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+    vdecl_node = build_node(
+        vy_nodes.VariableDecl,
+        target=target,
+        annotation=annotation,
+        value=value,
+        is_constant=is_constant,
+        is_public=is_public,
+        is_immutable=is_immutable,
+    )
     return vdecl_node
 
 
@@ -198,7 +217,9 @@ def create_annassign_node(var, typ, value=None) -> vy_nodes.AnnAssign:
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    annassign_node = build_node(vy_nodes.AnnAssign, target=target, annotation=annotation, value=value)
+    annassign_node = build_node(
+        vy_nodes.AnnAssign, target=target, annotation=annotation, value=value
+    )
     return annassign_node
 
 
@@ -209,7 +230,9 @@ def create_variabledecl_node(var, typ, value=None) -> vy_nodes.VariableDecl:
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
-    vdecl_node = build_node(vy_nodes.VariableDecl, target=target, annotation=annotation, value=value)
+    vdecl_node = build_node(
+        vy_nodes.VariableDecl, target=target, annotation=annotation, value=value
+    )
     return vdecl_node
 
 
@@ -261,7 +284,9 @@ def parse_defcontract(expr):
 
 
 def parse_defstruct(expr):
-    struct_node = build_node(vy_nodes.StructDef, name=str(expr[1]), body=parse_structbody(expr))
+    struct_node = build_node(
+        vy_nodes.StructDef, name=str(expr[1]), body=parse_structbody(expr)
+    )
     return struct_node
 
 
@@ -283,7 +308,15 @@ def parse_definterface(expr):
         vis_node = dasy.parse.parse_node(f[-1])
         expr_node = build_node(vy_nodes.Expr, value=vis_node)
         fn_body = [expr_node]
-        fn_node = build_node(vy_nodes.FunctionDef, args=args, returns=rets, decorator_list=decorators, pos=None, body=fn_body, name=fn_name)
+        fn_node = build_node(
+            vy_nodes.FunctionDef,
+            args=args,
+            returns=rets,
+            decorator_list=decorators,
+            pos=None,
+            body=fn_body,
+            name=fn_name,
+        )
         body.append(fn_node)
 
     interface_node = build_node(vy_nodes.InterfaceDef, body=body, name=name)
@@ -293,10 +326,9 @@ def parse_definterface(expr):
 def parse_defevent(expr):
     return build_node(vy_nodes.EventDef, name=str(expr[1]), body=parse_structbody(expr))
 
+
 def parse_enumbody(expr):
-    return [
-        build_node(vy_nodes.Expr, value=dasy.parse.parse_node(x)) for x in expr[2:]
-    ]
+    return [build_node(vy_nodes.Expr, value=dasy.parse.parse_node(x)) for x in expr[2:]]
 
 
 def parse_defenum(expr):

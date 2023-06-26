@@ -7,6 +7,7 @@ from vyper.compiler import phases
 
 from dasy import parser
 
+
 def parse_venom(expr):
     ir = IRnode.from_list((parse_s_exp(expr[1]))[0])
     # generate some vyper code to patch in.

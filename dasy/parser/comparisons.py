@@ -6,6 +6,7 @@ from hy.models import Expression, Symbol
 
 COMP_FUNCS = ["<", "<=", ">", ">=", "==", "!="]
 
+
 def chain_comps(chain_expr: Expression) -> Expression:
     """
     Creates a new expression chaining comparisons.
@@ -17,11 +18,14 @@ def chain_comps(chain_expr: Expression) -> Expression:
     new_node += tuple(new_expr)
     return new_node
 
+
 def parse_comparison(comparison_expr: Expression) -> vy_nodes.Compare:
     """
     Parses a comparison expression, chaining comparisons if necessary.
     """
-    assert str(comparison_expr[0]) in COMP_FUNCS, f"Invalid comparison operator {comparison_expr[0]}"
+    assert (
+        str(comparison_expr[0]) in COMP_FUNCS
+    ), f"Invalid comparison operator {comparison_expr[0]}"
 
     # Always apply chain comps for consistency
     chained_expr = chain_comps(comparison_expr)

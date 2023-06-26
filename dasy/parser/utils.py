@@ -18,6 +18,7 @@ def add_src_map(src_code, element, ast_node):
             ast_node.end_col_offset = element.end_column
     return ast_node
 
+
 def process_body(body):
     # flatten list if necessary
     # wrap raw Call in Expr if needed

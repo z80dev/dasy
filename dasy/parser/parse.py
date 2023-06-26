@@ -48,7 +48,15 @@ def convert_annassign(ast):
                 is_immutable = True
             case "constant":
                 is_constant = True
-    new_node = build_node(vy_nodes.VariableDecl, target=ast.target, annotation=ast.annotation, value=ast.value, is_constant=is_constant, is_public=is_public, is_immutable=is_immutable)
+    new_node = build_node(
+        vy_nodes.VariableDecl,
+        target=ast.target,
+        annotation=ast.annotation,
+        value=ast.value,
+        is_constant=is_constant,
+        is_public=is_public,
+        is_immutable=is_immutable,
+    )
     for child in ast.get_children():
         new_node._children.add(child)
         child._parent = new_node
@@ -56,7 +64,6 @@ def convert_annassign(ast):
 
 
 def parse_expr(expr):
-
     cmd_str = ALIASES.get(str(expr[0]), str(expr[0]))
 
     if is_op(cmd_str):
@@ -91,10 +98,16 @@ def parse_expr(expr):
         case _:
             return parse_call(expr)
 
+
 def parse_augop(expr):
     op = models.Symbol(str(expr[0])[:1])
     target, value = expr[1:]
-    parsed_code = build_node(vy_nodes.AugAssign, op=parse_node(op), target=parse_node(target), value=parse_node(value))
+    parsed_code = build_node(
+        vy_nodes.AugAssign,
+        op=parse_node(op),
+        target=parse_node(target),
+        value=parse_node(value),
+    )
     return parsed_code
 
 
@@ -115,7 +128,9 @@ def parse_call(expr, wrap_expr=False):
                     # or reconsider whether we should be using keywords for builtin types at all
                     val_arg = args[i + 1]
                     val_node = parse_node(val_arg)
-                    kw_node = build_node(vy_nodes.keyword, arg=str(cur_arg)[1:], value=val_node)
+                    kw_node = build_node(
+                        vy_nodes.keyword, arg=str(cur_arg)[1:], value=val_node
+                    )
                     kw_args.append(kw_node)
                     i += 2
                 else:
@@ -123,13 +138,26 @@ def parse_call(expr, wrap_expr=False):
                     args_list.append(val_node)
                     i += 1
             func_node = parse_node(fn_name)
-            call_node = build_node(vy_nodes.Call, func=func_node, args=args_list, keywords=kw_args)
+            call_node = build_node(
+                vy_nodes.Call, func=func_node, args=args_list, keywords=kw_args
+            )
             if wrap_expr:
                 expr_node = build_node(vy_nodes.Expr, value=call_node)
                 return expr_node
             return call_node
 
-def parse_node(node: Union[models.Expression, models.Integer, models.String, models.Symbol, models.Keyword, models.Bytes, models.List]):
+
+def parse_node(
+    node: Union[
+        models.Expression,
+        models.Integer,
+        models.String,
+        models.Symbol,
+        models.Keyword,
+        models.Bytes,
+        models.List,
+    ]
+):
     """
     This function converts a node into its corresponding AST node based on its type.
     :param node: A node of the parsed model
@@ -155,7 +183,9 @@ def parse_node(node: Union[models.Expression, models.Integer, models.String, mod
             elif str_node in BUILTIN_FUNCS:
                 ast_node = parse_builtin(node)
             elif str_node in NAME_CONSTS:
-                ast_node = build_node(vy_nodes.NameConstant, value=py_ast.literal_eval(str(node)))
+                ast_node = build_node(
+                    vy_nodes.NameConstant, value=py_ast.literal_eval(str(node))
+                )
             elif str_node.startswith("0x"):
                 ast_node = build_node(vy_nodes.Hex, value=str_node)
             elif "/" in str_node:
@@ -171,13 +201,14 @@ def parse_node(node: Union[models.Expression, models.Integer, models.String, mod
         case models.Bytes(byt):
             ast_node = build_node(vy_nodes.Bytes, value=byt)
         case models.List(lst):
-            ast_node = build_node(vy_nodes.List, elements=[parse_node(elmt) for elmt in lst])
+            ast_node = build_node(
+                vy_nodes.List, elements=[parse_node(elmt) for elmt in lst]
+            )
         case None:
             ast_node = None
         case _:
             raise ValueError(f"No match for node {node}. Unsupported node type.")
     return add_src_map(SRC, node, ast_node)
-
 
 
 def parse_src(src: str):

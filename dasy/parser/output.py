@@ -27,7 +27,9 @@ def get_external_interface(compiler_data: CompilerData) -> str:
 
     out = ";; External Interface\n"
     funcs = []
-    for func in [func for func in interface.members.values() if type(func) == ContractFunctionT]:
+    for func in [
+        func for func in interface.members.values() if type(func) == ContractFunctionT
+    ]:
         if func.visibility == FunctionVisibility.INTERNAL or func.name == "__init__":
             continue
         args = ""
