@@ -3,7 +3,6 @@ from vyper.ast import Call, Expr
 from vyper.ir.s_expressions import parse_s_exp
 from vyper.codegen.ir_node import IRnode
 from vyper.builtins.functions import STMT_DISPATCH_TABLE, BuiltinFunction
-from dasy.parser.utils import next_nodeid
 from vyper.compiler import phases
 
 from dasy import parser
@@ -11,7 +10,7 @@ from dasy import parser
 def parse_venom(expr):
     ir = IRnode.from_list((parse_s_exp(expr[1]))[0])
     # generate some vyper code to patch in.
-    IDENTIFIER = f"__DASY_VENOM_BUILTIN_{next_nodeid()}__"
+    IDENTIFIER = f"__DASY_VENOM_BUILTIN_{parser.next_nodeid()}__"
     insert_code = f"{IDENTIFIER}()"
 
     # dynamically generate a class on the fly

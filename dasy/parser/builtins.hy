@@ -1,10 +1,23 @@
 (import vyper.ast.nodes *
-        .utils [next_nodeid])
+        )
 (require
   hyrule.control [case])
 
 ;; (defn build-node [t #* args #** kw-args]
   ;; (t :node-id (next_nodeid) :ast-type (. t __name__) #* args #** kw-args))
+
+(defn counter-gen []
+  (setv counter 0)
+  (while True
+    (yield counter)
+    (setv counter (+ counter 1))))
+
+(defn next-node-id-maker []
+  (setv counter (counter-gen))
+  (fn []
+    (next counter)))
+
+(setv next_nodeid (next-node-id-maker))
 
 (defn build-node [node-class #* args #** kwargs]
   (setv args-dict kwargs)

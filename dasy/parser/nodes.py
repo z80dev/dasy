@@ -13,7 +13,7 @@ from vyper.ast.nodes import (
 from hy import models
 from dasy import parser
 from .core import process_body
-from .utils import next_nodeid
+from .builtins import next_nodeid
 
 handlers = {}
 

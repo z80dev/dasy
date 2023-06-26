@@ -1,9 +1,9 @@
 import dasy
 import vyper.ast.nodes as vy_nodes
-from .builtins import build_node
+from .builtins import build_node, next_nodeid
 from hy import models
 
-from .utils import has_return, next_nodeid, pairwise
+from .utils import has_return, pairwise, process_body
 
 
 def parse_attribute(expr):
@@ -51,30 +51,6 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
         arg_node = build_node(vy_nodes.arg, arg=str(arg), parent=None, annotation=annotation_node)
         results.append(arg_node)
     return results
-
-
-def process_body(body, parent=None):
-    # flatten list if necessary
-    # wrap raw Call in Expr if needed
-    new_body = []
-    for f in body:
-        if isinstance(f, list):
-            for f2 in f:
-                new_body.append(f2)
-        elif isinstance(f, vy_nodes.List):
-            for f2 in f.elements:
-                if isinstance(f2, vy_nodes.Call):
-                    expr_node = build_node(vy_nodes.Expr, value=f2)
-                    new_body.append(expr_node)
-                else:
-                    new_body.append(f2)
-        elif isinstance(f, vy_nodes.Call):
-            expr_node = build_node(vy_nodes.Expr, value=f)
-            new_body.append(expr_node)
-        else:
-            new_body.append(f)
-    return new_body
-
 
 def parse_defn(fn_tree):
     fn_node_id = next_nodeid()

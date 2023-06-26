@@ -1,14 +1,13 @@
 import hy
 import os
 from .parse import parse_src, parse_node
-from .utils import next_node_id_maker
-from . import utils, output
+from . import utils, output, builtins
 from pathlib import Path
-from .builtins import build_node
+from .builtins import next_node_id_maker, build_node, next_nodeid
 
 
 def reset_nodeid_counter():
-    utils.next_nodeid = next_node_id_maker()
+    builtins.next_nodeid = next_node_id_maker()
 
 
 def install_builtin_macros():

@@ -1,7 +1,6 @@
 from typing import List, Union
 from hy import models
 from dasy import parser
-from .utils import next_nodeid
 import vyper.ast.nodes as vy_nodes
 from hy.models import Expression, Symbol
 
@@ -29,10 +28,4 @@ def parse_comparison(comparison_expr: Expression) -> vy_nodes.Compare:
     left = parser.parse_node(chained_expr[1])
     right = parser.parse_node(chained_expr[2])
     op = parser.parse_node(chained_expr[0])
-    return vy_nodes.Compare(
-        left=left,
-        ops=[op],
-        comparators=[right],
-        node_id=next_nodeid(),
-        ast_type="Compare",
-    )
+    return parser.build_node(vy_nodes.Compare, left=left, ops=[op], comparators=[right])
