@@ -12,7 +12,6 @@ from hy import models
 from .builtins import parse_builtin, build_node
 from .ops import BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, is_op, parse_op
 from .utils import add_src_map
-from .builtins import next_nodeid
 
 # namespaces with expression handlers
 from . import nodes, core, macros

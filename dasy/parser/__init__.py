@@ -1,9 +1,9 @@
 import hy
 import os
 from .parse import parse_src, parse_node
-from . import utils, output, builtins
+from . import output, builtins
 from pathlib import Path
-from .builtins import next_node_id_maker, build_node, next_nodeid
+from .utils import next_node_id_maker, build_node, next_nodeid
 
 
 def reset_nodeid_counter():

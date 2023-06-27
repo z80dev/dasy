@@ -1,10 +1,9 @@
 import dasy
 import vyper.ast.nodes as vy_nodes
-from .builtins import build_node, next_nodeid, pairwise
+from .utils import build_node, next_nodeid, pairwise
 from hy import models
 
-from .utils import process_body
-from .builtins import has_return
+from .utils import has_return, process_body
 
 
 def parse_attribute(expr):
