@@ -203,8 +203,6 @@ def parse_node(
             ast_node = build_node(
                 vy_nodes.List, elements=[parse_node(elmt) for elmt in lst]
             )
-        case None:
-            ast_node = None
         case _:
             raise ValueError(f"No match for node {node}. Unsupported node type.")
     return add_src_map(SRC, node, ast_node)
@@ -224,12 +222,14 @@ def parse_src(src: str):
         if isinstance(ast, list):
             for v in ast:
                 v.full_source_code = src
-        elif ast is not None:
+        elif ast:
             ast.full_source_code = src
             ast.lineno = element.start_line
             ast.end_lineno = element.end_line
             ast.col_offset = element.start_column
             ast.end_col_offset = element.end_column
+        else:
+            continue
 
         match ast:
             case vy_nodes.Module:
@@ -243,12 +243,13 @@ def parse_src(src: str):
                     var_node = var
                     if isinstance(var, vy_nodes.AnnAssign):
                         var_node = convert_annassign(var)
+                    elif isinstance(var, vy_nodes.FunctionDef):
+                        fs.append(var)
+                        continue
                     vars.append(var_node)
             case vy_nodes.AnnAssign():
                 new_node = convert_annassign(ast)
                 vars.append(new_node)
-            case None:
-                pass
             case _:
                 raise Exception(f"Unrecognized top-level form {element} {ast}")
 

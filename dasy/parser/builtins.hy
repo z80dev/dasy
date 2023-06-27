@@ -3,8 +3,7 @@
         .utils [build-node])
 
 (require
-  hyrule.control [case]
-  )
+  hyrule.control [case])
 
 (defn parse-builtin [node]
   (case (str node)

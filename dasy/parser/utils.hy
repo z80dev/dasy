@@ -1,5 +1,6 @@
 (import vyper.ast.nodes *
-        hy.models [Symbol Sequence])
+        hy.models [Symbol Sequence]
+        hyrule.iterables [flatten])
 
 (require
   hyrule.control [case branch]
@@ -43,24 +44,22 @@
 
 (defn build-node [node-class #* args #** kwargs]
   (setv args-dict kwargs)
+  ;; set positional args according to node-class.__slots__
   (when args
-    (do
-      (for [[slot value] (zip (.__slots__ node-class) args)]
-        (assoc args-dict slot value))
-      (for [slot (slice (.__slots__ node-class) (len args) None)]
-        (assoc args-dict slot None))
-      (setv args [])))
-  (setv new-node (node-class :node-id (next_nodeid) :ast-type (. node-class __name__) #* args #** args-dict))
-  (set-parent-children new-node (.values args-dict))
-  new-node)
+    (setv args-dict (merge (zipdict (.__slots__ node-class) args) args-dict))
+    (for [slot (slice (.__slots__ node-class) (len args) None)]
+      (assoc args-dict slot None)))
+  (-> (node-class :node-id (next_nodeid) :ast-type (. node-class __name__) #** args-dict)
+      (set-parent-children (.values args-dict))))
 
 (defn set-parent-children [parent children]
   (for [n children]
     (branch (isinstance n it)
-          list (set-parent-children parent n)
-          VyperNode (do
-                      (.add (. parent _children) n)
-                      (setv (. n _parent) parent)))))
+            list (set-parent-children parent n)
+            VyperNode (do
+                        (.add (. parent _children) n)
+                        (setv (. n _parent) parent))))
+  parent)
 
 (defn add-src-map [src-code element ast-node]
   (when ast-node
@@ -71,21 +70,20 @@
          (setv (. ast-node full_source_code) src-code)
          (when (hasattr element "start_line")
            (do
-             (setv (. ast-node lineno) (. element start_line))
-             (setv (. ast-node end_lineno) (. element end_line))
-             (setv (. ast-node col_offset) (. element start_column))
-             (setv (. ast-node end_col_offset) (. element end_column)))))))
+            (setv ast-node.lineno element.start_line)
+            (setv ast-node.end_lineno element.end_line)
+            (setv ast-node.col_offset element.start_column)
+            (setv ast-node.end_col_offset element.end_column))))))
   ast-node)
 
 (defn process-body [body]
-  (setv new-body [])
-  (for [f body]
-    (cond
-      (isinstance f list) (for [f2 f] (.append new-body f2))
-      (isinstance f List) (for [f2 (. f elements)]
-                            (cond
-                              (isinstance f2 Call) (.append new-body (build-node Expr :value f2))
-                              True (.append new-body f2)))
-      (isinstance f Call) (.append new-body (build-node Expr :value f))
-      True (.append new-body f)))
-  new-body)
+  (flatten
+    (lfor f body
+      (branch (isinstance f it)
+              list f
+              List (lfor f2 (. f elements)
+                         (if (isinstance f2 Call)
+                             (build-node Expr :value f2)
+                             f2))
+              Call [(build-node Expr :value f)]
+              else [f]))))
