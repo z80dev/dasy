@@ -83,64 +83,64 @@ def parse_defn(fn_tree):
         ]
         fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
         fn_body = process_body(fn_body)
-
-    match fn_tree[1:]:
-        case models.Symbol(sym_node), models.List(
-            args_node
-        ), returns, decs, *body if isinstance(decs, models.Keyword) or isinstance(
-            decs, models.List
-        ):
-            # (defn name [args] :uint256 :external ...)
-            # (defn name [args] :uint256 [:external :view] ...)
-            assert (
-                isinstance(returns, models.Keyword)
-                or isinstance(returns, models.Expression)
-                or isinstance(returns, models.Symbol)
-            )
-            rets = dasy.parse.parse_node(returns)
-            args_list = parse_args_list(args_node)
-            args = vy_nodes.arguments(
-                args=args_list,
-                defaults=list(),
-                node_id=next_nodeid(),
-                ast_type="arguments",
-            )
-            if isinstance(decs, models.Keyword):
-                decorators = [
-                    vy_nodes.Name(
-                        id=str(decs.name), node_id=next_nodeid(), ast_type="Name"
-                    )
-                ]
-            elif isinstance(decs, models.List):
-                # decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
-                decorators = [dasy.parse.parse_node(d) for d in decs]
-            else:
-                decorators = []
-            fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
-            if not has_return(body[-1]):
-                value_node = dasy.parse.parse_node(body[-1])
-                implicit_return_node = vy_nodes.Return(
-                    value=value_node, ast_type="Return", node_id=next_nodeid()
+    else:
+        match fn_tree[1:]:
+            case models.Symbol(sym_node), models.List(
+                args_node
+            ), returns, decs, *body if isinstance(decs, models.Keyword) or isinstance(
+                decs, models.List
+            ):
+                # (defn name [args] :uint256 :external ...)
+                # (defn name [args] :uint256 [:external :view] ...)
+                assert (
+                    isinstance(returns, models.Keyword)
+                    or isinstance(returns, models.Expression)
+                    or isinstance(returns, models.Symbol)
                 )
-                fn_body.append(implicit_return_node)
-            else:
-                fn_body.append(dasy.parse.parse_node(body[-1]))
-            fn_body = process_body(fn_body)
-        case models.Symbol(), models.List(args_node), decs, *body:
-            args = build_node(
-                vy_nodes.arguments, args=parse_args_list(args_node), defaults=list()
-            )
-            if isinstance(decs, models.Keyword):
-                decorators = [build_node(vy_nodes.Name, id=str(decs.name))]
-            elif isinstance(decs, models.List):
-                # decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
-                decorators = [dasy.parse.parse_node(d) for d in decs]
-            else:
-                decorators = []
-            fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
-            fn_body = process_body(fn_body)
-        case _:
-            raise Exception(f"Invalid fn form {fn_tree}")
+                rets = dasy.parse.parse_node(returns)
+                args_list = parse_args_list(args_node)
+                args = vy_nodes.arguments(
+                    args=args_list,
+                    defaults=list(),
+                    node_id=next_nodeid(),
+                    ast_type="arguments",
+                )
+                if isinstance(decs, models.Keyword):
+                    decorators = [
+                        vy_nodes.Name(
+                            id=str(decs.name), node_id=next_nodeid(), ast_type="Name"
+                        )
+                    ]
+                elif isinstance(decs, models.List):
+                    # decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
+                    decorators = [dasy.parse.parse_node(d) for d in decs]
+                else:
+                    decorators = []
+                fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
+                if not has_return(body[-1]):
+                    value_node = dasy.parse.parse_node(body[-1])
+                    implicit_return_node = vy_nodes.Return(
+                        value=value_node, ast_type="Return", node_id=next_nodeid()
+                    )
+                    fn_body.append(implicit_return_node)
+                else:
+                    fn_body.append(dasy.parse.parse_node(body[-1]))
+                fn_body = process_body(fn_body)
+            case models.Symbol(), models.List(args_node), decs, *body:
+                args = build_node(
+                    vy_nodes.arguments, args=parse_args_list(args_node), defaults=list()
+                )
+                if isinstance(decs, models.Keyword):
+                    decorators = [build_node(vy_nodes.Name, id=str(decs.name))]
+                elif isinstance(decs, models.List):
+                    # decorators = [vy_nodes.Name(id=str(d.name), node_id=next_nodeid(), ast_type='Name') for d in decs]
+                    decorators = [dasy.parse.parse_node(d) for d in decs]
+                else:
+                    decorators = []
+                fn_body = [dasy.parse.parse_node(body_node) for body_node in body]
+                fn_body = process_body(fn_body)
+            case _:
+                raise Exception(f"Invalid fn form {fn_tree}")
 
     fn_node = vy_nodes.FunctionDef(
         args=args,
