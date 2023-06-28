@@ -29,6 +29,10 @@ ALIASES = {
     "array": "subscript",
     "defvar": "annassign",
     "setv": "assign",
+    "+!": "unsafe_add",
+    "-!": "unsafe_sub",
+    "*!": "unsafe_mul",
+    "/!": "unsafe_div",
 }
 
 SRC = ""
