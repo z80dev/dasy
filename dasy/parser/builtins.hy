@@ -1,5 +1,4 @@
 (import vyper.ast.nodes *
-        hy.models [Symbol Sequence]
         .utils [build-node])
 
 (require
