@@ -27,7 +27,9 @@ def test_has_return():
     assert not has_return(dasy.read('(1 2 3)')) == False
 
 def test_build_node():
-    assert build_node(Expr, value=1) == Expr(node_id=2655, ast_type='Expr', value=1)
+    node = build_node(Expr, value=1)
+    node_id = node.node_id
+    assert node == Expr(node_id=node_id, ast_type='Expr', value=1)
 
 def test_set_parent_children():
     parent = build_node(Expr, value=1)
