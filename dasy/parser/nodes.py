@@ -19,12 +19,12 @@ def parse_for(expr):
     # (for [x xs] (.append self/nums x))
     # (for [target iter] *body)
     target, iter_ = expr[1]
-    tarbuild_node = parser.parse_node(target)
+    target_node = parser.parse_node(target)
     iter_node = parser.parse_node(iter_)
     body_nodes = [parser.parse_node(b) for b in expr[2:]]
     body = process_body(body_nodes)
-    for_node = build_node(vy_nodes.For, body=body, iter=iter_node, target=tarbuild_node)
-    set_parent_children(for_node, body + [tarbuild_node, iter_node])
+    for_node = build_node(vy_nodes.For, body=body, iter=iter_node, target=target_node)
+    set_parent_children(for_node, body + [target_node, iter_node])
     return for_node
 
 
