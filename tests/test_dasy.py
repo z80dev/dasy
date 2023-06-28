@@ -3,6 +3,10 @@ from boa.vyper.contract import VyperContract
 import boa
 import pytest
 
+def test_venom():
+    c = compile("examples/venom.dasy")
+    c.absoluteValue()
+
 
 def compile_src(src: str, *args) -> VyperContract:
     ast = dasy.compile(src, include_abi=True)
@@ -14,11 +18,6 @@ def compile(filename: str, *args) -> VyperContract:
         src = f.read()
         return compile_src(src, *args)
 
-
-def test_venom():
-    pass
-    # c = compile("examples/venom.dasy")
-    # assert c.absoluteValue()
 
 
 def test_binops():
@@ -99,6 +98,17 @@ def test_if():
       (if (>= x y)
          (return (- x y))
          (return (- y x))))"""
+    )
+    assert c.absValue(4, 7) == 3
+
+
+def test_if_expr():
+    c = compile_src(
+        """
+    (defn absValue [:uint256 x y] :uint256 [:external :pure]
+      (if (>= x y)
+          (- x y)
+          (- y x)))"""
     )
     assert c.absValue(4, 7) == 3
 

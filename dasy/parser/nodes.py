@@ -34,15 +34,30 @@ def parse_if(expr):
         if expr[3] == models.Symbol("None"):
             return parser.parse_node(expr[2])
 
+    # we need to determine if this is an if expression or if statement
+    # if expressionsn always have 4 elements, if statements may have 3
+    # if expressions always have a single element in the body and else
+    # if statements have 1 or more elements in the body and else
+    #
+    # so our criteria can be something like:
+    # - if len(expr) == 4 and len(expr[2]) == 1 and len(expr[3]) == 1 and
+    # both body and else are instances of vy_nodes.ExprNode
+
     body_nodes = [parser.parse_node(expr[2])]
     body = process_body(body_nodes)
     else_nodes = [parser.parse_node(expr[3])] if len(expr) == 4 else []
     else_ = process_body(else_nodes)
     test = parser.parse_node(expr[1])
-    if_node = build_node(vy_nodes.If, test=test, body=body, orelse=else_)
-    set_parent_children(if_node, body + else_ + [test])
-    return if_node
 
+    if len(body) == 1 and len(else_) == 1 and isinstance(body[0], vy_nodes.ExprNode) and isinstance(else_[0], vy_nodes.ExprNode):
+        body = body[0]
+        else_ = else_[0]
+        if_node = build_node(vy_nodes.IfExp, test=test, body=body, orelse=else_)
+        set_parent_children(if_node, [body, else_, test])
+    else:
+        if_node = build_node(vy_nodes.If, test=test, body=body, orelse=else_)
+        set_parent_children(if_node, body + else_ + [test])
+    return if_node
 
 def parse_assign(expr):
     # needs some slight massaging due to the way targets/target is treated

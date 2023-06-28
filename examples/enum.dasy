@@ -9,14 +9,14 @@
 
 (defn getPrice [] :uint256 [:external :view]
       (if (== (get-at self/roles msg/sender) Roles/ADMIN)
-          (return 10)
+           10
           (if (== (get-at self/roles msg/sender) Roles/USER)
-              (return 20)
-              (return 30))))
+               20
+               30)))
 
 (defn getPriceUsingCondp [] :uint256 [:external :view]
       (defvar role Roles (get-at self/roles msg/sender))
       (condp == role
-             Roles/ADMIN (return 10)
-             Roles/USER (return 20)
-             :else (return 30)))
+             Roles/ADMIN  10
+             Roles/USER  20
+             :else  30))
