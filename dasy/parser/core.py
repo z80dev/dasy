@@ -68,17 +68,13 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
 def parse_fn_args(fn_tree):
     args_node, *rest = fn_tree[2:]
     args_list = parse_args_list(args_node)
-    args = vy_nodes.arguments(
-        args=args_list, defaults=list(), node_id=next_nodeid(), ast_type="arguments"
-    )
+    args = build_node(vy_nodes.arguments, args=args_list, defaults=list())
     return args, rest
 
 
 def parse_fn_decorators(decs):
     if isinstance(decs, models.Keyword):
-        return [
-            vy_nodes.Name(id=str(decs.name), node_id=next_nodeid(), ast_type="Name")
-        ]
+        return [build_node(vy_nodes.Name, id=str(decs.name))]
     elif isinstance(decs, models.List):
         return [dasy.parse.parse_node(d) for d in decs]
     return []
@@ -88,9 +84,7 @@ def parse_fn_body(body, wrap=False):
     fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
     if wrap and not has_return(body[-1]):
         value_node = dasy.parse.parse_node(body[-1])
-        implicit_return_node = vy_nodes.Return(
-            value=value_node, ast_type="Return", node_id=next_nodeid()
-        )
+        implicit_return_node = build_node(vy_nodes.Return, value=value_node)
         fn_body.append(implicit_return_node)
     else:
         fn_body.append(dasy.parse.parse_node(body[-1]))
@@ -111,9 +105,7 @@ def parse_defn(fn_tree):
 
     if str(fn_tree[1]) == "__init__":
         args, rest = parse_fn_args(fn_tree)
-        decorators = [
-            vy_nodes.Name(id="external", node_id=next_nodeid(), ast_type="Name")
-        ]
+        decorators = [build_node(vy_nodes.Name, id="external")]
         fn_body = process_body(
             [dasy.parse.parse_node(body_node) for body_node in rest[1:]]
         )
@@ -130,7 +122,6 @@ def parse_defn(fn_tree):
         args, rest = parse_fn_args(fn_tree)
         decorators = parse_fn_decorators(fn_args[3])
         fn_body = parse_fn_body(rest[2:], wrap=True)
-    # elif fn_args_len >= 3:
     elif isinstance(fn_args[2], (models.Keyword, models.List)):
         # (defn name [args] ...)
         assert isinstance(fn_args[0], models.Symbol)
@@ -163,7 +154,7 @@ def parse_declaration(var, typ, value=None):
     annotation = None
 
     match typ:
-        case [models.Symbol(e), typ_decl] if str(e) in annotation_attrs.keys():
+        case [models.Symbol(e), _] if str(e) in annotation_attrs.keys():
             annotation = dasy.parse.parse_node(typ)
             annotation_attrs[str(e)] = True
         case models.Expression() | models.Keyword():
@@ -259,7 +250,6 @@ def parse_definterface(expr):
     name = str(expr[1])
     body = []
     for f in expr[2:]:
-        fn_node_id = next_nodeid()
         rets = None
         fn_name = str(f[1])
         args = None

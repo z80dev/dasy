@@ -3,6 +3,7 @@
         hyrule.iterables [flatten])
 
 (require
+  hyrule [assoc]
   hyrule.control [case branch]
   hyrule.argmove [->])
 
@@ -46,11 +47,13 @@
   (setv args-dict kwargs)
   ;; set positional args according to node-class.__slots__
   (when args
-    (setv args-dict (merge (zipdict (.__slots__ node-class) args) args-dict))
-    (for [slot (slice (.__slots__ node-class) (len args) None)]
+    (setv args-zip-dict (dict (zip node-class.__slots__ args)))
+    (.update args-dict args-zip-dict)
+    (for [slot (list (cut node-class.__slots__ (len args) None))]
       (assoc args-dict slot None)))
   (-> (node-class :node-id (next_nodeid) :ast-type (. node-class __name__) #** args-dict)
       (set-parent-children (.values args-dict))))
+
 
 (defn set-parent-children [parent children]
   (for [n children]
