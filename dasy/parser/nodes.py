@@ -49,7 +49,12 @@ def parse_if(expr):
     else_ = process_body(else_nodes)
     test = parser.parse_node(expr[1])
 
-    if len(body) == 1 and len(else_) == 1 and isinstance(body[0], vy_nodes.ExprNode) and isinstance(else_[0], vy_nodes.ExprNode):
+    if (
+        len(body) == 1
+        and len(else_) == 1
+        and isinstance(body[0], vy_nodes.ExprNode)
+        and isinstance(else_[0], vy_nodes.ExprNode)
+    ):
         body = body[0]
         else_ = else_[0]
         if_node = build_node(vy_nodes.IfExp, test=test, body=body, orelse=else_)
@@ -58,6 +63,7 @@ def parse_if(expr):
         if_node = build_node(vy_nodes.If, test=test, body=body, orelse=else_)
         set_parent_children(if_node, body + else_ + [test])
     return if_node
+
 
 def parse_assign(expr):
     # needs some slight massaging due to the way targets/target is treated
