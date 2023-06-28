@@ -210,7 +210,7 @@ def parse_node(
 def parse_src(src: str):
     global SRC
     SRC = src
-    mod_node = build_node(vy_nodes.Module, body=[], name="", doc_string="")
+    mod_node: vy_nodes.Module = build_node(vy_nodes.Module, body=[], name="", doc_string="")
 
     vars = []
     fs = []
