@@ -167,40 +167,29 @@ def parse_defn(fn_tree):
             n._parent = fn_node
     return fn_node
 
-
 def parse_declaration(var, typ, value=None):
     target = dasy.parse.parse_node(var)
-    is_constant = False
-    is_public = False
-    is_immutable = False
+    annotation_attrs = {"public": False, "immutable": False, "constant": False}
+    annotation = None
+
     match typ:
-        case [models.Symbol(e), typ_decl] if str(e) in [
-            "public",
-            "immutable",
-            "constant",
-        ]:
+        case [models.Symbol(e), typ_decl] if str(e) in annotation_attrs.keys():
             annotation = dasy.parse.parse_node(typ)
-            match str(e):
-                case "public":
-                    is_public = True
-                case "immutable":
-                    is_immutable = True
-                case "constant":
-                    is_constant = True
-        case models.Expression():
-            annotation = dasy.parse.parse_node(typ)
-        case models.Keyword():
+            annotation_attrs[str(e)] = True
+        case models.Expression() | models.Keyword():
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
+
+    if annotation is None:
+        raise Exception(f"No valid annotation was found")
+
     vdecl_node = build_node(
         vy_nodes.VariableDecl,
         target=target,
         annotation=annotation,
         value=value,
-        is_constant=is_constant,
-        is_public=is_public,
-        is_immutable=is_immutable,
+        **annotation_attrs,
     )
     return vdecl_node
 
@@ -208,52 +197,34 @@ def parse_declaration(var, typ, value=None):
 def parse_defvars(expr):
     return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
-
-def create_annassign_node(var, typ, value=None) -> vy_nodes.AnnAssign:
+def create_annotated_node(node_class, var, typ, value=None):
     target = dasy.parse.parse_node(var)
-    match typ:
-        case models.Expression() | models.Keyword() | models.Symbol():
-            annotation = dasy.parse.parse_node(typ)
-        case _:
-            raise Exception(f"Invalid declaration type {typ}")
-    annassign_node = build_node(
-        vy_nodes.AnnAssign, target=target, annotation=annotation, value=value
-    )
-    return annassign_node
-
-
-def create_variabledecl_node(var, typ, value=None) -> vy_nodes.VariableDecl:
-    target = dasy.parse.parse_node(var)
-    match typ:
-        case models.Expression() | models.Keyword() | models.Symbol():
-            annotation = dasy.parse.parse_node(typ)
-        case _:
-            raise Exception(f"Invalid declaration type {typ}")
-    vdecl_node = build_node(
-        vy_nodes.VariableDecl, target=target, annotation=annotation, value=value
-    )
-    return vdecl_node
-
-
-def parse_variabledecl(expr) -> vy_nodes.VariableDecl:
-    node = create_variabledecl_node(
-        expr[1],
-        expr[2],
-        value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None,
+    if not isinstance(typ, (models.Expression, models.Keyword, models.Symbol)):
+        raise Exception(f"Invalid declaration type {typ}")
+    annotation = dasy.parse.parse_node(typ)
+    node = build_node(
+        node_class, target=target, annotation=annotation, value=value
     )
     return node
 
-
-def parse_annassign(expr) -> vy_nodes.AnnAssign:
-    return create_annassign_node(
+def parse_variabledecl(expr) -> vy_nodes.VariableDecl:
+    return create_annotated_node(
+        vy_nodes.VariableDecl,
         expr[1],
         expr[2],
         value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None,
     )
 
+def parse_annassign(expr) -> vy_nodes.AnnAssign:
+    return create_annotated_node(
+        vy_nodes.AnnAssign,
+        expr[1],
+        expr[2],
+        value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None,
+    )
 
 def parse_structbody(expr):
-    return [create_annassign_node(var, typ) for var, typ in pairwise(expr[2:])]
+    return [create_annotated_node(vy_nodes.AnnAssign, var, typ) for var, typ in pairwise(expr[2:])]
 
 
 def parse_defcontract(expr):
