@@ -73,16 +73,16 @@ def parse_fn_args(fn_tree):
     )
     return args, rest
 
+
 def parse_fn_decorators(decs):
     if isinstance(decs, models.Keyword):
         return [
-            vy_nodes.Name(
-                id=str(decs.name), node_id=next_nodeid(), ast_type="Name"
-            )
+            vy_nodes.Name(id=str(decs.name), node_id=next_nodeid(), ast_type="Name")
         ]
     elif isinstance(decs, models.List):
         return [dasy.parse.parse_node(d) for d in decs]
     return []
+
 
 def parse_fn_body(body, wrap=False):
     fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
@@ -95,6 +95,7 @@ def parse_fn_body(body, wrap=False):
     else:
         fn_body.append(dasy.parse.parse_node(body[-1]))
     return process_body(fn_body)
+
 
 def parse_defn(fn_tree):
     fn_node_id = next_nodeid()
@@ -113,14 +114,18 @@ def parse_defn(fn_tree):
         decorators = [
             vy_nodes.Name(id="external", node_id=next_nodeid(), ast_type="Name")
         ]
-        fn_body = process_body([dasy.parse.parse_node(body_node) for body_node in rest[1:]])
+        fn_body = process_body(
+            [dasy.parse.parse_node(body_node) for body_node in rest[1:]]
+        )
 
     elif fn_args_len > 3 and isinstance(fn_args[3], (models.Keyword, models.List)):
         # (defn name [args] :uint256 :external ...)
         # (defn name [args] :uint256 [:external :view] ...)
         assert isinstance(fn_args[0], models.Symbol)
         assert isinstance(fn_args[1], models.List)
-        assert isinstance(fn_args[2], (models.Keyword, models.Expression, models.Symbol))
+        assert isinstance(
+            fn_args[2], (models.Keyword, models.Expression, models.Symbol)
+        )
         rets = dasy.parse.parse_node(fn_args[2])
         args, rest = parse_fn_args(fn_tree)
         decorators = parse_fn_decorators(fn_args[3])
@@ -182,15 +187,15 @@ def parse_declaration(var, typ, value=None):
 def parse_defvars(expr):
     return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
+
 def create_annotated_node(node_class, var, typ, value=None):
     target = dasy.parse.parse_node(var)
     if not isinstance(typ, (models.Expression, models.Keyword, models.Symbol)):
         raise Exception(f"Invalid declaration type {typ}")
     annotation = dasy.parse.parse_node(typ)
-    node = build_node(
-        node_class, target=target, annotation=annotation, value=value
-    )
+    node = build_node(node_class, target=target, annotation=annotation, value=value)
     return node
+
 
 def parse_variabledecl(expr) -> vy_nodes.VariableDecl:
     return create_annotated_node(
@@ -200,6 +205,7 @@ def parse_variabledecl(expr) -> vy_nodes.VariableDecl:
         value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None,
     )
 
+
 def parse_annassign(expr) -> vy_nodes.AnnAssign:
     return create_annotated_node(
         vy_nodes.AnnAssign,
@@ -208,8 +214,12 @@ def parse_annassign(expr) -> vy_nodes.AnnAssign:
         value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None,
     )
 
+
 def parse_structbody(expr):
-    return [create_annotated_node(vy_nodes.AnnAssign, var, typ) for var, typ in pairwise(expr[2:])]
+    return [
+        create_annotated_node(vy_nodes.AnnAssign, var, typ)
+        for var, typ in pairwise(expr[2:])
+    ]
 
 
 def parse_defcontract(expr):

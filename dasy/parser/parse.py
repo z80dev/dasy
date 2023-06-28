@@ -211,10 +211,13 @@ def parse_node(
             raise ValueError(f"No match for node {node}. Unsupported node type.")
     return add_src_map(SRC, node, ast_node)
 
+
 def parse_src(src: str):
     global SRC
     SRC = src
-    mod_node: vy_nodes.Module = build_node(vy_nodes.Module, body=[], name="", doc_string="")
+    mod_node: vy_nodes.Module = build_node(
+        vy_nodes.Module, body=[], name="", doc_string=""
+    )
 
     vars = []
     fs = []
@@ -236,7 +239,16 @@ def parse_src(src: str):
 
         if isinstance(ast, vy_nodes.Module):
             mod_node = ast
-        elif isinstance(ast, (vy_nodes.VariableDecl, vy_nodes.StructDef, vy_nodes.EventDef, vy_nodes.InterfaceDef, vy_nodes.EnumDef)):
+        elif isinstance(
+            ast,
+            (
+                vy_nodes.VariableDecl,
+                vy_nodes.StructDef,
+                vy_nodes.EventDef,
+                vy_nodes.InterfaceDef,
+                vy_nodes.EnumDef,
+            ),
+        ):
             vars.append(ast)
         elif isinstance(ast, vy_nodes.FunctionDef):
             fs.append(ast)
