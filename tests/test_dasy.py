@@ -359,6 +359,10 @@ def test_in():
     assert c.foo()
     assert not c.bar()
 
+
 def test_unsafe_ops():
     c = compile("examples/unsafe_ops.dasy")
-    assert c.unsafe_sub(0, 1) == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    assert (
+        c.unsafe_sub(0, 1)
+        == 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    )
