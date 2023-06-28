@@ -207,7 +207,6 @@ def parse_node(
             raise ValueError(f"No match for node {node}. Unsupported node type.")
     return add_src_map(SRC, node, ast_node)
 
-
 def parse_src(src: str):
     global SRC
     SRC = src
@@ -231,27 +230,26 @@ def parse_src(src: str):
         else:
             continue
 
-        match ast:
-            case vy_nodes.Module:
-                mod_node = ast
-            case vy_nodes.VariableDecl() | vy_nodes.StructDef() | vy_nodes.EventDef() | vy_nodes.InterfaceDef() | vy_nodes.EnumDef():
-                vars.append(ast)
-            case vy_nodes.FunctionDef():
-                fs.append(ast)
-            case list():
-                for var in ast:
-                    var_node = var
-                    if isinstance(var, vy_nodes.AnnAssign):
-                        var_node = convert_annassign(var)
-                    elif isinstance(var, vy_nodes.FunctionDef):
-                        fs.append(var)
-                        continue
-                    vars.append(var_node)
-            case vy_nodes.AnnAssign():
-                new_node = convert_annassign(ast)
-                vars.append(new_node)
-            case _:
-                raise Exception(f"Unrecognized top-level form {element} {ast}")
+        if isinstance(ast, vy_nodes.Module):
+            mod_node = ast
+        elif isinstance(ast, (vy_nodes.VariableDecl, vy_nodes.StructDef, vy_nodes.EventDef, vy_nodes.InterfaceDef, vy_nodes.EnumDef)):
+            vars.append(ast)
+        elif isinstance(ast, vy_nodes.FunctionDef):
+            fs.append(ast)
+        elif isinstance(ast, list):
+            for var in ast:
+                var_node = var
+                if isinstance(var, vy_nodes.AnnAssign):
+                    var_node = convert_annassign(var)
+                elif isinstance(var, vy_nodes.FunctionDef):
+                    fs.append(var)
+                    continue
+                vars.append(var_node)
+        elif isinstance(ast, vy_nodes.AnnAssign):
+            new_node = convert_annassign(ast)
+            vars.append(new_node)
+        else:
+            raise Exception(f"Unrecognized top-level form {element} {ast}")
 
     for e in vars + fs:
         mod_node.add_to_body(e)
