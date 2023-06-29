@@ -132,7 +132,8 @@ def parse_defn(fn_tree):
     else:
         raise Exception(f"Invalid fn form {fn_tree}")
 
-    fn_node = vy_nodes.FunctionDef(
+    fn_node = build_node(
+        vy_nodes.FunctionDef,
         args=args,
         returns=rets,
         decorator_list=decorators,
@@ -140,10 +141,7 @@ def parse_defn(fn_tree):
         body=fn_body,
         name=name,
         node_id=fn_node_id,
-        ast_type="FunctionDef",
     )
-
-    set_parent_children(fn_node, fn_body)
 
     return fn_node
 

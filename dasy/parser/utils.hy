@@ -51,8 +51,10 @@
     (.update args-dict args-zip-dict)
     (for [slot (list (cut node-class.__slots__ (len args) None))]
       (assoc args-dict slot None)))
-  (-> (node-class :node-id (next_nodeid) :ast-type (. node-class __name__) #** args-dict)
-      (set-parent-children (.values args-dict))))
+  (let [node-id (.get args-dict "node_id" (next_nodeid))]
+    (when (in "node_id" args-dict) (del (get args-dict "node_id")))
+    (-> (node-class :node-id node-id :ast-type (. node-class __name__) #** args-dict)
+        (set-parent-children (.values args-dict)))))
 
 
 (defn set-parent-children [parent children]
