@@ -24,7 +24,6 @@ def parse_for(expr):
     body_nodes = [parser.parse_node(b) for b in expr[2:]]
     body = process_body(body_nodes)
     for_node = build_node(vy_nodes.For, body=body, iter=iter_node, target=target_node)
-    set_parent_children(for_node, body + [target_node, iter_node])
     return for_node
 
 
@@ -34,21 +33,18 @@ def parse_if(expr):
         if expr[3] == models.Symbol("None"):
             return parser.parse_node(expr[2])
 
-    # we need to determine if this is an if expression or if statement
-    # if expressionsn always have 4 elements, if statements may have 3
-    # if expressions always have a single element in the body and else
-    # if statements have 1 or more elements in the body and else
-    #
-    # so our criteria can be something like:
-    # - if len(expr) == 4 and len(expr[2]) == 1 and len(expr[3]) == 1 and
-    # both body and else are instances of vy_nodes.ExprNode
-
     body_nodes = [parser.parse_node(expr[2])]
     body = process_body(body_nodes)
     else_nodes = [parser.parse_node(expr[3])] if len(expr) == 4 else []
     else_ = process_body(else_nodes)
     test = parser.parse_node(expr[1])
 
+    # if-expressions always have:
+    # - one node in body
+    # - one node in else
+    # - both nodes are ExprNodes
+    # in theory we could also verify that both ExprNodes are of the same type
+    # but the Vyper compiler will catch that anyway
     if (
         len(body) == 1
         and len(else_) == 1
@@ -58,10 +54,8 @@ def parse_if(expr):
         body = body[0]
         else_ = else_[0]
         if_node = build_node(vy_nodes.IfExp, test=test, body=body, orelse=else_)
-        set_parent_children(if_node, [body, else_, test])
     else:
         if_node = build_node(vy_nodes.If, test=test, body=body, orelse=else_)
-        set_parent_children(if_node, body + else_ + [test])
     return if_node
 
 
@@ -79,7 +73,6 @@ def parse_expr(expr, nodes):
 
 def build_and_parent(node_type, body_nodes, else_nodes, test):
     node = build_node(node_type, test=test, body=body_nodes, orelse=else_nodes)
-    set_parent_children(node, body_nodes + else_nodes + [test])
     return node
 
 

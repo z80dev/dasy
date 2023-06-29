@@ -175,8 +175,6 @@ def parse_node(
             ast_node = parse_expr(node)
         case models.Integer(node):
             ast_node = build_node(vy_nodes.Int, value=int(node))
-        case models.Float(node):
-            raise NotImplementedError("Floating point not supported (yet)")
         case models.String(node):
             ast_node = build_node(vy_nodes.Str, value=str(node))
         case models.Symbol(node):
@@ -207,6 +205,8 @@ def parse_node(
             ast_node = build_node(
                 vy_nodes.List, elements=[parse_node(elmt) for elmt in lst]
             )
+        case models.Float(node):
+            raise NotImplementedError("Floating point not supported (yet)")
         case _:
             raise ValueError(f"No match for node {node}. Unsupported node type.")
     return add_src_map(SRC, node, ast_node)
