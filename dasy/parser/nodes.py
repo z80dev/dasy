@@ -71,11 +71,6 @@ def parse_expr(expr, nodes):
     return [parser.parse_node(node) for node in expr[1 : nodes + 1]]
 
 
-def build_and_parent(node_type, body_nodes, else_nodes, test):
-    node = build_node(node_type, test=test, body=body_nodes, orelse=else_nodes)
-    return node
-
-
 handlers = {
     node_type.__name__.lower(): lambda expr, node_type=node_type: build_node(
         node_type, *parse_expr(expr, 2)
