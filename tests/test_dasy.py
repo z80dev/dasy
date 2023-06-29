@@ -372,6 +372,17 @@ def test_in():
     assert not c.bar()
 
 
+def test_usub():
+    c = compile_src(
+        """
+        (defn foo [:int256 x] :int256 :external
+            (return (usub x)))
+        """
+    )
+
+    assert c.foo(10) == -10
+
+
 def test_unsafe_ops():
     c = compile("examples/unsafe_ops.dasy")
     assert (

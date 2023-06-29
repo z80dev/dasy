@@ -25,5 +25,6 @@
         "in" (build-node In :-pretty "in" :-description "membership")
         "notin" (build-node NotIn :-pretty "not in" :-description "exclusion")
         "not" (build-node Not :-pretty "not" :-description "negation")
+        "usub" (build-node USub :-pretty "-" :-description "unary subtraction")
         "and" (build-node And :-pretty "and" :-description "boolean and")
         "or" (build-node Or :-pretty "or" :-description "boolean or")))
