@@ -256,6 +256,8 @@ def test_ifelse():
     assert c.useCond(15) == 2
     assert c.useCond(25) == 3
     assert c.absoluteValue(10, 5) == 5
+    assert c.setIf(100) == 2
+    assert c.setIf(1) == 1
 
 
 def test_for_loop():

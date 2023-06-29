@@ -21,3 +21,10 @@
   (if (>= x y)
        (- x y)
        (- y x)))
+
+(defn setIf [:uint256 x] :uint256 [:external :pure]
+  (defvar y :uint256
+    (if (<= x 10)
+        1
+        2))
+  y)
