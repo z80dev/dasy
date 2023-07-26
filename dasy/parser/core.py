@@ -1,6 +1,6 @@
 import dasy
 import vyper.ast.nodes as vy_nodes
-from .utils import build_node, next_nodeid, pairwise, set_parent_children
+from .utils import build_node, next_nodeid, pairwise
 from hy import models
 
 from .utils import has_return, process_body
@@ -18,19 +18,16 @@ def parse_attribute(expr):
 
 
 def parse_tuple(tuple_tree):
-    match tuple_tree:
-        case models.Symbol(q), elements if str(q) == "quote":
-            return build_node(
-                vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements]
-            )
-        case models.Symbol(q), *elements if str(q) == "tuple":
-            return build_node(
-                vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements]
-            )
-        case _:
-            raise Exception(
-                "Invalid tuple declaration; requires quoted list or tuple-fn ex: '(2 3 4)/(tuple 2 3 4)"
-            )
+    elements = []
+    if tuple_tree[0] == models.Symbol("quote"):
+        elements = tuple_tree[1]
+    elif tuple_tree[0] == models.Symbol("tuple"):
+        elements = tuple_tree[1:]
+    else:
+        raise Exception("Invalid tuple declaration")
+    return build_node(
+        vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements]
+    )
 
 
 def parse_args_list(args_list) -> list[vy_nodes.arg]:
@@ -91,42 +88,60 @@ def parse_fn_body(body, wrap=False):
     return process_body(fn_body)
 
 
+def _fn_tree_has_return_type(fn_tree):
+    # has return type
+    # (defn name [args] :uint256 :external ...)
+    # (defn name [args] :uint256 [:external :view] ...)
+    fn_args = fn_tree[1:]
+    fn_args_len = len(fn_args)
+    return (
+        fn_args_len > 3
+        and isinstance(fn_args[0], models.Symbol)
+        and isinstance(fn_args[1], models.List)
+        and isinstance(fn_args[2], (models.Keyword, models.Expression, models.Symbol))
+        and isinstance(fn_args[3], (models.Keyword, models.List))
+    )
+
+
+def _fn_tree_has_no_return_type(fn_tree):
+    # no return type
+    # (defn name [args] ...)
+    fn_args = fn_tree[1:]
+    fn_args_len = len(fn_args)
+    return (
+        fn_args_len > 2
+        and isinstance(fn_args[0], models.Symbol)
+        and isinstance(fn_args[1], models.List)
+        and isinstance(fn_args[2], (models.Keyword, models.List))
+    )
+
+
+def _fn_is_constructor(fn_tree):
+    return isinstance(fn_tree[1], models.Symbol) and str(fn_tree[1]) == "__init__"
+
+
 def parse_defn(fn_tree):
-    fn_node_id = next_nodeid()
+    fn_node_id = (
+        next_nodeid()
+    )  # we want our fn node to have a lower id than its child node
     assert isinstance(fn_tree, models.Expression)
     assert fn_tree[0] == models.Symbol("defn")
-    rets = None
+    return_type = None
     name = str(fn_tree[1])
     args = None
     decorators = []
 
     fn_args = fn_tree[1:]
-    fn_args_len = len(fn_args)
+    args, rest = parse_fn_args(fn_tree)
 
-    if str(fn_tree[1]) == "__init__":
-        args, rest = parse_fn_args(fn_tree)
+    if _fn_is_constructor(fn_tree):
         decorators = [build_node(vy_nodes.Name, id="external")]
-        fn_body = process_body(
-            [dasy.parse.parse_node(body_node) for body_node in rest[1:]]
-        )
-
-    elif fn_args_len > 3 and isinstance(fn_args[3], (models.Keyword, models.List)):
-        # (defn name [args] :uint256 :external ...)
-        # (defn name [args] :uint256 [:external :view] ...)
-        assert isinstance(fn_args[0], models.Symbol)
-        assert isinstance(fn_args[1], models.List)
-        assert isinstance(
-            fn_args[2], (models.Keyword, models.Expression, models.Symbol)
-        )
-        rets = dasy.parse.parse_node(fn_args[2])
-        args, rest = parse_fn_args(fn_tree)
+        fn_body = parse_fn_body(rest[1:])
+    elif _fn_tree_has_return_type(fn_tree):
         decorators = parse_fn_decorators(fn_args[3])
         fn_body = parse_fn_body(rest[2:], wrap=True)
-    elif isinstance(fn_args[2], (models.Keyword, models.List)):
-        # (defn name [args] ...)
-        assert isinstance(fn_args[0], models.Symbol)
-        assert isinstance(fn_args[1], models.List)
-        args, rest = parse_fn_args(fn_tree)
+        return_type = dasy.parse.parse_node(fn_args[2])
+    elif _fn_tree_has_no_return_type(fn_tree):
         decorators = parse_fn_decorators(fn_args[2])
         fn_body = parse_fn_body(rest[1:])
     else:
@@ -135,7 +150,7 @@ def parse_defn(fn_tree):
     fn_node = build_node(
         vy_nodes.FunctionDef,
         args=args,
-        returns=rets,
+        returns=return_type,
         decorator_list=decorators,
         pos=None,
         body=fn_body,
@@ -248,27 +263,23 @@ def parse_definterface(expr):
     name = str(expr[1])
     body = []
     for f in expr[2:]:
-        rets = None
-        fn_name = str(f[1])
-        args = None
-        decorators = []
+        rets = None if len(f) == 4 else dasy.parse.parse_node(f[3])
 
         args_list = parse_args_list(f[2])
-        args = build_node(vy_nodes.arguments, args=args_list, defaults=list())
-        if len(f) == 5:
-            # have return
-            rets = dasy.parse.parse_node(f[3])
-        vis_node = dasy.parse.parse_node(f[-1])
-        expr_node = build_node(vy_nodes.Expr, value=vis_node)
-        fn_body = [expr_node]
+        args_node = build_node(vy_nodes.arguments, args=args_list, defaults=list())
+
+        # in an interface, the body is a single expr node with the visibility
+        visibility_node = dasy.parse.parse_node(f[-1])
+        body_node = build_node(vy_nodes.Expr, value=visibility_node)
+
         fn_node = build_node(
             vy_nodes.FunctionDef,
-            args=args,
+            args=args_node,
             returns=rets,
-            decorator_list=decorators,
+            decorator_list=[],
             pos=None,
-            body=fn_body,
-            name=fn_name,
+            body=[body_node],
+            name=str(f[1]),
         )
         body.append(fn_node)
 

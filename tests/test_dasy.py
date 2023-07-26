@@ -122,7 +122,7 @@ def test_struct():
     (defn __init__ [] :external
       (setv (. self/person age) 12))
     (defn memoryPerson [] Person :external
-      (defvar mPers Person self/person)
+      (def mPers Person self/person)
       (set-in mPers age 10)
       mPers)
     """

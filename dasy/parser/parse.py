@@ -1,6 +1,6 @@
 import ast as py_ast
 
-from typing import Optional, Union
+from typing import Union
 
 from dasy.parser.macros import handle_macro, is_macro
 
@@ -17,7 +17,7 @@ from .utils import add_src_map
 from . import nodes, core, macros
 from dasy.builtin import functions
 
-BUILTIN_FUNCS = BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS + ["in", "notin"]
+BUILTIN_FUNCS = BIN_FUNCS | COMP_FUNCS | UNARY_OPS | BOOL_OPS | {"in", "notin"}
 
 NAME_CONSTS = ["True", "False"]
 
@@ -33,6 +33,7 @@ ALIASES = {
     "-!": "unsafe_sub",
     "*!": "unsafe_mul",
     "/!": "unsafe_div",
+    "def": "annassign",
 }
 
 SRC = ""
@@ -65,9 +66,14 @@ def convert_annassign(ast):
         child._parent = new_node
     return new_node
 
+DONT_REPLACE = ("tuple")
 
 def parse_expr(expr):
+    # print(f"parse_expr: {expr}")
     cmd_str = ALIASES.get(str(expr[0]), str(expr[0]))
+
+    if cmd_str != str(expr[0]) and cmd_str not in DONT_REPLACE:
+        expr = models.Expression((models.Symbol(cmd_str), *expr[1:]))
 
     if is_op(cmd_str):
         return parse_op(expr, cmd_str)
@@ -179,6 +185,7 @@ def parse_node(
             ast_node = build_node(vy_nodes.Str, value=str(node))
         case models.Symbol(node):
             str_node = str(node)
+            str_node = ALIASES.get(str_node, str_node)
             if str_node in CONSTS:
                 ast_node = parse_node(CONSTS[str(node)])
             elif str_node in BUILTIN_FUNCS:
@@ -227,13 +234,9 @@ def parse_src(src: str):
 
         if isinstance(ast, list):
             for v in ast:
-                v.full_source_code = src
+                add_src_map(src, element, v)
         elif ast:
-            ast.full_source_code = src
-            ast.lineno = element.start_line
-            ast.end_lineno = element.end_line
-            ast.col_offset = element.start_column
-            ast.end_col_offset = element.end_column
+            add_src_map(src, element, ast)
         else:
             continue
 

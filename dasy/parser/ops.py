@@ -4,14 +4,14 @@ from dasy import parser
 from vyper.ast.nodes import BinOp, Compare, UnaryOp, BoolOp
 from .builtins import build_node
 
-BIN_FUNCS = ["+", "-", "/", "*", "**", "%"]
-COMP_FUNCS = ["<", "<=", ">", ">=", "==", "!=", "in", "notin"]
-UNARY_OPS = ["not", "usub"]
-BOOL_OPS = ["and", "or"]
+BIN_FUNCS = {"+", "-", "/", "*", "**", "%"}
+COMP_FUNCS = {"<", "<=", ">", ">=", "==", "!=", "in", "notin"}
+UNARY_OPS = {"not", "usub"}
+BOOL_OPS = {"and", "or"}
 
 
 def is_op(cmd_str):
-    return cmd_str in BIN_FUNCS + COMP_FUNCS + UNARY_OPS + BOOL_OPS
+    return cmd_str in BIN_FUNCS | COMP_FUNCS | UNARY_OPS | BOOL_OPS
 
 
 def parse_op(expr, alias=None):
