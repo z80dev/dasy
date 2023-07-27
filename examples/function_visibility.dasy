@@ -12,7 +12,7 @@
   ;; (.extFunc self)
 
   ;; can call internal functions
-  (defvar z :uint256 (self/_add x y))
+  (defvar z :uint256 (self._add x y))
   (/ (+ x y)
      2))
 
@@ -20,5 +20,5 @@
   (* x x))
 
 (defn sumOfSquares [:uint256 x y] :uint256 [:external :view]
-  (+ (self/_sqr x)
-     (self/_sqr y)))
+  (+ (self._sqr x)
+     (self._sqr y)))

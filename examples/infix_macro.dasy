@@ -18,9 +18,10 @@
   (let [[arg1 op arg2] expr] ;; destructure the expression
     `(~op ~arg1 ~arg2)))
 
+
 ;; Now we can write infix_add, which is more readable than
 ;; prefix_add to some people. The compiler will expand infix_add to
 ;; prefix_add, so the two functions are equivalent.
 (defn infix_add [:uint256 x y] :uint256 [:external :pure]
-  (infix*
+  (infix
    (x + y)))

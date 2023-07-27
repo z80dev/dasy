@@ -201,6 +201,12 @@ def parse_node(
                     (models.Symbol("."), models.Symbol(target), models.Symbol(attr))
                 )
                 ast_node = parse_node(replacement_node)
+            elif "." in str_node and len(str_node) > 1:
+                target, attr = str(node).split(".")
+                replacement_node = models.Expression(
+                    (models.Symbol("."), models.Symbol(target), models.Symbol(attr))
+                )
+                ast_node = parse_node(replacement_node)
             else:
                 ast_node = build_node(vy_nodes.Name, id=str(node))
         case models.Keyword(node):
