@@ -1,4 +1,9 @@
+
+;; Contract which extends the hello_world contract via `include`
+
+;; code from hello_world.dasy is injected here
 (include! "examples/hello_world.dasy")
 
+;; define a new function, which references code from the hello_world contract
 (defn setGreeting [(string 100) newGreeting] :external
   (setv self/greet newGreeting))

@@ -69,7 +69,6 @@ def convert_annassign(ast):
 DONT_REPLACE = ("tuple")
 
 def parse_expr(expr):
-    # print(f"parse_expr: {expr}")
     cmd_str = ALIASES.get(str(expr[0]), str(expr[0]))
 
     if cmd_str != str(expr[0]) and cmd_str not in DONT_REPLACE:

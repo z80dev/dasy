@@ -31,6 +31,8 @@
         `(setv (. self ~k) ~k)))
 
 (defmacro get-at [obj #* keys]
+  "(get-at person age) -> (subscript person age).
+   The vyper equivalent is: person[age]"
   (let [body `(subscript ~obj ~(get keys 0))]
     (for [k (cut keys 1 None)]
       (setv body `(subscript ~body ~k)))

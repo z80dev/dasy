@@ -1,3 +1,6 @@
+
+;; Contract containing a single greeting variable
+
 ;; Create a string variable that can store maximum 100 characters
 (defvar greet (public (string 100)))
 
