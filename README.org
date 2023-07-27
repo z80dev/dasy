@@ -48,7 +48,7 @@ There are a lot of opportunities for macros in smart contracts. They can also be
 macros are written in Hy, a pythonic lisp. They allow us to transform our code at compile time, allowing the developer to tailor the language itself to their needs.
 
 =cond= and =condp= are examples of useful macros that help make your code shorter, yet easier to understand.
-#+begin_src lisp
+#+begin_src clojure
 (defn useIf [:uint256 x] :uint256 :external
   (if (<= x 10)
       (return 1)
