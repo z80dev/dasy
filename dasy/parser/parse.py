@@ -66,7 +66,9 @@ def convert_annassign(ast):
         child._parent = new_node
     return new_node
 
-DONT_REPLACE = ("tuple")
+
+DONT_REPLACE = ("tuple",)
+
 
 def parse_expr(expr):
     cmd_str = ALIASES.get(str(expr[0]), str(expr[0]))
