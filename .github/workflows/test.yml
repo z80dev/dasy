@@ -1,0 +1,25 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    needs: install
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Run the test script
+        run: |
+          curl -sSL "https://raw.githubusercontent.com/hhamud/dasy/main/scripts/test.sh" | bash

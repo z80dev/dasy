@@ -15,7 +15,6 @@ vyper = "^0.3.9"
 eth-abi = "^4.0.0"
 eth-typing = "^3.2.0"
 py-evm = ">=0.6.1a2"
-eth-ape = "^0.6.15"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=7.1"
@@ -26,7 +25,9 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-"dasy" = "dasy:main"
+"dasy" = "dasy.cli.main:cli"
+
+
 
 [tool.pytest.ini_options]
 filterwarnings = [
