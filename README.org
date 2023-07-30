@@ -28,6 +28,12 @@ Learn more in the [[file:docs.org][documentation]]
 #+end_src
 
 * Installation
+
+** Using a Bash script (Only MacOS and Linux)
+#+begin_src  bash
+curl -sSL "https://raw.githubusercontent.com/hhamud/dasy/main/install.sh" | bash
+#+end_src
+
 ** For use as a library
 #+begin_src bash
 pip install git+https://github.com/dasylang/dasy.git

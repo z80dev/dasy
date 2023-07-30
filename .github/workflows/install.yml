@@ -1,0 +1,24 @@
+name: Install
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  install:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Run the install script
+        run: |
+          curl -sSL "https://raw.githubusercontent.com/hhamud/dasy/main/scripts/install.sh" | bash
