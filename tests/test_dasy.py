@@ -4,10 +4,6 @@ import boa
 import pytest
 
 
-def test_venom():
-    c = compile("examples/venom.dasy")
-    assert c.retOne() == 1
-
 def test_compare_venom_vyper():
     c = compile("examples/venom.dasy")
     v = boa.load("examples/venom_comp.vy")
