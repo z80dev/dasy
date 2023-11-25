@@ -25,11 +25,11 @@ def parse_venom(expr):
 
     STMT_DISPATCH_TABLE[IDENTIFIER] = generated_builtin()
 
-    return phases.generate_ast(insert_code, 0, "").body[0]
+    return phases.generate_ast(insert_code, 0, "")[1].body[0]
 
 
 def parse_vyper(expr):
-    return phases.generate_ast(str(expr[1]), 0, "").body[0]
+    return phases.generate_ast(str(expr[1]), 0, "")[1].body[0]
 
 
 def wrap_calls(nodes):
