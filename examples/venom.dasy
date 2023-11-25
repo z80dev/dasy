@@ -1,2 +1,16 @@
-(defn absoluteValue [] :external
-   (venom "(seq (mstore (add 32 31) 5945936342127) (mstore 0 20) (return 0 0))"))
+(defn storeInMem [] :external
+   (venom "(seq (mstore (add 32 31) 5945936342127)
+                (mstore 0 20)
+                (return 0 0))"))
+
+(defn retOne [] :uint256 :external
+  (defvar x :uint256 0)
+  (venom "(mstore 64 1)")
+  x)
+
+
+;; 41 gas
+(defn addTwoNums [:uint256 x y] :uint256 :external
+  (defvar z :uint256 0) ;; first variable is at offset 64
+  (venom "(mstore 64 (add (calldataload 4) (calldataload 36)))")
+  z)

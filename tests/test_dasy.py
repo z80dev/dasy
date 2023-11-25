@@ -6,8 +6,15 @@ import pytest
 
 def test_venom():
     c = compile("examples/venom.dasy")
-    c.absoluteValue()
+    assert c.retOne() == 1
 
+def test_compare_venom_vyper():
+    c = compile("examples/venom.dasy")
+    v = boa.load("examples/venom_comp.vy")
+
+    for contract in [c, v]:
+        assert contract.retOne() == 1
+        assert contract.addTwoNums(1, 2) == 3
 
 def compile_src(src: str, *args) -> VyperContract:
     ast = dasy.compile(src, include_abi=True)
