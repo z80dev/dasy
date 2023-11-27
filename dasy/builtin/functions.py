@@ -7,9 +7,12 @@ from vyper.compiler import phases
 
 from dasy import parser
 
+from hy import repr, read_many
+
 
 def parse_venom(expr):
-    ir = IRnode.from_list((parse_s_exp(expr[1]))[0])
+    ir = IRnode.from_list((parse_s_exp(repr(expr[1])[1:]))[0])
+
     # generate some vyper code to patch in.
     IDENTIFIER = f"__DASY_VENOM_BUILTIN_{parser.next_nodeid()}__"
     insert_code = f"{IDENTIFIER}()"
