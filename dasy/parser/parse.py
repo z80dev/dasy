@@ -166,7 +166,7 @@ def parse_node(
         models.Keyword,
         models.Bytes,
         models.List,
-    ]
+    ],
 ):
     """
     This function converts a node into its corresponding AST node based on its type.

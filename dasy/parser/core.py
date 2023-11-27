@@ -176,7 +176,7 @@ def parse_declaration(var, typ, value=None):
             raise Exception(f"Invalid declaration type {typ}")
 
     if annotation is None:
-        raise Exception(f"No valid annotation was found")
+        raise Exception("No valid annotation was found")
 
     vdecl_node = build_node(
         vy_nodes.VariableDecl,

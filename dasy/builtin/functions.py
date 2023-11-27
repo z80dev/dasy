@@ -7,7 +7,7 @@ from vyper.compiler import phases
 
 from dasy import parser
 
-from hy import repr, read_many
+from hy import repr
 
 
 def parse_venom(expr):

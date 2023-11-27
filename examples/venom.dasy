@@ -1,11 +1,16 @@
 (defn retOne [] :uint256 :external
   (defvar x :uint256 0)
-  (venom "(mstore 64 1)")
+  (venom (mstore 64 1))
   x)
 
 
-;; 41 gas
+;; this works as-is but unecessary variable costs gas
 (defn addTwoNums [:uint256 x y] :uint256 :external
   (defvar z :uint256 0) ;; first variable is at offset 64
-  (venom "(mstore 64 (add (calldataload 4) (calldataload 36)))")
+  (venom (mstore 64 (add (calldataload 4) (calldataload 36))))
   z)
+
+;; ;; this might be ideal, removing implicit returns around venom blocks
+;; (defn addTwoNums2 [:uint256 x y] :uint256 :external
+;;   (venom (seq
+;;             (mstore 64 (add (calldataload 4) (calldataload 36))))))

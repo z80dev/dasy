@@ -1,6 +1,5 @@
-from dasy.parser.utils import *
-from dasy.parser import reset_nodeid_counter
-from vyper.ast.nodes import *
+from dasy.parser.utils import process_body, add_src_map, set_parent_children, build_node, next_node_id_maker, pairwise, filename_to_contract_name, has_return
+from vyper.ast.nodes import Expr
 import dasy
 
 
@@ -24,11 +23,11 @@ def test_pairwise():
 
 
 def test_has_return():
-    assert has_return(dasy.read("(return 1)")) == True
-    assert has_return(dasy.read("(return 1 2)")) == True
-    assert has_return(dasy.read("(return)")) == True
-    assert has_return(dasy.read("(return (return 1))")) == True
-    assert not has_return(dasy.read("(1 2 3)")) == False
+    assert has_return(dasy.read("(return 1)"))
+    assert has_return(dasy.read("(return 1 2)"))
+    assert has_return(dasy.read("(return)"))
+    assert has_return(dasy.read("(return (return 1))"))
+    assert not has_return(dasy.read("(1 2 3)"))
 
 
 def test_build_node():

@@ -1,6 +1,5 @@
-from dasy import compiler, parser
+from dasy import compiler
 from vyper.compiler import OUTPUT_FORMATS as VYPER_OUTPUT_FORMATS
-from vyper import compiler as vyper_compiler
 import argparse
 import sys
 

@@ -12,7 +12,7 @@ from vyper.ast.nodes import (
 )
 from hy import models
 from dasy import parser
-from .utils import process_body, build_node, set_parent_children
+from .utils import process_body, build_node
 
 
 def parse_for(expr):

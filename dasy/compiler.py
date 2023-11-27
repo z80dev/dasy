@@ -1,4 +1,3 @@
-from vyper.compiler import compile_code
 from vyper.compiler.phases import CompilerData as VyperCompilerData
 from pathlib import Path
 from vyper.compiler.output import (

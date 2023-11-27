@@ -30,6 +30,12 @@
     (isinstance tree Sequence) (for [el tree] (when (has-return el) (return True)))
     True (return False)))
 
+(defn is-venom [tree]
+  (cond
+    (isinstance tree Symbol) (= (str tree) "venom")
+    (isinstance tree Sequence) (for [el tree] (when (is-venom el) (return True)))
+    True (return False)))
+
 (defn filename-to-contract-name [fname]
   ;; converts a filename to a contract name
   ;; e.g. "contracts/my_contract.vy" -> "MyContract"

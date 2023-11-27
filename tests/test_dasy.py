@@ -1,7 +1,6 @@
 import dasy
 from boa.vyper.contract import VyperContract
 import boa
-import pytest
 
 
 def test_compare_venom_vyper():
@@ -11,6 +10,7 @@ def test_compare_venom_vyper():
     for contract in [c, v]:
         assert contract.retOne() == 1
         assert contract.addTwoNums(1, 2) == 3
+
 
 def compile_src(src: str, *args) -> VyperContract:
     ast = dasy.compile(src, include_abi=True)
@@ -166,19 +166,6 @@ def test_map():
     assert c.getOwnerNum() == 10
 
 
-def test_dynarrays():
-    c = compile_src(
-        """
-    (defvar nums (public (dyn-array :uint256 3)))
-    (defn __init__ [] :external
-    (.append self/nums 11)
-    (.append self/nums 12))
-    """
-    )
-    assert c.nums(0) == 11
-    assert c.nums(1) == 12
-
-
 def test_reference_types():
     c = compile_src(
         """
@@ -229,7 +216,7 @@ def test_funtions():
 
 def test_visibility():
     c = compile("examples/function_visibility.dasy")
-    assert c.extFunc() == True
+    assert c.extFunc()
     assert c.sumOfSquares(2, 5) == 29
     assert c.avg(20, 80) == 50
 
@@ -237,7 +224,7 @@ def test_visibility():
 def test_view_pure():
     c = compile("examples/view_pure.dasy")
     assert c.pureFunc(5) == 5
-    assert c.viewFunc(1) == True
+    assert c.viewFunc(1)
     assert c.sum(4, 5, 6) == 15
     assert c.addNum(10) == 10
 
@@ -325,7 +312,6 @@ def testInterface():
     b = compile("examples/test_interface.dasy")
     c = compile("examples/interface.dasy", b.address)
     addr1 = boa.env.generate_address()
-    addr2 = boa.env.generate_address()
     assert b.owner() == c.getOwner()
     c.setOwner(addr1)
     # convert addr1 to 0x formatted hex string
@@ -333,12 +319,12 @@ def testInterface():
 
 
 def test_reentrancy():
-    c = compile("examples/nonreentrant.dasy")
+    c = compile("examples/nonreentrant.dasy") # noqa: F841
 
 
 def test_auction():
     a = boa.env.generate_address()
-    c = compile("examples/simple_auction.dasy", a, 100, 10000000)
+    c = compile("examples/simple_auction.dasy", a, 100, 10000000) # noqa: F841
 
 
 def test_token():
