@@ -319,12 +319,12 @@ def testInterface():
 
 
 def test_reentrancy():
-    c = compile("examples/nonreentrant.dasy") # noqa: F841
+    c = compile("examples/nonreentrant.dasy")  # noqa: F841
 
 
 def test_auction():
     a = boa.env.generate_address()
-    c = compile("examples/simple_auction.dasy", a, 100, 10000000) # noqa: F841
+    c = compile("examples/simple_auction.dasy", a, 100, 10000000)  # noqa: F841
 
 
 def test_token():

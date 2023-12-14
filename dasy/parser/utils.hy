@@ -1,6 +1,26 @@
 (import vyper.ast.nodes *
         hy.models [Symbol Sequence]
-        hyrule.iterables [flatten])
+        hyrule.iterables [flatten]
+        vyper.semantics.types.primitives [SINT UINT BytesM_T])
+
+(require
+        hyrule.control [branch]
+        hyrule.argmove [->])
+
+(defn get-ir-type [name]
+  ;; check if starts with "uint" or "int"
+  ;; if so, return the corresponding type
+  ;; otherwise, return None
+  (let [name-str (str name)
+        [type-constructor size-index] (branch (name-str.startswith it)
+                                        "uint" [UINT 4]
+                                        "int" [SINT 3]
+                                        "bytes" [BytesM_T 5]
+                                        )]
+    (-> name-str
+        (cut size-index None)
+        int
+        type-constructor)))
 
 (require
   hyrule [assoc]

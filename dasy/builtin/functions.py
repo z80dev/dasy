@@ -2,16 +2,29 @@
 from vyper.ast import Call, Expr
 from vyper.ir.s_expressions import parse_s_exp
 from vyper.codegen.ir_node import IRnode
-from vyper.builtins.functions import STMT_DISPATCH_TABLE, BuiltinFunction
+from vyper.builtins.functions import (
+    STMT_DISPATCH_TABLE,
+    DISPATCH_TABLE,
+    BuiltinFunction,
+)
 from vyper.compiler import phases
 
 from dasy import parser
+from dasy.parser.utils import get_ir_type
 
 from hy import repr
 
 
-def parse_venom(expr):
-    ir = IRnode.from_list((parse_s_exp(repr(expr[1])[1:]))[0])
+def parse_ir(expr):
+    # check for optional return type annotation as second element
+    ret_type = None
+    ir_expr = None
+    if len(expr) == 3:
+        ret_type = get_ir_type(expr[1].name)
+        ir_expr = expr[2]
+    elif len(expr) == 2:
+        ir_expr = expr[1]
+    ir = IRnode.from_list((parse_s_exp(repr(ir_expr)[1:]))[0], typ=ret_type)
 
     # generate some vyper code to patch in.
     IDENTIFIER = f"__DASY_VENOM_BUILTIN_{parser.next_nodeid()}__"
@@ -21,13 +34,23 @@ def parse_venom(expr):
     class generated_builtin(BuiltinFunction):
         _id = IDENTIFIER
         _inputs = ()
-        _return_type = None
+        _return_type = ret_type
+
+        def fetch_call_return(self, node):
+            return self._return_type
+
+        def infer_arg_types(self, node):
+            return []
 
         def build_IR(self, expr, context):
             return ir
 
-    STMT_DISPATCH_TABLE[IDENTIFIER] = generated_builtin()
+    if ret_type is not None:
+        DISPATCH_TABLE[IDENTIFIER] = generated_builtin()
+        gend_ast = phases.generate_ast(insert_code, 0, "")
+        return gend_ast[1].body[0].value
 
+    STMT_DISPATCH_TABLE[IDENTIFIER] = generated_builtin()
     return phases.generate_ast(insert_code, 0, "")[1].body[0]
 
 

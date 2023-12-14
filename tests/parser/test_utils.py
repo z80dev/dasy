@@ -1,4 +1,13 @@
-from dasy.parser.utils import process_body, add_src_map, set_parent_children, build_node, next_node_id_maker, pairwise, filename_to_contract_name, has_return
+from dasy.parser.utils import (
+    process_body,
+    add_src_map,
+    set_parent_children,
+    build_node,
+    next_node_id_maker,
+    pairwise,
+    filename_to_contract_name,
+    has_return,
+)
 from vyper.ast.nodes import Expr
 import dasy
 

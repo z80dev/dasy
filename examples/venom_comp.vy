@@ -1,11 +1,8 @@
 @external
 def retOne() -> uint256:
-    x: uint256 = 0
-    x = 1
-    return x
+    return 1
 
 
-# 71 gas
 @external
 def addTwoNums(a: uint256, b: uint256) -> uint256:
     return unsafe_add(a, b)
