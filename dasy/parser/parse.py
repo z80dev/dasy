@@ -35,6 +35,8 @@ ALIASES = {
     "*!": "unsafe_mul",
     "/!": "unsafe_div",
     "def": "annassign",
+    "->": "arrow",
+    "->>": "arroww",
 }
 
 SRC = ""

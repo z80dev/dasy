@@ -98,3 +98,32 @@
         (.append forms (.read dasy stream))
         (except [EOFError] (break))))
     `(splice ~@forms)))
+
+;; ->
+(defmacro arrow [args #*body]
+  ;; TODO: Get rid of this dynamic import
+  (import hy.models [Expression])
+  (let [first-exp (get body 0)
+        rest (cut body 1 None)
+        body (if (isinstance first-exp Expression)
+                 `(~(get first-exp 0) ~args ~@(cut first-exp 1 None))
+                 `(~first-exp ~args))]
+    (for [exp rest]
+      (setv body (if (isinstance exp Expression)
+                    `(~(get exp 0) ~body ~@(cut exp 1 None))
+                    `(~exp ~body))))
+    body))
+
+;; ->>
+(defmacro arroww [args #*body]
+  (import hy.models [Expression])
+  (let [first-exp (get body 0)
+        rest (cut body 1 None)
+        body (if (isinstance first-exp Expression)
+                 `(~(get first-exp 0) ~@(cut first-exp 1 None) ~args)
+                 `(~first-exp ~args))]
+    (for [exp rest]
+      (setv body (if (isinstance exp Expression)
+                    `(~(get exp 0) ~@(cut exp 1 None) ~body)
+                    `(~exp ~body))))
+    body))

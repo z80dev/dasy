@@ -25,7 +25,9 @@
   ;; auction start time can be in the past, present, or future
   (set self/auctionStart auction_start)
   ;; auction end time should be in the future
-  (set self/auctionEnd (+ self/auctionStart bidding_time)))
+  (->> bidding_time
+       (+ self.auctionStart)
+       (set self/auctionEnd)))
 
 ;; Bid on the auction with the value sent with the transaction
 ;; the value will only be refunded if the auction is not won
@@ -37,8 +39,9 @@
   ;; Check if bid is high enough
   (assert (> msg/value self/highestBid))
   ;; Track the refund for the previous highest bidder
-  (+= (subscript self/pendingReturns self/highestBidder) self/highestBid)
-  ;; (set (subscript self/pendingReturns self/highestBidder) (+ 1 (subscript self/pendingReturns self/highestBidder)))
+  (-> self/pendingReturns
+      (subscript self/highestBidder)
+      (+= self/highestBid))
   ;; Track new high bid
   (set self/highestBidder msg/sender)
   (set self/highestBid msg/value))
