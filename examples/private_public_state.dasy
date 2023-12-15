@@ -4,6 +4,6 @@
     bar (public :bool))
 
 (defn __init__ [] :external
-  (setv self/owner msg/sender)
-  (setv self/foo 123)
-  (setv self/bar True))
+  (set self/owner msg/sender)
+  (set self/foo 123)
+  (set self/bar True))

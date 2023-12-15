@@ -5,4 +5,4 @@
 (defvar greet (public (string 100)))
 
 (defn __init__ [] :external
-    (setv self/greet "Hello World"))
+    (set self/greet "Hello World"))

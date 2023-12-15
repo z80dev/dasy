@@ -10,9 +10,9 @@
    ;; (.append self/nums 44)
     )
   ;; delete all elements
-  (setv self/nums [])
+  (set self/nums [])
   ;; set values
-  (setv self/nums [1 2 3]))
+  (set self/nums [1 2 3]))
 
 (defn examples [(dyn-array :uint256 5) xs] (dyn-array :uint256 8) [:external :pure]
   (defvar ys (dyn-array :uint256 8) [1 2 3])

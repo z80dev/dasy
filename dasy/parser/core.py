@@ -179,6 +179,10 @@ def parse_declaration(var, typ, value=None, attrs: Set[str] = set()):
             for attr in attrs:
                 typ = models.Expression((models.Symbol(attr), typ))
             annotation = dasy.parse.parse_node(typ)
+        case models.Symbol():
+            for attr in attrs:
+                typ = models.Expression((models.Symbol(attr), typ))
+            annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
 

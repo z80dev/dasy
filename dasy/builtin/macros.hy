@@ -22,13 +22,13 @@
 ;; Field Access Macros
 
 (defmacro set-in [obj field new-val]
-  "(set-in person age 12) -> (setv (. person age) 12).
+  "(set-in person age 12) -> (set (. person age) 12).
    The vyper equivalent is: person.age = 12"
-  `(setv (. ~obj ~field) ~new-val))
+  `(set (. ~obj ~field) ~new-val))
 
 (defmacro set-self [#* keys]
   (lfor k keys
-        `(setv (. self ~k) ~k)))
+        `(set (. self ~k) ~k)))
 
 (defmacro get-at [obj #* keys]
   "(get-at person age) -> (subscript person age).
@@ -48,13 +48,13 @@
   (let [body `(subscript ~obj ~(get keys 0))]
     (for [k (cut keys 1 -1)]
       (setv body `(subscript ~body ~k)))
-    `(setv ~body ~(get keys -1))))
+    `(set ~body ~(get keys -1))))
 
 (defmacro set-at! [obj keys val]
   (let [body `(subscript ~obj ~(get keys 0))]
     (for [k (cut keys 1 None)]
       (setv body `(subscript ~body ~k)))
-    `(setv ~body ~val)))
+    `(set ~body ~val)))
 
 
 ;; Syntax Sugar macros

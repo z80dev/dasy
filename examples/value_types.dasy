@@ -8,9 +8,9 @@
     s   (public (string 100)))
 
 (defn __init__ [] :external
-    (setv self/b False)
-    (setv self/i -1)
-    (setv self/u 123)
-    (setv self/b32 0xada1b75f8ae9a65dcc16f95678ac203030505c6b465c8206e26ae84b525cdacb)
-    (setv self/bs b"\x01")
-    (setv self/s "Hello Dasy"))
+    (set self/b False)
+    (set self/i -1)
+    (set self/u 123)
+    (set self/b32 0xada1b75f8ae9a65dcc16f95678ac203030505c6b465c8206e26ae84b525cdacb)
+    (set self/bs b"\x01")
+    (set self/s "Hello Dasy"))

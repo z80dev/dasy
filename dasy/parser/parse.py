@@ -29,6 +29,7 @@ ALIASES = {
     "array": "subscript",
     "defvar": "annassign",
     "setv": "assign",
+    "set": "assign",
     "+!": "unsafe_add",
     "-!": "unsafe_sub",
     "*!": "unsafe_mul",

@@ -5,9 +5,9 @@
 
 (defn __init__ [(string 10) name :uint256 duration] :external
     ;; set owner to caller
-    (setv self/owner msg/sender)
+    (set self/owner msg/sender)
     ;; set name from input
-    (setv self/name name)
-    (setv self/createdAt block/timestamp)
-    (setv self/expiresAt (+ block/timestamp
+    (set self/name name)
+    (set self/createdAt block/timestamp)
+    (set self/expiresAt (+ block/timestamp
                             duration)))

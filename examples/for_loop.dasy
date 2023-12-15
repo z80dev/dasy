@@ -8,7 +8,7 @@
   (defvar x :uint256 (max_value :uint256))
   (for [num nums]
        (if (< num x)
-           (setv x num)))
+           (set x num)))
   (defvar c :uint256 0)
   (for [i [1 2 3 4 5]]
        (if (== i 2)

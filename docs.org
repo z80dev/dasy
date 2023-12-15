@@ -88,8 +88,8 @@ The ~value~ form is optional.
 (defn foo [] :external
   (defvar owner_memory :address self/owner)) ;; declare copy in memory
 #+end_src
-** ~setv~
-~(setv name value)~
+** ~set~
+~(set name value)~
 
 This special form assigns a value to a name. It is roughly equivalent to the equal sign ~=~ in Vyper.
 #+begin_src clojure
@@ -97,7 +97,7 @@ This special form assigns a value to a name. It is roughly equivalent to the equ
 (defvar greet (public (string 100)))
 
 (defn __init__ [] :external
-    (setv self/greet "Hello World")) ;; in vyper: self.greet = "Hello World"
+    (set self/greet "Hello World")) ;; in vyper: self.greet = "Hello World"
 #+end_src
 ** ~definterface~
 ~(definterface name & fns)~
@@ -151,8 +151,8 @@ Macros can be used to implement convenient shorthand syntaxes. They can also be 
 In the most simple terms, macros allow you to extend the Dasy compiler yourself in whichever way you see fit.
 
 #+begin_src clojure
-;; (set-at myArr 0 100) -> (setv (subscript myArr 0) 100)
-(defmacro set-at [array index new-val] `(setv (subscript ~array ~index) ~new-val))
+;; (set-at myArr 0 100) -> (set (subscript myArr 0) 100)
+(defmacro set-at [array index new-val] `(set (subscript ~array ~index) ~new-val))
 
 ;; (doto obj (.append 10) (.append 20)) -> (do (.append obj 10) (.append obj 20))
 (defmacro doto [ obj #*cmds]
@@ -207,7 +207,7 @@ In a ~for~ loop's body, ~continue~ and ~break~ behave the same as they do in Vyp
 
 ** ~/~
 
-~(setv self/foo bar)~
+~(set self/foo bar)~
 
 Access object attributes. ~obj/name~ is shorthand for ~(. obj name)~
 ** ~cond~
@@ -236,7 +236,7 @@ Access object attributes. ~obj/name~ is shorthand for ~(. obj name)~
 
 Sets a value at an index within an object. This object can be an array, dynamic array, or hashmap.
 
-This expands to ~(setv (subscript array index) new-val)~
+This expands to ~(set (subscript array index) new-val)~
 
 The vyper equivalent looks like ~obj[index] = val~
 
@@ -252,7 +252,7 @@ The vyper equivalent looks like ~obj[index] = val~
 
 Sets the value of an attribute of an object. This object is usually a struct.
 
-This expands to ~(setv (. obj attr) val)~
+This expands to ~(set (. obj attr) val)~
 
 #+begin_src clojure
 (defstruct Person

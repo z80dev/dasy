@@ -45,7 +45,7 @@ def test_defvars():
     src = """
     (defvars x :uint256)
     (defn setX [:uint256 x] :external
-      (setv self/x x))
+      (set self/x x))
     (defn getX [] :uint256 [:external :view] self/x)
     """
     c = compile_src(src)
@@ -123,7 +123,7 @@ def test_struct():
         age :uint256)
     (defvars person (public Person))
     (defn __init__ [] :external
-      (setv (. self/person age) 12))
+      (set (. self/person age) 12))
     (defn memoryPerson [] Person :external
       (def mPers Person self/person)
       (set-in mPers age 10)
@@ -155,7 +155,7 @@ def test_map():
     (defvars myMap (public (hash-map :address :uint256))
             owner (public :address))
     (defn __init__ [] :external
-      (setv self/owner msg/sender)
+      (set self/owner msg/sender)
       (set-at! self/myMap [msg/sender] 10))
     (defn getOwnerNum [] :uint256 :external
      (get-at! self/myMap [msg/sender]))
@@ -199,7 +199,7 @@ def test_expr_wrap():
     (defvar owner (public :address))
     (defvar nums (public (dyn-array :uint256 3)))
     (defn test [] :external
-      (setv self/owner msg/sender)
+      (set self/owner msg/sender)
       (.append self/nums 1))
     """
     )

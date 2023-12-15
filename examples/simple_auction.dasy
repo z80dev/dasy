@@ -21,11 +21,11 @@
 ;; bidding_time seconds bidding time on behalf of
 ;; the beneficiary address beneficiary
 (defn __init__ [:address beneficiary :uint256 auction_start bidding_time] :external
-  (setv self/beneficiary beneficiary)
+  (set self/beneficiary beneficiary)
   ;; auction start time can be in the past, present, or future
-  (setv self/auctionStart auction_start)
+  (set self/auctionStart auction_start)
   ;; auction end time should be in the future
-  (setv self/auctionEnd (+ self/auctionStart bidding_time)))
+  (set self/auctionEnd (+ self/auctionStart bidding_time)))
 
 ;; Bid on the auction with the value sent with the transaction
 ;; the value will only be refunded if the auction is not won
@@ -38,10 +38,10 @@
   (assert (> msg/value self/highestBid))
   ;; Track the refund for the previous highest bidder
   (+= (subscript self/pendingReturns self/highestBidder) self/highestBid)
-  ;; (setv (subscript self/pendingReturns self/highestBidder) (+ 1 (subscript self/pendingReturns self/highestBidder)))
+  ;; (set (subscript self/pendingReturns self/highestBidder) (+ 1 (subscript self/pendingReturns self/highestBidder)))
   ;; Track new high bid
-  (setv self/highestBidder msg/sender)
-  (setv self/highestBid msg/value))
+  (set self/highestBidder msg/sender)
+  (set self/highestBid msg/value))
 
 ;; withdraw a previously refunded bid
 (defn withdraw [] :external
@@ -57,7 +57,7 @@
   (assert (not self/ended))
 
   ;; effects
-  (setv self/ended True)
+  (set self/ended True)
 
   ;; interactions
   (send self/beneficiary self/highestBid))

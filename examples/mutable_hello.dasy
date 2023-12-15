@@ -6,4 +6,4 @@
 
 ;; define a new function, which references code from the hello_world contract
 (defn setGreeting [(string 100) newGreeting] :external
-  (setv self/greet newGreeting))
+  (set self/greet newGreeting))

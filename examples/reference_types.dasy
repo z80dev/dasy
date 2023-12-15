@@ -3,9 +3,10 @@
   age :uint256)
 
 (defvars
-    nums (public (array :uint256 10)) ;; fixed size list, must be bounded
-    myMap (public (hash-map :address :uint256))
-    person (public Person))
+    :public
+    nums   (array :uint256 10) ;; fixed size list, must be bounded
+    myMap  (hash-map :address :uint256)
+    person Person)
 
 (defn __init__ [] :external
   (doto self/nums

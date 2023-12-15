@@ -13,4 +13,4 @@
 
 (defn pay [] [:external :payable]
   (assert (> msg/value 0) "msg.value = 0")
-  (setv self/owner msg/sender))
+  (set self/owner msg/sender))

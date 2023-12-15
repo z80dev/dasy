@@ -3,7 +3,7 @@
 (defvar test (public TestInterface))
 
 (defn __init__ [:address test] :external
-  (setv self/test (TestInterface test)))
+  (set self/test (TestInterface test)))
 
 (defn getOwner [] :address [:external :view]
   (.owner self/test))

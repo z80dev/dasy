@@ -23,8 +23,8 @@
                                   (** 10
                                       (convert decimals :uint256))))
   (set-self name symbol decimals totalSupply)
-  (set-at self/balanceOf msg/sender totalSupply)
-  (setv self/minter msg/sender)
+  (set-at self.balanceOf msg.sender totalSupply)
+  (set self.minter msg.sender)
   (log (Transfer (empty address) msg/sender totalSupply)))
 
 (defn transfer [:address to :uint256 val] :bool :external

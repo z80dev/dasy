@@ -18,7 +18,7 @@ Learn more in the [[file:docs.org][documentation]]
         owner (public :address))
 
 (defn __init__ [] :external
-  (setv self/owner msg/sender)
+  (set self/owner msg/sender)
   (set-at self/myMap msg/sender 10)
   (do ;; wrap statements in do
     (.append self/nums 11)))

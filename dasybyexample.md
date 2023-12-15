@@ -34,7 +34,7 @@
 2  (defvar greet (public (string 100)))
 3  
 4  (defn __init__ [] :external
-5      (setv self/greet "Hello World"))
+5      (set self/greet "Hello World"))
 ```
 
 
@@ -53,12 +53,12 @@
  8      s   (public (string 100)))
  9  
 10  (defn __init__ [] :external
-11      (setv self/b False)
-12      (setv self/i -1)
-13      (setv self/u 123)
-14      (setv self/b32 0xada1b75f8ae9a65dcc16f95678ac203030505c6b465c8206e26ae84b525cdacb)
-15      (setv self/bs b"\x01")
-16      (setv self/s "Hello Dasy"))
+11      (set self/b False)
+12      (set self/i -1)
+13      (set self/u 123)
+14      (set self/b32 0xada1b75f8ae9a65dcc16f95678ac203030505c6b465c8206e26ae84b525cdacb)
+15      (set self/bs b"\x01")
+16      (set self/s "Hello Dasy"))
 ```
 
 
@@ -121,9 +121,9 @@
 10     ;; (.append self/nums 44)
 11      )
 12    ;; delete all elements
-13    (setv self/nums [])
+13    (set self/nums [])
 14    ;; set values
-15    (setv self/nums [1 2 3]))
+15    (set self/nums [1 2 3]))
 16  
 17  (defn examples [(dyn-array :uint256 5) xs] (dyn-array :uint256 8) [:external :pure]
 18    (defvar ys (dyn-array :uint256 8) [1 2 3])
@@ -226,11 +226,11 @@
  5  
  6  (defn __init__ [(string 10) name :uint256 duration] :external
  7      ;; set owner to caller
- 8      (setv self/owner msg/sender)
+ 8      (set self/owner msg/sender)
  9      ;; set name from input
-10      (setv self/name name)
-11      (setv self/createdAt block/timestamp)
-12      (setv self/expiresAt (+ block/timestamp
+10      (set self/name name)
+11      (set self/createdAt block/timestamp)
+12      (set self/expiresAt (+ block/timestamp
 13                              duration)))
 ```
 
@@ -246,9 +246,9 @@
 4      bar (public :bool))
 5  
 6  (defn __init__ [] :external
-7    (setv self/owner msg/sender)
-8    (setv self/foo 123)
-9    (setv self/bar True))
+7    (set self/owner msg/sender)
+8    (set self/foo 123)
+9    (set self/bar True))
 ```
 
 
@@ -279,8 +279,8 @@
 2  (defvar MY_IMMUTABLE (immutable :uint256))
 3  
 4  (defn __init__ [:uint256 _val] :external
-5    (setv OWNER msg/sender)
-6    (setv MY_IMMUTABLE _val))
+5    (set OWNER msg/sender)
+6    (set MY_IMMUTABLE _val))
 7  
 8  (defn getMyImmutable [] :uint256 [:external :pure]
 9    MY_IMMUTABLE)
@@ -321,7 +321,7 @@
  8    (defvar x :uint256 (max_value :uint256))
  9    (for [num nums]
 10         (if (< num x)
-11             (setv x num)))
+11             (set x num)))
 12    (defvar c :uint256 0)
 13    (for [i [1 2 3 4 5]]
 14         (if (== i 2)
@@ -349,29 +349,29 @@
  3      owner (public :address))
  4  
  5  (defn __init__ [] :external
- 6    (setv self/owner msg/sender))
+ 6    (set self/owner msg/sender))
  7  
  8  (defn testAssert [:uint256 x] :external
  9    (assert (>= x 1) "x < 1")
-10    (setv self/x x))
+10    (set self/x x))
 11  
 12  (defn testRaise [:uint256 x] :external
 13    (if (<= x 1)
 14        (raise "x < 1"))
-15    (setv self/x x))
+15    (set self/x x))
 16  
 17  (defn _testErrorBubblesUp [:uint256 x] :internal
 18    (assert (>= x 1) "x < 1")
-19    (setv self/x x))
+19    (set self/x x))
 20  
 21  (defn testErrorBubblesUp [:uint256 x] :external
 22    (self/_testErrorBubblesUp x)
-23    (setv self/x 123))
+23    (set self/x 123))
 24  
 25  (defn setOwner [:address owner] :external
 26    (assert (== msg/sender self/owner) "!owner")
 27    (assert (!= owner (empty :address)) "owner = zero")
-28    (setv self/owner owner))
+28    (set self/owner owner))
 ```
 
 
@@ -416,7 +416,7 @@
 13  
 14  (defn pay [] [:external :payable]
 15    (assert (> msg/value 0) "msg.value = 0")
-16    (setv self/owner msg/sender))
+16    (set self/owner msg/sender))
 ```
 
 
@@ -484,10 +484,10 @@
 2           y (public :uint256))
 3  
 4  (defn updateX [:uint256 x] :external
-5    (setv self/x (+ x 1)))
+5    (set self/x (+ x 1)))
 6  
 7  (defn updateY [:uint256 y] :external
-8    (setv self/y (* y y)))
+8    (set self/y (* y y)))
 ```
 
 ```clojure
@@ -524,7 +524,7 @@
  7  (defvar test (public TestInterface))
  8  
  9  (defn __init__ [:address test] :external
-10    (setv self/test (TestInterface test)))
+10    (set self/test (TestInterface test)))
 11  
 12  (defn getOwner [] :address [:external :view]
 13    (.owner self/test))
@@ -542,14 +542,14 @@
  3      eth (public :uint256))
  4  
  5  (defn setOwner [:address owner] :external
- 6    (setv self/owner owner))
+ 6    (set self/owner owner))
  7  
  8  (defn sendEth [] [:external :payable]
- 9    (setv self/eth msg/value))
+ 9    (set self/eth msg/value))
 10  
 11  (defn setOwnerAndSendEth [:address owner] [:external :payable]
-12    (setv self/owner owner)
-13    (setv self/eth msg/value))
+12    (set self/owner owner)
+13    (set self/eth msg/value))
 ```
 
 
