@@ -1,3 +1,4 @@
+from typing import Set
 import dasy
 import vyper.ast.nodes as vy_nodes
 from .utils import build_node, next_nodeid, pairwise
@@ -161,9 +162,13 @@ def parse_defn(fn_tree):
     return fn_node
 
 
-def parse_declaration(var, typ, value=None):
+def parse_declaration(var, typ, value=None, attrs: Set[str] = set()):
     target = dasy.parse.parse_node(var)
     annotation_attrs = {"public": False, "immutable": False, "constant": False}
+    if attrs is not None:
+        for attr in attrs:
+            annotation_attrs[attr] = True
+
     annotation = None
 
     match typ:
@@ -171,6 +176,8 @@ def parse_declaration(var, typ, value=None):
             annotation = dasy.parse.parse_node(typ)
             annotation_attrs[str(e)] = True
         case models.Expression() | models.Keyword():
+            for attr in attrs:
+                typ = models.Expression((models.Symbol(attr), typ))
             annotation = dasy.parse.parse_node(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
@@ -189,6 +196,9 @@ def parse_declaration(var, typ, value=None):
 
 
 def parse_defvars(expr):
+    if isinstance(expr[1], models.Keyword):
+        attrs = {expr[1].name}
+        return [parse_declaration(var, typ, attrs=attrs) for var, typ in pairwise(expr[2:])]
     return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
 

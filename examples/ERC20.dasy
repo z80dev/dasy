@@ -9,13 +9,14 @@
   value :uint256)
 
 (defvars
-    name (public (string 32))
-    symbol (public (string 32))
-    decimals (public :uint8)
-    balanceOf (public (hash-map :address :uint256))
-    allowance (public (hash-map :address (hash-map :address :uint256)))
-    totalSupply (public :uint256)
-    minter (public :address))
+    :public
+    name (string 32)
+    symbol (string 32)
+    decimals :uint8
+    balanceOf (hash-map :address :uint256)
+    allowance (hash-map :address (hash-map :address :uint256))
+    totalSupply :uint256
+    minter :address)
 
 (defn __init__ [(string 32) name symbol :uint8 decimals :uint256 supply] :external
   (defvar totalSupply :uint256 (* supply
