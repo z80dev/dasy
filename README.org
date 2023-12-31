@@ -13,9 +13,10 @@ Learn more in the [[file:docs.org][documentation]]
 * Examples
 [[https://dasy-by-example.github.io][More examples at Dasy By Example]]
 #+begin_src clojure
-(defvars myMap (public (hash-map :address :uint256))
-        nums (public (dyn-arr :uint256 3))
-        owner (public :address))
+(defvars :public
+        myMap (hash-map :address :uint256)
+        nums (dyn-arr :uint256 3)
+        owner :address)
 
 (defn __init__ [] :external
   (set self/owner msg/sender)
