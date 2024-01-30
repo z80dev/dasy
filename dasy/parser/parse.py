@@ -252,6 +252,7 @@ def parse_src(src: str):
                 add_src_map(src, element, v)
         elif isinstance(ast, dict):
             settings.update(ast)
+            continue
         elif ast:
             add_src_map(src, element, ast)
         else:

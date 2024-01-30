@@ -1,0 +1,14 @@
+;; (interface! "examples/nonreentrantenforcer.dasy")
+(definterface Nonreentrantenforcer
+    (defn func0 [] :nonpayable))
+
+(defvar target (public Nonreentrantenforcer))
+
+(defn __init__ [:address target] :external
+  (set self/target (Nonreentrantenforcer target)))
+
+(defn callback [] :external
+  (.func0 self/target))
+
+(defn __fallback__ [] :external
+  (.func0 self/target))

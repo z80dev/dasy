@@ -11,6 +11,7 @@ from vyper.compiler.output import (
     build_layout_output,
     build_opcodes_output,
 )
+from vyper.compiler.settings import Settings
 from dasy.parser import parse_src
 from dasy.parser.utils import filename_to_contract_name
 
@@ -74,13 +75,16 @@ class CompilerData(VyperCompilerData):
 
 def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
     (ast, settings) = parse_src(src)
+    settings = Settings(**settings)
     data = CompilerData(
         "",
         ast.name or name,
         None,
         source_id=0,
-        **settings,
+        settings=settings,
     )
+    print(data)
+    print(data.settings)
     data.vyper_module = ast
     return data
 

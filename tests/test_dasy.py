@@ -340,7 +340,10 @@ def testInterface():
 
 
 def test_reentrancy():
-    c = compile("examples/nonreentrant.dasy")  # noqa: F841
+    # TODO: This test should fail!
+    c = compile("examples/nonreentrantenforcer.dasy")  # noqa: F841
+    helper = compile("examples/nonreentrant2.dasy", c.address)  # noqa: F841
+    helper.callback()
 
 
 def test_auction():
