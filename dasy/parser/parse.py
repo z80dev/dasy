@@ -182,6 +182,10 @@ def parse_node(
     # dispatch on type of parsed model
     match node:
         case models.Expression(node):
+            # check for pragma and set settings
+            if node[0] == models.Symbol("pragma"):
+                if node[1] == models.Keyword("evm-version"):
+                    return {"evm_version": str(node[2])}
             ast_node = parse_expr(node)
         case models.Integer(node):
             ast_node = build_node(vy_nodes.Int, value=int(node))
@@ -238,6 +242,7 @@ def parse_src(src: str):
 
     vars = []
     fs = []
+    settings = {}
     for element in hy.read_many(src):
         # parse each top-level form
         ast = parse_node(element)
@@ -245,6 +250,8 @@ def parse_src(src: str):
         if isinstance(ast, list):
             for v in ast:
                 add_src_map(src, element, v)
+        elif isinstance(ast, dict):
+            settings.update(ast)
         elif ast:
             add_src_map(src, element, ast)
         else:
@@ -283,4 +290,4 @@ def parse_src(src: str):
     for e in vars + fs:
         mod_node.add_to_body(e)
 
-    return mod_node
+    return mod_node, settings

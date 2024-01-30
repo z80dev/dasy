@@ -73,12 +73,13 @@ class CompilerData(VyperCompilerData):
 
 
 def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
-    ast = parse_src(src)
+    (ast, settings) = parse_src(src)
     data = CompilerData(
         "",
         ast.name or name,
         None,
         source_id=0,
+        **settings,
     )
     data.vyper_module = ast
     return data

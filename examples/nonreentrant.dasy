@@ -1,3 +1,5 @@
+(pragma :evm-version "cancun")
+
 (defn func0 [] [:external (nonreentrant "lock")]
   (raw_call msg/sender b"" :value 0))
 
