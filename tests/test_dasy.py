@@ -2,7 +2,6 @@ import dasy
 from boa.vyper.contract import VyperContract
 import boa
 
-
 def test_compare_venom_vyper():
     c = compile("examples/venom.dasy")
     v = boa.load("examples/venom_comp.vy")
@@ -11,6 +10,28 @@ def test_compare_venom_vyper():
         assert contract.retOne() == 1
         assert contract.addTwoNums(1, 2) == 3
 
+# def test_merkle():
+#     leaf3 = 0xdca3326ad7e8121bf9cf9c12333e6b2271abe823ec9edfe42f813b1e768fa57b
+#     leaf_bytes = leaf3.to_bytes(32, 'big')
+#     merkle_root = 0xcc086fcc038189b4641db2cc4f1de3bb132aefbd65d510d817591550937818c7
+#     root_bytes = merkle_root.to_bytes(32, 'big')
+#     proof = [0x8da9e1c820f9dbd1589fd6585872bc1063588625729e7ab0797cfc63a00bd950, 0x995788ffc103b987ad50f5e5707fd094419eb12d9552cc423bd0cd86a3861433]
+#     proof_bytes = [x.to_bytes(32, 'big') for x in proof]
+#     vyper_merkle = boa.load("examples/merkle.vy")
+
+#     in1 = 0x835ba2995566015bd49e561c1210937952c6843e10010f333a65b51f69247b44
+#     in1 = in1.to_bytes(32, 'big')
+
+#     in2 = 0x97bcb6ec8d1a742a9e39be8bf20cd581d3af6b4faa63e4e72d67ff57a81b72e9
+#     in2 = in2.to_bytes(32, 'big')
+
+#     in3 = 0xdd1b8d11e7734e8c06816161afb24a5dfa82761dd92afaec2f037f0cd0e369f4
+#     in3 = in3.to_bytes(32, 'big')
+
+#     leaf = 0x1aD91ee08f21bE3dE0BA2ba6918E714dA6B45836000000000000000000000000
+#     leaf = leaf.to_bytes(32, 'big')
+
+#     assert vyper_merkle.verify([in1, in2], in3, leaf)
 
 def compile_src(src: str, *args) -> VyperContract:
     ast = dasy.compile(src, include_abi=True)
@@ -359,6 +380,17 @@ def test_in():
     )
     assert c.foo()
     assert not c.bar()
+
+
+def test_return_variable():
+    c = compile_src(
+        """
+    (defvar x (public :uint256))
+    (defn foo [] :uint256 :external
+      (def x :uint256 5)
+      (return x))
+        """)
+
 
 
 def test_usub():
