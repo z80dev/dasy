@@ -342,8 +342,12 @@ def testInterface():
 def test_reentrancy():
     # TODO: This test should fail!
     c = compile("examples/nonreentrantenforcer.dasy")  # noqa: F841
+    # v = boa.load("examples/nonreentrantenforcer.vy")
+    # print("vyper settings")
+    # print(v.compiler_data.settings)
     helper = compile("examples/nonreentrant2.dasy", c.address)  # noqa: F841
-    helper.callback()
+    with boa.reverts():
+        helper.callback()
 
 
 def test_auction():

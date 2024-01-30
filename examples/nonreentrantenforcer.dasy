@@ -1,10 +1,4 @@
-(pragma :evm-version "paris")
+(pragma :evm-version "cancun")
 
 (defn func0 [] [:external (nonreentrant "lock")]
-  (raw_call msg/sender b"" :value 0))
-
-(defn func1 [] [:external (nonreentrant "lock_2")]
-  (raw_call msg/sender b"" :value 0))
-
-(defn func2 [] [:external (nonreentrant "lock_2")]
   (raw_call msg/sender b"" :value 0))

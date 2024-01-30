@@ -14,6 +14,7 @@ from vyper.compiler.output import (
 from vyper.compiler.settings import Settings
 from dasy.parser import parse_src
 from dasy.parser.utils import filename_to_contract_name
+from vyper.evm.opcodes import anchor_evm_version
 
 
 class CompilerData(VyperCompilerData):
@@ -76,17 +77,19 @@ class CompilerData(VyperCompilerData):
 def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
     (ast, settings) = parse_src(src)
     settings = Settings(**settings)
-    data = CompilerData(
-        "",
-        ast.name or name,
-        None,
-        source_id=0,
-        settings=settings,
-    )
-    print(data)
-    print(data.settings)
-    data.vyper_module = ast
-    return data
+    if settings.evm_version:
+        with anchor_evm_version(settings.evm_version):
+            data = CompilerData(
+                "",
+                ast.name or name,
+                None,
+                source_id=0,
+                settings=settings,
+            )
+            # data.settings = settings
+            data.vyper_module = ast
+            _ = data.bytecode
+            return data
 
 
 def compile(src: str, name="DasyContract", include_abi=True) -> CompilerData:
