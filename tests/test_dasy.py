@@ -1,3 +1,4 @@
+from vyper.evm.opcodes import anchor_evm_version
 import dasy
 from boa.vyper.contract import VyperContract
 import boa
@@ -195,22 +196,23 @@ def test_map():
 
 
 def test_reference_types():
-    c = compile_src(
+    with anchor_evm_version("cancun"):
+        c = compile_src(
+            """
+        (defvar nums (array :uint256 10))
+        (defn memoryArrayVal [] '(:uint256 :uint256) :external
+        (defvar arr (array :uint256 10) self/nums)
+        (set-at arr 1 12)
+        '((get-at arr 0) (get-at arr 1)))
         """
-    (defvar nums (array :uint256 10))
-    (defn memoryArrayVal [] '(:uint256 :uint256) :external
-      (defvar arr (array :uint256 10) self/nums)
-      (set-at arr 1 12)
-      '((get-at arr 0) (get-at arr 1)))
-    """
-    )
-    assert c.memoryArrayVal() == (0, 12)
+        )
+        assert c.memoryArrayVal() == (0, 12)
 
-    d = compile("examples/reference_types.dasy")
-    assert d.person() == ("Dasy", 11)
-    assert d.nums(0) == 123
-    assert d.nums(1) == 0
-    assert d.nums(9) == 456
+        d = compile("examples/reference_types.dasy")
+        assert d.person() == ("Dasy", 11)
+        assert d.nums(0) == 123
+        assert d.nums(1) == 0
+        assert d.nums(9) == 456
 
 
 def test_dynarrays():
@@ -348,13 +350,14 @@ def testInterface():
 
 def test_reentrancy():
     # TODO: This test should fail!
-    c = compile("examples/nonreentrantenforcer.dasy")  # noqa: F841
-    # v = boa.load("examples/nonreentrantenforcer.vy")
-    # print("vyper settings")
-    # print(v.compiler_data.settings)
-    helper = compile("examples/nonreentrant2.dasy", c.address)  # noqa: F841
-    with boa.reverts():
-        helper.callback()
+    with anchor_evm_version("cancun"):
+        c = compile("examples/nonreentrantenforcer.dasy")  # noqa: F841
+        # v = boa.load("examples/nonreentrantenforcer.vy")
+        # print("vyper settings")
+        # print(v.compiler_data.settings)
+        helper = compile("examples/nonreentrant2.dasy", c.address)  # noqa: F841
+        with boa.reverts():
+            helper.callback()
 
 
 def test_auction():

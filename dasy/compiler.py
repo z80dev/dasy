@@ -78,7 +78,7 @@ def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
     (ast, settings) = parse_src(src)
     settings = Settings(**settings)
     version = settings.evm_version or "paris"
-    with anchor_evm_version(settings.evm_version):
+    with anchor_evm_version(version):
         data = CompilerData(
             "",
             ast.name or name,

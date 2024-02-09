@@ -1,4 +1,3 @@
-(pragma :evm-version "cancun")
 (defstruct Person
   name (string 100)
   age :uint256)
