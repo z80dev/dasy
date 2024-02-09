@@ -1,4 +1,8 @@
+
+;; use `pragma` to specify the EVM version
 (pragma :evm-version "cancun")
 
+;; this reentrancy lock will use tstore/tload
 (defn func0 [] [:external (nonreentrant "lock")]
   (raw_call msg/sender b"" :value 0))
+

@@ -140,6 +140,7 @@ def test_if_expr():
 def test_struct():
     c = compile_src(
         """
+    (pragma :evm-version "cancun")
     (defstruct Person
         age :uint256)
     (defvars person (public Person))
@@ -149,10 +150,13 @@ def test_struct():
       (def mPers Person self/person)
       (set-in mPers age 10)
       mPers)
+    (defn literalPerson [] Person :external
+      (Person {:age 100 :name "Foo"}))
     """
     )
     assert c.person()[0] == 12
     assert c.memoryPerson() == (10,)
+    # assert c.literalPerson() == (100,"Foo")
 
 
 def test_arrays():

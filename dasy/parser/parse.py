@@ -228,6 +228,10 @@ def parse_node(
             )
         case models.Float(node):
             raise NotImplementedError("Floating point not supported (yet)")
+        case models.Dict(node):
+            keys = [parse_node(k) for k in node.keys()]
+            values = [parse_node(v) for v in node.values()]
+            ast_node = build_node(vy_nodes.Dict, keys=keys, values=values)
         case _:
             raise ValueError(f"No match for node {node}. Unsupported node type.")
     return add_src_map(SRC, node, ast_node)
