@@ -2,6 +2,7 @@ import dasy
 from boa.vyper.contract import VyperContract
 import boa
 
+
 def test_compare_venom_vyper():
     c = compile("examples/venom.dasy")
     v = boa.load("examples/venom_comp.vy")
@@ -9,6 +10,7 @@ def test_compare_venom_vyper():
     for contract in [c, v]:
         assert contract.retOne() == 1
         assert contract.addTwoNums(1, 2) == 3
+
 
 # def test_merkle():
 #     leaf3 = 0xdca3326ad7e8121bf9cf9c12333e6b2271abe823ec9edfe42f813b1e768fa57b
@@ -32,6 +34,7 @@ def test_compare_venom_vyper():
 #     leaf = leaf.to_bytes(32, 'big')
 
 #     assert vyper_merkle.verify([in1, in2], in3, leaf)
+
 
 def compile_src(src: str, *args) -> VyperContract:
     ast = dasy.compile(src, include_abi=True)
@@ -140,9 +143,9 @@ def test_if_expr():
 def test_struct():
     c = compile_src(
         """
-    (pragma :evm-version "cancun")
     (defstruct Person
-        age :uint256)
+        age :uint256
+        name (string 100))
     (defvars person (public Person))
     (defn __init__ [] :external
       (set (. self/person age) 12))
@@ -155,8 +158,8 @@ def test_struct():
     """
     )
     assert c.person()[0] == 12
-    assert c.memoryPerson() == (10,)
-    # assert c.literalPerson() == (100,"Foo")
+    assert c.memoryPerson() == (10, "")
+    assert c.literalPerson() == (100, "Foo")
 
 
 def test_arrays():
@@ -400,8 +403,8 @@ def test_return_variable():
     (defn foo [] :uint256 :external
       (def x :uint256 5)
       (return x))
-        """)
-
+        """
+    )
 
 
 def test_usub():

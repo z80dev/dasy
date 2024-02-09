@@ -202,7 +202,9 @@ def parse_declaration(var, typ, value=None, attrs: Set[str] = set()):
 def parse_defvars(expr):
     if isinstance(expr[1], models.Keyword):
         attrs = {expr[1].name}
-        return [parse_declaration(var, typ, attrs=attrs) for var, typ in pairwise(expr[2:])]
+        return [
+            parse_declaration(var, typ, attrs=attrs) for var, typ in pairwise(expr[2:])
+        ]
     return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
 
