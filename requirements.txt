@@ -4,3 +4,4 @@ dasy-hy
 hyrule
 black
 pytest
+eth-abi>=5.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
