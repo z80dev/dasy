@@ -9,8 +9,24 @@ from .utils import has_return, process_body
 
 def parse_attribute(expr):
     """Parses an attribute and builds a node."""
-    if len(expr) < 2:
+    if len(expr) < 3:
         raise ValueError("Expression too short to parse attribute.")
+    
+    # If we have more than 3 elements, it's a method call
+    if len(expr) > 3:
+        # Transform (. obj method args...) to ((. obj method) args...)
+        _, obj, attr, *args = expr
+        attr_node = build_node(
+            vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node(obj)
+        )
+        # Create a call node with the attribute as the function
+        args_list = [dasy.parser.parse_node(arg) for arg in args]
+        call_node = build_node(
+            vy_nodes.Call, func=attr_node, args=args_list, keywords=[]
+        )
+        return call_node
+    
+    # Standard attribute access
     _, obj, attr = expr
     attr_node = build_node(
         vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node(obj)
