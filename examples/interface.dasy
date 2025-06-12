@@ -6,10 +6,10 @@
   (set self/test (TestInterface test)))
 
 (defn getOwner [] :address [:external :view]
-  (.owner self/test))
+  ((. self/test owner)))
 
 (defn getOwnerFromAddress [:address test] :address [:external :view]
-  (.owner (TestInterface test)))
+  ((. (TestInterface test) owner)))
 
 (defn setOwner [:address owner] :external
   (.setOwner self/test owner))

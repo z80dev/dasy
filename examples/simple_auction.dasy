@@ -39,9 +39,7 @@
   ;; Check if bid is high enough
   (assert (> msg/value self/highestBid))
   ;; Track the refund for the previous highest bidder
-  (-> self/pendingReturns
-      (subscript self/highestBidder)
-      (+= self/highestBid))
+  (+= (subscript self/pendingReturns self/highestBidder) self/highestBid)
   ;; Track new high bid
   (set self/highestBidder msg/sender)
   (set self/highestBid msg/value))

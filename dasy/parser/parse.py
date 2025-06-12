@@ -96,7 +96,8 @@ def parse_expr(expr):
         return handle_macro(expr)
 
     if cmd_str.startswith("."):
-        inner_node = models.Expression((models.Symbol("."), expr[1], (cmd_str[1:])))
+        # Handle .method syntax - transform to (. obj method ...)
+        inner_node = models.Expression((models.Symbol("."), expr[1], models.Symbol(cmd_str[1:])))
         outer_node = models.Expression((inner_node, *expr[2:]))
         return parse_node(outer_node)
 
@@ -128,6 +129,20 @@ def parse_augop(expr):
 def parse_call(expr, wrap_expr=False):
     match expr:
         case (fn_name, *args):
+            # Handle Hy's (. None method) pattern for method references like .append
+            if (isinstance(fn_name, models.Expression) and 
+                len(fn_name) == 3 and 
+                fn_name[0] == models.Symbol(".") and 
+                fn_name[1] == models.Symbol("None")):
+                # Transform ((. None append) obj arg1 arg2) to (. obj append arg1 arg2)
+                if args:
+                    method_name = fn_name[2]
+                    obj = args[0]
+                    method_args = args[1:]
+                    # Create new expression: (. obj method args...)
+                    new_expr = models.Expression([models.Symbol("."), obj, method_name, *method_args])
+                    return parse_node(new_expr)
+            
             args_list = []
             kw_args = []
             i = 0
