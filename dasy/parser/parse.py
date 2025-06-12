@@ -10,6 +10,7 @@ import vyper.ast.nodes as vy_nodes
 from hy import models
 
 from .builtins import parse_builtin, build_node
+from .reader import read_many as dasy_read_many
 from .ops import BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, is_op, parse_op
 from .utils import add_src_map
 
@@ -247,7 +248,7 @@ def parse_src(src: str):
     vars = []
     fs = []
     settings = {}
-    for element in hy.read_many(src):
+    for element in dasy_read_many(src):
         # parse each top-level form
         ast = parse_node(element)
 
