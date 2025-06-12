@@ -58,11 +58,11 @@
 
 
 ;; Syntax Sugar macros
-(defmacro doto [ obj #*cmds]
+(defmacro doto [ obj #* cmds]
   `(splice ~@(lfor c cmds
          `(~(get c 0) ~obj ~@(cut c 1 None)))))
 
-(defmacro condp [op obj #*body]
+(defmacro condp [op obj #* body]
   `(cond
      ~@(lfor i (range 0 (len body))
              (if (= 0 (% i 2))
@@ -100,10 +100,10 @@
     `(splice ~@forms)))
 
 ;; ->
-(defmacro arrow [args #*body]
+(defmacro arrow [args #* body]
   ;; TODO: Get rid of this dynamic import
   (import hy.models [Expression])
-  (let [[first #*rest] body
+  (let [[first #* rest] body
         body (if (isinstance first Expression)
                  `(~(get first 0) ~args ~@(cut first 1 None))
                  `(~first ~args))]
@@ -114,9 +114,9 @@
     body))
 
 ;; ->>
-(defmacro arroww [args #*body]
+(defmacro arroww [args #* body]
   (import hy.models [Expression])
-  (let [[first #*rest] body
+  (let [[first #* rest] body
         body (if (isinstance first Expression)
                  `(~(get first 0) ~@(cut first 1 None) ~args)
                  `(~first ~args))]
