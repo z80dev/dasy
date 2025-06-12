@@ -4,13 +4,6 @@ from boa.vyper.contract import VyperContract
 import boa
 
 
-def test_compare_venom_vyper():
-    c = compile("examples/venom.dasy")
-    v = boa.load("examples/venom_comp.vy")
-
-    for contract in [c, v]:
-        assert contract.retOne() == 1
-        assert contract.addTwoNums(1, 2) == 3
 
 
 # def test_merkle():

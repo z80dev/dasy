@@ -4,23 +4,9 @@
         vyper.semantics.types.primitives [SINT UINT BytesM_T])
 
 (require
-  hyrule [assoc]
   hyrule.control [case branch]
   hyrule.argmove [->])
 
-(defn get-ir-type [name]
-  ;; check if starts with type prefix
-  ;; if so, return the corresponding type class
-  ;; otherwise, return None
-  (let [name-str (str name)
-        [type-constructor size-index] (branch (name-str.startswith it)
-                                        "uint"  [UINT 4]
-                                        "int"   [SINT 3]
-                                        "bytes" [BytesM_T 5])]
-    (-> name-str
-        (cut size-index None)
-        int
-        type-constructor)))
 
 (defn counter-gen []
   (setv counter 0)
@@ -45,11 +31,6 @@
     (isinstance tree Sequence) (for [el tree] (when (has-return el) (return True)))
     True (return False)))
 
-(defn is-venom [tree]
-  (cond
-    (isinstance tree Symbol) (= (str tree) "venom")
-    (isinstance tree Sequence) (for [el tree] (when (is-venom el) (return True)))
-    True (return False)))
 
 (defn filename-to-contract-name [fname]
   ;; converts a filename to a contract name
@@ -71,7 +52,7 @@
     (setv args-zip-dict (dict (zip node-class.__slots__ args)))
     (.update args-dict args-zip-dict)
     (for [slot (list (cut node-class.__slots__ (len args) None))]
-      (assoc args-dict slot None)))
+      (setv (get args-dict slot) None)))
   (let [node-id (.get args-dict "node_id" (next_nodeid))]
     (when (in "node_id" args-dict) (del (get args-dict "node_id")))
     (-> (node-class :node-id node-id :ast-type (. node-class __name__) #** args-dict)
