@@ -1,6 +1,6 @@
 vyper
 titanoboa
-dasy-hy
-hyrule
+hy>=1.1.0
+hyrule>=0.6.0
 black
 pytest
