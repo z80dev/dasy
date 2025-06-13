@@ -1,4 +1,4 @@
-(defenum Roles
+(defflag Roles
     ADMIN
     USER)
 

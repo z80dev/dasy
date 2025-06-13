@@ -290,6 +290,8 @@ def parse_defcontract(expr):
         path="contract.dasy",
         resolved_path="contract.dasy",
         source_id=0,
+        full_source_code="",  # Will be set by parent parser
+        is_interface=False,
         # settings will be set by parent parser
     )
     
@@ -339,8 +341,8 @@ def parse_enumbody(expr):
     return [build_node(vy_nodes.Expr, value=dasy.parser.parse_node_legacy(x)) for x in expr[2:]]
 
 
-def parse_defenum(expr):
-    return build_node(vy_nodes.EnumDef, name=str(expr[1]), body=parse_enumbody(expr))
+def parse_defflag(expr):
+    return build_node(vy_nodes.FlagDef, name=str(expr[1]), body=parse_enumbody(expr))
 
 
 def parse_do(expr):

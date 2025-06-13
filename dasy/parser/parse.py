@@ -68,7 +68,7 @@ def convert_annassign(ast):
         is_immutable=is_immutable,
     )
     for child in ast.get_children():
-        new_node._children.add(child)
+        new_node._children.append(child)
         child._parent = new_node
     return new_node
 
@@ -305,7 +305,7 @@ def parse_src(src: str, filepath: Optional[str] = None):
                 vy_nodes.StructDef,
                 vy_nodes.EventDef,
                 vy_nodes.InterfaceDef,
-                vy_nodes.EnumDef,
+                vy_nodes.FlagDef,
             ),
         ):
             vars.append(ast)
@@ -333,6 +333,8 @@ def parse_src(src: str, filepath: Optional[str] = None):
     mod_node.path = filepath or "contract.dasy"
     mod_node.resolved_path = filepath or "contract.dasy"
     mod_node.source_id = 0
+    mod_node.full_source_code = src
+    mod_node.is_interface = False
     
     # Convert settings dict to Settings object and attach to module
     from vyper.compiler.settings import Settings
