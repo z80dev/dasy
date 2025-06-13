@@ -4,6 +4,7 @@ import argparse
 import sys
 
 from dasy.parser.output import get_external_interface
+from dasy.exceptions import DasyUsageError
 
 format_help = """Format to print, one or more of:
 bytecode (default) - Deployable bytecode
@@ -71,7 +72,7 @@ def main():
     if output_format in OUTPUT_FORMATS:
         print(OUTPUT_FORMATS[output_format](data))
     else:
-        raise Exception(
+        raise DasyUsageError(
             f"Unrecognized Output Format {args.format}. Must be one of {OUTPUT_FORMATS.keys()}"
         )
 

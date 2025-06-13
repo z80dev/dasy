@@ -14,6 +14,11 @@ from .reader import read_many as dasy_read_many
 from .ops import BIN_FUNCS, BOOL_OPS, COMP_FUNCS, UNARY_OPS, is_op, parse_op
 from .utils import add_src_map
 from .context import ParseContext
+from dasy.exceptions import (
+    DasyNotImplementedError,
+    DasyUnsupportedError,
+    DasyParseError,
+)
 
 # namespaces with expression handlers
 from . import nodes, core, macros
@@ -251,13 +256,13 @@ def parse_node(
                 vy_nodes.List, elements=[parse_node(elmt, context) for elmt in lst]
             )
         case models.Float(node):
-            raise NotImplementedError("Floating point not supported (yet)")
+            raise DasyNotImplementedError("Floating point not supported (yet)")
         case models.Dict(node):
             keys = [parse_node(k, context) for k in node.keys()]
             values = [parse_node(v, context) for v in node.values()]
             ast_node = build_node(vy_nodes.Dict, keys=keys, values=values)
         case _:
-            raise ValueError(f"No match for node {node}. Unsupported node type.")
+            raise DasyUnsupportedError(f"No match for node {node}. Unsupported node type.")
     return add_src_map(context.source_code, node, ast_node)
 
 
@@ -319,7 +324,7 @@ def parse_src(src: str, filepath: Optional[str] = None):
             new_node = convert_annassign(ast)
             vars.append(new_node)
         else:
-            raise Exception(f"Unrecognized top-level form {element} {ast}")
+            raise DasyParseError(f"Unrecognized top-level form {element} {ast}")
 
     for e in vars + fs:
         mod_node.add_to_body(e)

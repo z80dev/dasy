@@ -7,13 +7,10 @@ from vyper.compiler import CompilerData
 from vyper.compiler.settings import Settings
 from vyper.evm.opcodes import anchor_evm_version
 
+from dasy.exceptions import DasyCircularDependencyError
+
 # Thread-local storage for tracking compilation stack
 _thread_local = threading.local()
-
-
-class CircularDependencyError(Exception):
-    """Raised when a circular dependency is detected during compilation."""
-    pass
 
 
 def get_compilation_stack() -> Set[str]:
@@ -34,9 +31,11 @@ def compile_for_interface(filepath: str) -> CompilerData:
     # Check for circular dependencies
     stack = get_compilation_stack()
     if abs_path in stack:
-        raise CircularDependencyError(
+        raise DasyCircularDependencyError(
             f"Circular dependency detected: {abs_path} is already being compiled. "
-            f"Compilation stack: {list(stack)}"
+            f"Compilation stack: {list(stack)}",
+            path=abs_path,
+            stack=list(stack)
         )
     
     # Add to compilation stack
@@ -102,7 +101,9 @@ def check_include_recursion(filepath: str) -> None:
     stack = get_include_stack()
     
     if abs_path in stack:
-        raise CircularDependencyError(
+        raise DasyCircularDependencyError(
             f"Circular include detected: {abs_path} is already being included. "
-            f"Include stack: {list(stack)}"
+            f"Include stack: {list(stack)}",
+            path=abs_path,
+            stack=list(stack)
         )

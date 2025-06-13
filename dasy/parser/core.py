@@ -5,12 +5,16 @@ from .utils import build_node, next_nodeid, pairwise
 from hy import models
 
 from .utils import has_return, process_body
+from dasy.exceptions import (
+    DasySyntaxError,
+    DasyTypeError,
+)
 
 
 def parse_attribute(expr):
     """Parses an attribute and builds a node."""
     if len(expr) < 3:
-        raise ValueError("Expression too short to parse attribute.")
+        raise DasySyntaxError("Expression too short to parse attribute.")
     
     # If we have more than 3 elements, it's a method call
     if len(expr) > 3:
@@ -41,7 +45,7 @@ def parse_tuple(tuple_tree):
     elif tuple_tree[0] == models.Symbol("tuple"):
         elements = tuple_tree[1:]
     else:
-        raise Exception("Invalid tuple declaration")
+        raise DasySyntaxError("Invalid tuple declaration")
     return build_node(
         vy_nodes.Tuple, elements=[dasy.parser.parse_node_legacy(e) for e in elements]
     )
@@ -71,7 +75,7 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
             # user-defined types like Foo
             annotation_node = dasy.parser.parse_node_legacy(current_type)
         else:
-            raise Exception("Invalid type annotation")
+            raise DasyTypeError("Invalid type annotation")
         arg_node = build_node(
             vy_nodes.arg, arg=str(arg), parent=None, annotation=annotation_node
         )
@@ -162,7 +166,7 @@ def parse_defn(fn_tree):
         decorators = parse_fn_decorators(fn_args[2])
         fn_body = parse_fn_body(rest[1:])
     else:
-        raise Exception(f"Invalid fn form {fn_tree}")
+        raise DasySyntaxError(f"Invalid fn form {fn_tree}")
 
     fn_node = build_node(
         vy_nodes.FunctionDef,
@@ -200,10 +204,10 @@ def parse_declaration(var, typ, value=None, attrs: Set[str] = set()):
                 typ = models.Expression((models.Symbol(attr), typ))
             annotation = dasy.parser.parse_node_legacy(typ)
         case _:
-            raise Exception(f"Invalid declaration type {typ}")
+            raise DasyTypeError(f"Invalid declaration type {typ}")
 
     if annotation is None:
-        raise Exception("No valid annotation was found")
+        raise DasyTypeError("No valid annotation was found")
 
     vdecl_node = build_node(
         vy_nodes.VariableDecl,
@@ -227,7 +231,7 @@ def parse_defvars(expr):
 def create_annotated_node(node_class, var, typ, value=None):
     target = dasy.parser.parse_node_legacy(var)
     if not isinstance(typ, (models.Expression, models.Keyword, models.Symbol)):
-        raise Exception(f"Invalid declaration type {typ}")
+        raise DasyTypeError(f"Invalid declaration type {typ}")
     annotation = dasy.parser.parse_node_legacy(typ)
     node = build_node(node_class, target=target, annotation=annotation, value=value)
     return node
@@ -277,7 +281,7 @@ def parse_defcontract(expr):
             # no contract state
             expr_body = body
         case _:
-            raise Exception(f"Invalid defcontract form: {expr}")
+            raise DasySyntaxError(f"Invalid defcontract form: {expr}")
     for node in expr_body:
         mod_node.add_to_body(dasy.parser.parse_node_legacy(node))
 
