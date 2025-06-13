@@ -8,7 +8,7 @@ dependencies = [
     "argparse>=1.4.0",
     "hy>=1.1.0",
     "hyrule>=0.6.0",
-    "vyper==0.3.10",
+    "vyper==0.4.2",
     "eth-abi>=4.0.0",
     "eth-typing>=3.2.0",
     "py-evm>=0.6.1a2",
