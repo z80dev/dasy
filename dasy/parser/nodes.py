@@ -10,6 +10,9 @@ from vyper.ast.nodes import (
     Assert,
     ExtCall,
     StaticCall,
+    UsesDecl,
+    InitializesDecl,
+    ExportsDecl,
 )
 from hy import models
 from dasy import parser
@@ -137,3 +140,43 @@ def parse_staticcall(expr):
     
     # Wrap it in a StaticCall node
     return build_node(StaticCall, value=call_node)
+
+
+def parse_uses(expr):
+    # (uses module_name)
+    if len(expr) != 2:
+        raise ValueError("uses requires exactly one module name")
+    
+    module_name = str(expr[1])
+    # Create a Name node for the module
+    name_node = build_node(vy_nodes.Name, id=module_name)
+    return build_node(UsesDecl, annotation=name_node)
+
+
+def parse_initializes(expr):
+    # (initializes module_name)
+    if len(expr) != 2:
+        raise ValueError("initializes requires exactly one module name")
+    
+    module_name = str(expr[1])
+    # Create a Name node for the module
+    name_node = build_node(vy_nodes.Name, id=module_name)
+    return build_node(InitializesDecl, annotation=name_node)
+
+
+def parse_exports(expr):
+    # (exports function_name) or (exports (function1 function2 ...))
+    if len(expr) < 2:
+        raise ValueError("exports requires at least one function name")
+    
+    # Handle single export or list of exports
+    if len(expr) == 2 and isinstance(expr[1], models.Symbol):
+        # Single export
+        func_name = str(expr[1])
+        # ExportsDecl expects a single Name node in annotation, not a list
+        name_node = build_node(vy_nodes.Name, id=func_name)
+        return build_node(ExportsDecl, annotation=name_node)
+    else:
+        # Multiple exports - need to check Vyper's expectations
+        # For now, just handle single export
+        raise ValueError("Multiple exports not yet supported")

@@ -309,6 +309,9 @@ def parse_src(src: str, filepath: Optional[str] = None):
                 vy_nodes.EventDef,
                 vy_nodes.InterfaceDef,
                 vy_nodes.FlagDef,
+                vy_nodes.UsesDecl,
+                vy_nodes.InitializesDecl,
+                vy_nodes.ExportsDecl,
             ),
         ):
             vars.append(ast)

@@ -67,18 +67,19 @@ The Module AST node in Vyper 0.4.2 requires additional attributes:
 
 ## Remaining Syntax Changes
 
-### 4. Built-in Function Updates
-- `_abi_encode` → `abi_encode`
-- `_abi_decode` → `abi_decode`
+### 4. Built-in Function Updates ✅
+- `_abi_encode` → `abi_encode` - **Added alias mapping**
+- `_abi_decode` → `abi_decode` - **Added alias mapping**
 - Removed builtin constants
 - `sqrt()` moved to stdlib math module
 
-### 5. Other Breaking Changes
+### 5. Other Breaking Changes ✅
 - `@internal` decorator now optional
 - Removed named reentrancy locks
 - Default nonreentrancy for all functions
 - Cannot call `__default__` directly
 - Ban calling nonreentrant from nonreentrant
+- Constructor must use `@deploy` instead of `@external` - **FIXED**
 
 ## Next Steps
 
