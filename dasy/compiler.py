@@ -74,8 +74,8 @@ class CompilerData(VyperCompilerData):
         return build_layout_output(self)
 
 
-def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
-    (ast, settings) = parse_src(src)
+def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) -> CompilerData:
+    (ast, settings) = parse_src(src, filepath)
     settings = Settings(**settings)
     version = settings.evm_version or "paris"
     with anchor_evm_version(version):
@@ -92,8 +92,8 @@ def generate_compiler_data(src: str, name="DasyContract") -> CompilerData:
         return data
 
 
-def compile(src: str, name="DasyContract", include_abi=True) -> CompilerData:
-    data = generate_compiler_data(src, name)
+def compile(src: str, name="DasyContract", include_abi=True, filepath: str = None) -> CompilerData:
+    data = generate_compiler_data(src, name, filepath)
     return data
 
 
@@ -105,7 +105,7 @@ def compile_file(filepath: str) -> CompilerData:
         src = f.read()
         if filepath.endswith(".vy"):
             return CompilerData(src, contract_name=filename_to_contract_name(filepath))
-        return compile(src, name=name)
+        return compile(src, name=name, filepath=filepath)
 
 
 def generate_abi(src: str) -> list:

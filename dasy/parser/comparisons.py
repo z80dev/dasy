@@ -29,7 +29,7 @@ def parse_comparison(comparison_expr: Expression) -> vy_nodes.Compare:
 
     # Always apply chain comps for consistency
     chained_expr = chain_comps(comparison_expr)
-    left = parser.parse_node(chained_expr[1])
-    right = parser.parse_node(chained_expr[2])
-    op = parser.parse_node(chained_expr[0])
+    left = parser.parse_node_legacy(chained_expr[1])
+    right = parser.parse_node_legacy(chained_expr[2])
+    op = parser.parse_node_legacy(chained_expr[0])
     return parser.build_node(vy_nodes.Compare, left=left, ops=[op], comparators=[right])

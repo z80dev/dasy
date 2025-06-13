@@ -39,22 +39,22 @@ def parse_comparison(comp_tree):
     if (
         len(comp_tree[1:]) > 2
     ):  # comparing more than 2 things; chain comps for (< 2 3 4 )
-        return parser.parse_node(chain_comps(comp_tree))
-    left = parser.parse_node(comp_tree[1])
-    right = parser.parse_node(comp_tree[2])
-    op = parser.parse_node(comp_tree[0])
+        return parser.parse_node_legacy(chain_comps(comp_tree))
+    left = parser.parse_node_legacy(comp_tree[1])
+    right = parser.parse_node_legacy(comp_tree[2])
+    op = parser.parse_node_legacy(comp_tree[0])
     return build_node(Compare, left=left, ops=[op], comparators=[right])
 
 
 def parse_unary(expr):
-    operand = parser.parse_node(expr[1])
-    op = parser.parse_node(expr[0])
+    operand = parser.parse_node_legacy(expr[1])
+    op = parser.parse_node_legacy(expr[0])
     return build_node(UnaryOp, operand=operand, op=op)
 
 
 def parse_boolop(expr):
-    op = parser.parse_node(expr[0])
-    values = [parser.parse_node(e) for e in expr[1:]]
+    op = parser.parse_node_legacy(expr[0])
+    values = [parser.parse_node_legacy(e) for e in expr[1:]]
     return build_node(BoolOp, op=op, values=values)
 
 
@@ -73,8 +73,8 @@ def chain_binops(expr):
 
 def parse_binop(binop_tree):
     if len(binop_tree) > 3:
-        return parser.parse_node(chain_binops(binop_tree))
-    left = parser.parse_node(binop_tree[1])
-    right = parser.parse_node(binop_tree[2])
-    op = parser.parse_node(binop_tree[0])
+        return parser.parse_node_legacy(chain_binops(binop_tree))
+    left = parser.parse_node_legacy(binop_tree[1])
+    right = parser.parse_node_legacy(binop_tree[2])
+    op = parser.parse_node_legacy(binop_tree[0])
     return build_node(BinOp, left=left, right=right, op=op)

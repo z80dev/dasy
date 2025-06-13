@@ -83,21 +83,44 @@
 (defmacro interface! [filename]
   (import dasy)
   (import os)
-  (let [path (+ (.getcwd os) "/" filename)
-        data (.compile-file dasy path)
+  (import pathlib [Path])
+  (import dasy.parser.macro-context [get-macro-context])
+  (import dasy.parser.macro-utils [compile-for-interface])
+  (let [ctx (get-macro-context)
+        base-dir (if ctx 
+                    (. ctx base_dir) 
+                    (Path (.getcwd os)))
+        path (str (/ base-dir filename))
+        data (compile-for-interface path)
         interface-str (.get-external-interface dasy data)]
     (.read dasy interface-str)))
 
 (defmacro include! [filename]
-  (import dasy os)
-  (let [path (+ (.getcwd os) "/" filename)
-        stream (open path)
-        forms []]
-    (while True
-      (try
-        (.append forms (.read dasy stream))
-        (except [EOFError] (break))))
-    `(splice ~@forms)))
+  (import dasy)
+  (import os)
+  (import pathlib [Path])
+  (import dasy.parser.macro-context [get-macro-context])
+  (import dasy.parser.macro-utils [check-include-recursion get-include-stack])
+  (let [ctx (get-macro-context)
+        base-dir (if ctx 
+                    (. ctx base_dir) 
+                    (Path (.getcwd os)))
+        path (str (/ base-dir filename))
+        abs-path (str (.absolute (Path path)))
+        include-stack (get-include-stack)]
+    ;; Check for circular includes
+    (check-include-recursion path)
+    ;; Add to include stack
+    (.add include-stack abs-path)
+    (let [stream (open path)
+          forms []]
+      (while True
+        (try
+          (.append forms (.read dasy stream))
+          (except [EOFError] (break))))
+      ;; Remove from include stack
+      (.discard include-stack abs-path)
+      `(splice ~@forms))))
 
 ;; ->
 (defmacro arrow [args #* body]

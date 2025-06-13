@@ -342,7 +342,6 @@ def testInterface():
 
 
 def test_reentrancy():
-    # TODO: This test should fail!
     with anchor_evm_version("cancun"):
         c = compile("examples/nonreentrantenforcer.dasy")  # noqa: F841
         # v = boa.load("examples/nonreentrantenforcer.vy")

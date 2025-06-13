@@ -20,5 +20,5 @@ def wrap_calls(nodes):
 
 
 def parse_splice(expr):
-    return_val = wrap_calls([parser.parse_node(n) for n in expr[1:]])
+    return_val = wrap_calls([parser.parse_node_legacy(n) for n in expr[1:]])
     return return_val

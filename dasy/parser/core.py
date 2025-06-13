@@ -17,10 +17,10 @@ def parse_attribute(expr):
         # Transform (. obj method args...) to ((. obj method) args...)
         _, obj, attr, *args = expr
         attr_node = build_node(
-            vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node(obj)
+            vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node_legacy(obj)
         )
         # Create a call node with the attribute as the function
-        args_list = [dasy.parser.parse_node(arg) for arg in args]
+        args_list = [dasy.parser.parse_node_legacy(arg) for arg in args]
         call_node = build_node(
             vy_nodes.Call, func=attr_node, args=args_list, keywords=[]
         )
@@ -29,7 +29,7 @@ def parse_attribute(expr):
     # Standard attribute access
     _, obj, attr = expr
     attr_node = build_node(
-        vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node(obj)
+        vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node_legacy(obj)
     )
     return attr_node
 
@@ -43,7 +43,7 @@ def parse_tuple(tuple_tree):
     else:
         raise Exception("Invalid tuple declaration")
     return build_node(
-        vy_nodes.Tuple, elements=[dasy.parser.parse_node(e) for e in elements]
+        vy_nodes.Tuple, elements=[dasy.parser.parse_node_legacy(e) for e in elements]
     )
 
 
@@ -69,7 +69,7 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
             )
         elif isinstance(current_type, models.Expression):
             # user-defined types like Foo
-            annotation_node = dasy.parse.parse_node(current_type)
+            annotation_node = dasy.parser.parse_node_legacy(current_type)
         else:
             raise Exception("Invalid type annotation")
         arg_node = build_node(
@@ -90,18 +90,18 @@ def parse_fn_decorators(decs):
     if isinstance(decs, models.Keyword):
         return [build_node(vy_nodes.Name, id=str(decs.name))]
     elif isinstance(decs, models.List):
-        return [dasy.parse.parse_node(d) for d in decs]
+        return [dasy.parser.parse_node_legacy(d) for d in decs]
     return []
 
 
 def parse_fn_body(body, wrap=False):
-    fn_body = [dasy.parse.parse_node(body_node) for body_node in body[:-1]]
+    fn_body = [dasy.parser.parse_node_legacy(body_node) for body_node in body[:-1]]
     if wrap and not has_return(body[-1]):
-        value_node = dasy.parse.parse_node(body[-1])
+        value_node = dasy.parser.parse_node_legacy(body[-1])
         implicit_return_node = build_node(vy_nodes.Return, value=value_node)
         fn_body.append(implicit_return_node)
     else:
-        fn_body.append(dasy.parse.parse_node(body[-1]))
+        fn_body.append(dasy.parser.parse_node_legacy(body[-1]))
     return process_body(fn_body)
 
 
@@ -157,7 +157,7 @@ def parse_defn(fn_tree):
     elif _fn_tree_has_return_type(fn_tree):
         decorators = parse_fn_decorators(fn_args[3])
         fn_body = parse_fn_body(rest[2:], wrap=True)
-        return_type = dasy.parse.parse_node(fn_args[2])
+        return_type = dasy.parser.parse_node_legacy(fn_args[2])
     elif _fn_tree_has_no_return_type(fn_tree):
         decorators = parse_fn_decorators(fn_args[2])
         fn_body = parse_fn_body(rest[1:])
@@ -179,7 +179,7 @@ def parse_defn(fn_tree):
 
 
 def parse_declaration(var, typ, value=None, attrs: Set[str] = set()):
-    target = dasy.parse.parse_node(var)
+    target = dasy.parser.parse_node_legacy(var)
     annotation_attrs = {"public": False, "immutable": False, "constant": False}
     if attrs is not None:
         for attr in attrs:
@@ -189,16 +189,16 @@ def parse_declaration(var, typ, value=None, attrs: Set[str] = set()):
 
     match typ:
         case [models.Symbol(e), _] if str(e) in annotation_attrs.keys():
-            annotation = dasy.parse.parse_node(typ)
+            annotation = dasy.parser.parse_node_legacy(typ)
             annotation_attrs[str(e)] = True
         case models.Expression() | models.Keyword():
             for attr in attrs:
                 typ = models.Expression((models.Symbol(attr), typ))
-            annotation = dasy.parse.parse_node(typ)
+            annotation = dasy.parser.parse_node_legacy(typ)
         case models.Symbol():
             for attr in attrs:
                 typ = models.Expression((models.Symbol(attr), typ))
-            annotation = dasy.parse.parse_node(typ)
+            annotation = dasy.parser.parse_node_legacy(typ)
         case _:
             raise Exception(f"Invalid declaration type {typ}")
 
@@ -225,10 +225,10 @@ def parse_defvars(expr):
 
 
 def create_annotated_node(node_class, var, typ, value=None):
-    target = dasy.parse.parse_node(var)
+    target = dasy.parser.parse_node_legacy(var)
     if not isinstance(typ, (models.Expression, models.Keyword, models.Symbol)):
         raise Exception(f"Invalid declaration type {typ}")
-    annotation = dasy.parse.parse_node(typ)
+    annotation = dasy.parser.parse_node_legacy(typ)
     node = build_node(node_class, target=target, annotation=annotation, value=value)
     return node
 
@@ -238,7 +238,7 @@ def parse_variabledecl(expr) -> vy_nodes.VariableDecl:
         vy_nodes.VariableDecl,
         expr[1],
         expr[2],
-        value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None,
+        value=dasy.parser.parse_node_legacy(expr[3]) if len(expr) == 4 else None,
     )
 
 
@@ -247,7 +247,7 @@ def parse_annassign(expr) -> vy_nodes.AnnAssign:
         vy_nodes.AnnAssign,
         expr[1],
         expr[2],
-        value=dasy.parse.parse_node(expr[3]) if len(expr) == 4 else None,
+        value=dasy.parser.parse_node_legacy(expr[3]) if len(expr) == 4 else None,
     )
 
 
@@ -279,7 +279,7 @@ def parse_defcontract(expr):
         case _:
             raise Exception(f"Invalid defcontract form: {expr}")
     for node in expr_body:
-        mod_node.add_to_body(dasy.parse.parse_node(node))
+        mod_node.add_to_body(dasy.parser.parse_node_legacy(node))
 
     return mod_node
 
@@ -295,13 +295,13 @@ def parse_definterface(expr):
     name = str(expr[1])
     body = []
     for f in expr[2:]:
-        rets = None if len(f) == 4 else dasy.parse.parse_node(f[3])
+        rets = None if len(f) == 4 else dasy.parser.parse_node_legacy(f[3])
 
         args_list = parse_args_list(f[2])
         args_node = build_node(vy_nodes.arguments, args=args_list, defaults=list())
 
         # in an interface, the body is a single expr node with the visibility
-        visibility_node = dasy.parse.parse_node(f[-1])
+        visibility_node = dasy.parser.parse_node_legacy(f[-1])
         body_node = build_node(vy_nodes.Expr, value=visibility_node)
 
         fn_node = build_node(
@@ -324,7 +324,7 @@ def parse_defevent(expr):
 
 
 def parse_enumbody(expr):
-    return [build_node(vy_nodes.Expr, value=dasy.parse.parse_node(x)) for x in expr[2:]]
+    return [build_node(vy_nodes.Expr, value=dasy.parser.parse_node_legacy(x)) for x in expr[2:]]
 
 
 def parse_defenum(expr):
@@ -332,15 +332,15 @@ def parse_defenum(expr):
 
 
 def parse_do(expr):
-    calls = [dasy.parse.parse_node(x) for x in expr[1:]]
+    calls = [dasy.parser.parse_node_legacy(x) for x in expr[1:]]
     exprs = [build_node(vy_nodes.Expr, value=call_node) for call_node in calls]
     return exprs
 
 
 def parse_subscript(expr):
     """(subscript value slice)"""
-    index_value_node = dasy.parse.parse_node(expr[2])
+    index_value_node = dasy.parser.parse_node_legacy(expr[2])
     index_node = build_node(vy_nodes.Index, value=index_value_node)
-    value_node = dasy.parse.parse_node(expr[1])
+    value_node = dasy.parser.parse_node_legacy(expr[1])
     subscript_node = build_node(vy_nodes.Subscript, slice=index_node, value=value_node)
     return subscript_node
