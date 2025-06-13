@@ -14,7 +14,7 @@
   (staticcall (self/test.owner)))
 
 (defn getOwnerFromAddress [:address test] :address [:external :view]
-  (staticcall ((. (TestInterface test) owner))))
+  (staticcall (. (TestInterface test) owner)))
 
 (defn setOwner [:address owner] :external
-  (extcall (self/test.setOwner owner)))
+  (extcall (. self/test setOwner owner)))

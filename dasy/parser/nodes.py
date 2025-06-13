@@ -119,19 +119,21 @@ handlers = {
 
 
 def parse_extcall(expr):
-    # (extcall contract.method arg1 arg2 ...)
+    # (extcall (. contract method args...)) - new simplified syntax
+    # (extcall contract.method arg1 arg2 ...) - original syntax
     # extcall foo.bar(x) becomes ExtCall(value=Call(...))
     if len(expr) < 2:
         raise ValueError("extcall requires at least a function call")
     
-    # The second element should be the call expression
-    # If it's already an expression (wrapped in parens), use it directly
-    # Otherwise, create an expression from all remaining elements
-    if len(expr) == 2 and isinstance(expr[1], models.Expression):
-        # Case: (extcall (contract.method args...))
+    # Handle different cases of extcall syntax
+    if len(expr) == 2:
+        # Case: (extcall (expression))
         call_node = parser.parse_node_legacy(expr[1])
+        # If we got an Attribute node instead of a Call, convert it to a zero-argument call
+        if isinstance(call_node, vy_nodes.Attribute):
+            call_node = build_node(vy_nodes.Call, func=call_node, args=[], keywords=[])
     else:
-        # Case: (extcall contract.method args...)
+        # Case: (extcall contract.method args...) - create expression from all remaining elements
         call_expr = models.Expression(expr[1:])
         call_node = parser.parse_node_legacy(call_expr)
     
@@ -140,19 +142,21 @@ def parse_extcall(expr):
 
 
 def parse_staticcall(expr):
-    # (staticcall contract.method arg1 arg2 ...)
+    # (staticcall (. contract method args...)) - new simplified syntax
+    # (staticcall contract.method arg1 arg2 ...) - original syntax  
     # staticcall is an expression (not a statement) that returns a value
     if len(expr) < 2:
         raise ValueError("staticcall requires at least a function call")
     
-    # The second element should be the call expression
-    # If it's already an expression (wrapped in parens), use it directly
-    # Otherwise, create an expression from all remaining elements
-    if len(expr) == 2 and isinstance(expr[1], models.Expression):
-        # Case: (staticcall (contract.method args...))
+    # Handle different cases of staticcall syntax
+    if len(expr) == 2:
+        # Case: (staticcall (expression))
         call_node = parser.parse_node_legacy(expr[1])
+        # If we got an Attribute node instead of a Call, convert it to a zero-argument call
+        if isinstance(call_node, vy_nodes.Attribute):
+            call_node = build_node(vy_nodes.Call, func=call_node, args=[], keywords=[])
     else:
-        # Case: (staticcall contract.method args...)
+        # Case: (staticcall contract.method args...) - create expression from all remaining elements
         call_expr = models.Expression(expr[1:])
         call_node = parser.parse_node_legacy(call_expr)
     

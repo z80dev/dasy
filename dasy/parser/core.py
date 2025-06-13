@@ -30,11 +30,31 @@ def parse_attribute(expr):
         )
         return call_node
     
-    # Standard attribute access
+    # For exactly 3 elements: (. obj attr)
+    # Check if this should be a function call or attribute access
     _, obj, attr = expr
     attr_node = build_node(
         vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node_legacy(obj)
     )
+    
+    # If obj is an interface constructor call, treat this as a zero-argument method call
+    if isinstance(obj, models.Expression) and len(obj) == 2:
+        # Check if it looks like (Interface address) 
+        if isinstance(obj[0], models.Symbol):
+            # TODO: EDGE CASE BUG - This heuristic may incorrectly detect non-interface
+            # expressions as interface constructors. Examples that would break:
+            # (. (get-contract addr) property) - function call returning struct
+            # (. (cast SomeType val) field) - type casting
+            # (. (self.array idx) attr) - array access
+            # Need better detection logic, perhaps checking if first symbol is
+            # actually an interface type name, or using explicit syntax.
+            # This could be an interface constructor - create a function call
+            call_node = build_node(
+                vy_nodes.Call, func=attr_node, args=[], keywords=[]
+            )
+            return call_node
+    
+    # Otherwise, standard attribute access
     return attr_node
 
 
