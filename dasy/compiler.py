@@ -76,16 +76,23 @@ class CompilerData(VyperCompilerData):
 def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) -> CompilerData:
     (ast, settings) = parse_src(src, filepath)
     settings = Settings(**settings)
+    
+    # Create a FileInput object
+    from vyper.compiler.input_bundle import FileInput
+    file_input = FileInput(
+        contents=src,
+        source_id=0,
+        path=filepath or f"{name}.dasy",
+        resolved_path=filepath or f"{name}.dasy"
+    )
+    
     with anchor_settings(settings):
         data = CompilerData(
-            "",
-            ast.name or name,
-            None,
-            source_id=0,
+            file_input,
             settings=settings,
         )
-        # data.settings = settings
-        data.vyper_module = ast
+        # Override the vyper_module with our parsed AST
+        data.__dict__["vyper_module"] = ast
         _ = data.bytecode
         return data
 

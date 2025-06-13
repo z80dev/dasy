@@ -8,6 +8,8 @@ from vyper.ast.nodes import (
     Return,
     AugAssign,
     Assert,
+    ExtCall,
+    StaticCall,
 )
 from hy import models
 from dasy import parser
@@ -85,3 +87,31 @@ handlers = {
         Assert,
     ]
 }
+
+
+def parse_extcall(expr):
+    # (extcall contract.method arg1 arg2 ...)
+    # Build a Call node from the arguments
+    if len(expr) < 2:
+        raise ValueError("extcall requires at least a function call")
+    
+    # Parse the call expression
+    call_expr = models.Expression(expr[1:])
+    call_node = parser.parse_node_legacy(call_expr)
+    
+    # Wrap it in an ExtCall node
+    return build_node(ExtCall, value=call_node)
+
+
+def parse_staticcall(expr):
+    # (staticcall contract.method arg1 arg2 ...)
+    # Build a Call node from the arguments
+    if len(expr) < 2:
+        raise ValueError("staticcall requires at least a function call")
+    
+    # Parse the call expression
+    call_expr = models.Expression(expr[1:])
+    call_node = parser.parse_node_legacy(call_expr)
+    
+    # Wrap it in a StaticCall node
+    return build_node(StaticCall, value=call_node)

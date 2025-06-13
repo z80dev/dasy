@@ -263,28 +263,36 @@ def parse_structbody(expr):
 
 
 def parse_defcontract(expr):
-    mod_node = vy_nodes.Module(
-        body=[],
-        name=str(expr[1]),
-        doc_string="",
-        ast_type="Module",
-        node_id=next_nodeid(),
-    )
+    body_nodes = []
     expr_body = []
+    
     match expr[1:]:
         case (_, vars, *body) if isinstance(vars, models.List):
-            # # contract has state
+            # contract has state
             for var, typ in pairwise(vars):
-                mod_node.add_to_body(parse_declaration(var, typ))
+                body_nodes.append(parse_declaration(var, typ))
             expr_body = body
         case (_, *body):
             # no contract state
             expr_body = body
         case _:
             raise DasySyntaxError(f"Invalid defcontract form: {expr}")
+    
     for node in expr_body:
-        mod_node.add_to_body(dasy.parser.parse_node_legacy(node))
-
+        body_nodes.append(dasy.parser.parse_node_legacy(node))
+    
+    mod_node = vy_nodes.Module(
+        body=body_nodes,
+        name=str(expr[1]),
+        doc_string="",
+        ast_type="Module",
+        node_id=next_nodeid(),
+        path="contract.dasy",
+        resolved_path="contract.dasy",
+        source_id=0,
+        # settings will be set by parent parser
+    )
+    
     return mod_node
 
 

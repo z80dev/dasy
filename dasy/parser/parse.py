@@ -326,7 +326,16 @@ def parse_src(src: str, filepath: Optional[str] = None):
         else:
             raise DasyParseError(f"Unrecognized top-level form {element} {ast}")
 
-    for e in vars + fs:
-        mod_node.add_to_body(e)
+    # Update module body
+    mod_node.body.extend(vars + fs)
+    
+    # Set required attributes for Module
+    mod_node.path = filepath or "contract.dasy"
+    mod_node.resolved_path = filepath or "contract.dasy"
+    mod_node.source_id = 0
+    
+    # Convert settings dict to Settings object and attach to module
+    from vyper.compiler.settings import Settings
+    mod_node.settings = Settings(**settings) if settings else Settings()
 
     return mod_node, settings
