@@ -326,8 +326,12 @@ def parse_src(src: str, filepath: Optional[str] = None):
         else:
             raise DasyParseError(f"Unrecognized top-level form {element} {ast}")
 
-    # Update module body
+    # Update module body and set parent relationships
     mod_node.body.extend(vars + fs)
+    for node in mod_node.body:
+        node._parent = mod_node
+        if node not in mod_node._children:
+            mod_node._children.append(node)
     
     # Set required attributes for Module
     mod_node.path = filepath or "contract.dasy"

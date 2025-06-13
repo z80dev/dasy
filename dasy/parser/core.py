@@ -148,7 +148,8 @@ def parse_defn(fn_tree):
     assert isinstance(fn_tree, models.Expression)
     assert fn_tree[0] == models.Symbol("defn")
     return_type = None
-    name = str(fn_tree[1])
+    from .utils import kebab_to_snake
+    name = kebab_to_snake(str(fn_tree[1]))
     args = None
     decorators = []
 

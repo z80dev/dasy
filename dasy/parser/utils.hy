@@ -44,6 +44,9 @@
         capitalized_words (map (fn [word] (.capitalize word)) words)]
     (.join "" capitalized_words)))
 
+(defn kebab-to-snake [name]
+  ;; Convert kebab-case to snake_case
+  (.replace name "-" "_"))
 
 (defn build-node [node-class #* args #** kwargs]
   (setv args-dict kwargs)
