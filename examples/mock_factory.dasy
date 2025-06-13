@@ -1,0 +1,18 @@
+;; Mock factory contract for interface pattern testing
+(defvars
+    tokens (public (dyn-array :address 10))
+    tokenCount (public :uint256))
+
+(defn __init__ [] :external
+  (set self/tokenCount 0))
+
+(defn getToken [:uint256 index] :address [:external :view]
+  (assert (< index self/tokenCount) "Index out of bounds")
+  (subscript self/tokens index))
+
+(defn addExistingToken [:address tokenAddr] :external
+  (.append self/tokens tokenAddr)
+  (+= self/tokenCount 1))
+
+(defn getTokenCount [] :uint256 [:external :view]
+  self/tokenCount)

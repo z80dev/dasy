@@ -1,0 +1,62 @@
+;; Contract that uses interfaces with different arities
+(definterface TestArities
+  ;; Zero argument functions
+  (defn getValue0 [] :uint256 :view)
+  (defn increment0 [] :nonpayable)
+  
+  ;; One argument functions
+  (defn getValue1 [:uint256 multiplier] :uint256 :view)
+  (defn setValue1 [:uint256 newValue] :nonpayable)
+  
+  ;; Two argument functions  
+  (defn getValue2 [:uint256 multiplier :uint256 offset] :uint256 :view)
+  (defn setValue2 [:uint256 newValue :uint256 extra] :nonpayable)
+  
+  ;; Three argument functions
+  (defn computeValue [:uint256 a :uint256 b :uint256 c] :uint256 :view)
+  (defn updateValues [:uint256 val0 :uint256 val1 :uint256 val2] :nonpayable))
+
+(defvar target (public TestArities))
+
+(defn __init__ [:address targetAddr] :external
+  (set self/target (TestArities targetAddr)))
+
+;; Test zero argument calls - both patterns
+(defn testZeroArgs [] :uint256 [:external :view]
+  ;; Stored interface variable pattern
+  (staticcall (. self/target getValue0)))
+
+(defn testZeroArgsConstructor [:address addr] :uint256 [:external :view]
+  ;; Constructor pattern  
+  (staticcall (. (TestArities addr) getValue0)))
+
+(defn callIncrement0 [] :external
+  (extcall (. self/target increment0)))
+
+;; Test one argument calls
+(defn testOneArg [:uint256 mult] :uint256 [:external :view]
+  (staticcall (. self/target getValue1 mult)))
+
+(defn callSetValue1 [:uint256 val] :external
+  (extcall (. self/target setValue1 val)))
+
+;; Test two argument calls
+(defn testTwoArgs [:uint256 mult :uint256 offset] :uint256 [:external :view]
+  (staticcall (. self/target getValue2 mult offset)))
+
+(defn callSetValue2 [:uint256 val :uint256 extra] :external
+  (extcall (. self/target setValue2 val extra)))
+
+;; Test three argument calls
+(defn testThreeArgs [:uint256 a :uint256 b :uint256 c] :uint256 [:external :view] 
+  (staticcall (. self/target computeValue a b c)))
+
+(defn callUpdateValues [:uint256 v0 :uint256 v1 :uint256 v2] :external
+  (extcall (. self/target updateValues v0 v1 v2)))
+
+;; Test constructor pattern with arguments
+(defn testConstructorWithArgs [:address addr :uint256 mult] :uint256 [:external :view]
+  (staticcall (. (TestArities addr) getValue1 mult)))
+
+(defn testConstructorThreeArgs [:address addr :uint256 a :uint256 b :uint256 c] :uint256 [:external :view]
+  (staticcall (. (TestArities addr) computeValue a b c)))

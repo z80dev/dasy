@@ -1,0 +1,42 @@
+;; Test contract for interface function arities
+(defvars
+    value0 (public :uint256)
+    value1 (public :uint256)
+    value2 (public :uint256)
+    caller (public :address))
+
+(defn __init__ [] :external
+  (set self/value0 100)
+  (set self/value1 200)
+  (set self/value2 300)
+  (set self/caller msg/sender))
+
+;; Zero argument functions
+(defn getValue0 [] :uint256 [:external :view]
+  self/value0)
+
+(defn increment0 [] :external
+  (+= self/value0 1))
+
+;; One argument functions  
+(defn getValue1 [:uint256 multiplier] :uint256 [:external :view]
+  (* self/value1 multiplier))
+
+(defn setValue1 [:uint256 newValue] :external
+  (set self/value1 newValue))
+
+;; Two argument functions
+(defn getValue2 [:uint256 multiplier :uint256 offset] :uint256 [:external :view]
+  (+ (* self/value2 multiplier) offset))
+
+(defn setValue2 [:uint256 newValue :uint256 extra] :external
+  (set self/value2 (+ newValue extra)))
+
+;; Three argument functions
+(defn computeValue [:uint256 a :uint256 b :uint256 c] :uint256 [:external :view]
+  (+ (+ (* a b) c) self/value0))
+
+(defn updateValues [:uint256 val0 :uint256 val1 :uint256 val2] :external
+  (set self/value0 val0)
+  (set self/value1 val1) 
+  (set self/value2 val2))

@@ -1,0 +1,26 @@
+;; Mock token contract for interface pattern testing
+(defvars
+    name (public (string 64))
+    symbol_ (public (string 32))
+    balances (public (hash-map :address :uint256)))
+
+(defn __init__ [(string 64) _name (string 32) _symbol] :external
+  (set self/name _name)
+  (set self/symbol_ _symbol)
+  ;; Set some initial balances for testing
+  (set (subscript self/balances msg/sender) 1000000))
+
+(defn symbol [] (string 32) [:external :view]
+  self/symbol_)
+
+(defn balanceOf [:address account] :uint256 [:external :view]
+  (subscript self/balances account))
+
+(defn transfer [:address to :uint256 amount] :bool [:external]
+  (assert (>= (subscript self/balances msg/sender) amount) "Insufficient balance")
+  (-= (subscript self/balances msg/sender) amount)
+  (+= (subscript self/balances to) amount)
+  True)
+
+(defn mint [:address to :uint256 amount] :external
+  (+= (subscript self/balances to) amount))
