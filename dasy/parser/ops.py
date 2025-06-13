@@ -4,7 +4,7 @@ from dasy import parser
 from vyper.ast.nodes import BinOp, Compare, UnaryOp, BoolOp
 from .builtins import build_node
 
-BIN_FUNCS = {"+", "-", "/", "*", "**", "%"}
+BIN_FUNCS = {"+", "-", "/", "//", "*", "**", "%"}
 COMP_FUNCS = {"<", "<=", ">", ">=", "==", "!=", "in", "notin"}
 UNARY_OPS = {"not", "usub"}
 BOOL_OPS = {"and", "or"}

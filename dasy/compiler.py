@@ -1,5 +1,6 @@
 from vyper.compiler.phases import CompilerData as VyperCompilerData
 from pathlib import Path
+import logging
 from vyper.compiler.output import (
     build_abi_output,
     build_asm_output,
@@ -14,6 +15,10 @@ from vyper.compiler.output import (
 from vyper.compiler.settings import Settings, anchor_settings
 from dasy.parser import parse_src
 from dasy.parser.utils import filename_to_contract_name
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class CompilerData(VyperCompilerData):
@@ -74,8 +79,23 @@ class CompilerData(VyperCompilerData):
 
 
 def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) -> CompilerData:
+    logger.debug(f"generate_compiler_data: name={name}, filepath={filepath}")
     (ast, settings) = parse_src(src, filepath)
+    
+    # Log AST structure
+    logger.debug(f"Parsed AST type: {type(ast).__name__}")
+    logger.debug(f"AST body length: {len(ast.body) if hasattr(ast, 'body') else 'no body'}")
+    if hasattr(ast, 'body'):
+        for i, node in enumerate(ast.body):
+            logger.debug(f"  Body[{i}]: {type(node).__name__} - {getattr(node, 'name', 'N/A')}")
+            if hasattr(node, 'body') and node.body:
+                for j, child in enumerate(node.body):
+                    logger.debug(f"    Child[{j}]: {type(child).__name__}")
+                    if hasattr(child, 'value'):
+                        logger.debug(f"      Value type: {type(child.value).__name__}")
+    
     settings = Settings(**settings)
+    logger.debug(f"Settings: {settings}")
     
     # Create a FileInput object
     from vyper.compiler.input_bundle import FileInput
@@ -86,15 +106,25 @@ def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) 
         resolved_path=filepath or f"{name}.dasy"
     )
     
+    logger.debug(f"Created FileInput: path={file_input.path}")
+    
     with anchor_settings(settings):
-        data = CompilerData(
-            file_input,
-            settings=settings,
-        )
-        # Override the vyper_module with our parsed AST
-        data.__dict__["vyper_module"] = ast
-        _ = data.bytecode
-        return data
+        try:
+            data = CompilerData(
+                file_input,
+                settings=settings,
+            )
+            # Override the vyper_module with our parsed AST
+            data.__dict__["vyper_module"] = ast
+            logger.debug("CompilerData created, attempting to compile bytecode...")
+            _ = data.bytecode
+            logger.debug("Bytecode compilation successful")
+            return data
+        except Exception as e:
+            logger.error(f"Compilation error: {type(e).__name__}: {str(e)}")
+            import traceback
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
+            raise
 
 
 def compile(src: str, name="DasyContract", include_abi=True, filepath: str = None) -> CompilerData:

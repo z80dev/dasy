@@ -16,6 +16,7 @@
         "&" (build-node BitAnd)
         "~" (build-node Invert)
         "/" (build-node Div)
+        "//" (build-node FloorDiv)
         "<" (build-node Lt :-pretty "<" :-description "less than")
         ">" (build-node Gt :-pretty ">" :-description "greater than")
         "<=" (build-node LtE :-pretty "<=" :-description "less than equal")

@@ -25,24 +25,28 @@ This document tracks the progress of migrating Dasy from Vyper 0.3.10 to Vyper 0
 - Updated parser to use `FlagDef` instead of `EnumDef`
 - Renamed `examples/enum.dasy` to `examples/flag.dasy`
 
-## Current Issues
+## Current Issues - RESOLVED ✅
 
-### Module Node Structure
+### Module Node Structure ✅
 The Module AST node in Vyper 0.4.2 requires additional attributes:
-- `path`: File path
-- `resolved_path`: Resolved file path  
-- `source_id`: Source ID for the file
-- `full_source_code`: Complete source code
-- `is_interface`: Boolean flag
-- `settings`: Settings object
+- `path`: File path - **FIXED**
+- `resolved_path`: Resolved file path - **FIXED**
+- `source_id`: Source ID for the file - **FIXED**
+- `full_source_code`: Complete source code - **FIXED**
+- `is_interface`: Boolean flag - **FIXED**
+- `settings`: Settings object - **FIXED**
 
-### CompilerData Initialization
-- Now requires `FileInput` object instead of direct arguments
-- Changed constructor signature significantly
+### CompilerData Initialization ✅
+- Now requires `FileInput` object instead of direct arguments - **FIXED**
+- Changed constructor signature significantly - **FIXED**
 
-### Missing Module Integration
-- FunctionDef nodes need `module_node` attribute
-- Need to properly set parent-child relationships in AST
+### AST Parent-Child Relationships ✅
+- Properly set parent-child relationships in AST - **FIXED**
+- Fixed kebab-case to snake_case conversion for function names - **FIXED**
+
+### Basic Compilation ✅
+- Simple contracts now compile successfully!
+- Fixed "Unsupported syntax for function namespace" error
 
 ## Remaining Syntax Changes
 

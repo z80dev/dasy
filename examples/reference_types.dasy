@@ -35,4 +35,4 @@
   (set-in p name "Solidity"))
 
 (defn literalPerson [] Person :external
-      (Person {:name "Foo" :age 100}))
+      (Person :name "Foo" :age 100))

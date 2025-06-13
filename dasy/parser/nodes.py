@@ -18,9 +18,31 @@ from .utils import process_body, build_node
 
 def parse_for(expr):
     # (for [x xs] (.append self/nums x))
-    # (for [target iter] *body)
-    target, iter_ = expr[1]
-    target_node = parser.parse_node_legacy(target)
+    # (for [target iter] *body) - old syntax
+    # (for [x :uint256 xs] *body) - new syntax with type annotation
+    binding = expr[1]
+    
+    # Check if we have type annotation (3 elements) or not (2 elements)
+    if len(binding) == 3:
+        # New syntax with type annotation: [target type iter]
+        target, type_ann, iter_ = binding
+        # Create an AnnAssign node for typed loop variable
+        target_name = build_node(vy_nodes.Name, id=str(target))
+        annotation = parser.parse_node_legacy(type_ann)
+        target_node = build_node(
+            vy_nodes.AnnAssign, 
+            target=target_name,
+            annotation=annotation,
+            simple=1
+        )
+    elif len(binding) == 2:
+        # Old syntax without type annotation: [target iter]  
+        target, iter_ = binding
+        # For backward compatibility, create a Name node directly
+        target_node = build_node(vy_nodes.Name, id=str(target))
+    else:
+        raise ValueError(f"Invalid for loop binding: {binding}")
+    
     iter_node = parser.parse_node_legacy(iter_)
     body_nodes = [parser.parse_node_legacy(b) for b in expr[2:]]
     body = process_body(body_nodes)
