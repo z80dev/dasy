@@ -9,3 +9,7 @@ poetry.lock
 .build
 frenv
 .benchmarks
+
+# uv
+.venv/
+uv.lock

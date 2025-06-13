@@ -29,10 +29,24 @@ Learn more in the [[file:docs.org][documentation]]
 #+end_src
 
 * Installation
+** Using uv (recommended)
+#+begin_src bash
+# Clone the repository
+git clone https://github.com/dasylang/dasy.git
+cd dasy
+
+# Install with development dependencies
+uv sync --dev
+
+# Run dasy
+uv run dasy examples/hello_world.dasy
+#+end_src
+
 ** For use as a library
 #+begin_src bash
-pip install git+https://github.com/dasylang/dasy.git
+uv pip install git+https://github.com/dasylang/dasy.git
 #+end_src
+
 ** For use as an executable via =pipx=
 #+begin_src bash
 pipx install git+https://github.com/dasylang/dasy.git
