@@ -76,6 +76,19 @@ class CompilerData(VyperCompilerData):
     @property
     def layout(self):
         return build_layout_output(self)
+    
+    @property
+    def source_map(self):
+        """Source map for debugging - required by titanoboa"""
+        if not hasattr(self, "_source_map"):
+            # Generate a simple source map
+            from vyper.compiler.output import build_source_map_output
+            try:
+                self._source_map = build_source_map_output(self)
+            except:
+                # Fallback if source map generation fails
+                self._source_map = {}
+        return self._source_map
 
 
 def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) -> CompilerData:

@@ -157,7 +157,7 @@ def parse_defn(fn_tree):
     args, rest = parse_fn_args(fn_tree)
 
     if _fn_is_constructor(fn_tree):
-        decorators = [build_node(vy_nodes.Name, id="external")]
+        decorators = [build_node(vy_nodes.Name, id="deploy")]
         fn_body = parse_fn_body(rest[1:])
     elif _fn_tree_has_return_type(fn_tree):
         decorators = parse_fn_decorators(fn_args[3])

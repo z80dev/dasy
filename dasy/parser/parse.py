@@ -42,6 +42,9 @@ ALIASES = {
     "def": "annassign",
     "->": "arrow",
     "->>": "arroww",
+    # Built-in function mappings for Vyper 0.4.2
+    "_abi_encode": "abi_encode",
+    "_abi_decode": "abi_decode",
 }
 
 

@@ -1,7 +1,7 @@
 from vyper.compiler.settings import Settings, anchor_settings
 import dasy
-from boa.vyper.contract import VyperContract
 import boa
+from boa.contracts.vyper.vyper_contract import VyperContract
 
 
 

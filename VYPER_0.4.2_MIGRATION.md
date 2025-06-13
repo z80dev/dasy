@@ -48,18 +48,24 @@ The Module AST node in Vyper 0.4.2 requires additional attributes:
 - Simple contracts now compile successfully!
 - Fixed "Unsupported syntax for function namespace" error
 
-## Remaining Syntax Changes
+## Completed Syntax Changes ✅
 
-### 1. Integer Division
-- Need to update `/` operator to `//` for integer division
-- Regular `/` is no longer allowed for integers
+### 1. Integer Division ✅
+- Updated `/` operator to `//` for integer division
+- Added `//` operator support in parser
+- Regular `/` is reserved for decimal division
 
-### 2. Struct Instantiation
+### 2. Struct Instantiation ✅ 
 - Must use keyword arguments: `(MyStruct :field1 val1 :field2 val2)`
-- Positional arguments no longer allowed
+- Updated examples to use keyword syntax
+- Parser already supported this syntax
 
-### 3. Loop Variables
-- Require type annotations: `(for [i :uint256] (range 10) ...)`
+### 3. Loop Variables ✅
+- Require type annotations: `(for [i :uint256 xs] ...)`
+- Updated parser to handle typed loop variables
+- Old syntax without types no longer supported
+
+## Remaining Syntax Changes
 
 ### 4. Built-in Function Updates
 - `_abi_encode` → `abi_encode`
