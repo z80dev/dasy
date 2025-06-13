@@ -2,7 +2,7 @@
   (* x y))
 
 (defn divide [:uint256 x y] :uint256 [:external :pure]
-  (/ x y))
+  (// x y))
 
 (defn multiOut [] '(:uint256 :bool) [:external :pure]
   '(1 True))

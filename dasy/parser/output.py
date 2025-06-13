@@ -17,8 +17,8 @@ def convert_type(vyper_type: str) -> str:
 
 
 def get_external_interface(compiler_data: CompilerData) -> str:
-    interface = compiler_data.vyper_module_folded._metadata["type"]
-    stem = Path(compiler_data.contract_name).stem
+    interface = compiler_data.annotated_vyper_module._metadata["type"]
+    stem = Path(compiler_data.contract_path).stem
     # capitalize words separated by '_'
     # ex: test_interface.vy -> TestInterface
     contract_name = (

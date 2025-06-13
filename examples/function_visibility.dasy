@@ -13,8 +13,8 @@
 
   ;; can call internal functions
   (defvar z :uint256 (self._add x y))
-  (/ (+ x y)
-     2))
+  (// (+ x y)
+      2))
 
 (defn _sqr [:uint256 x] :uint256 [:internal :pure]
   (* x x))

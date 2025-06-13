@@ -8,7 +8,7 @@
   (set self/target (Nonreentrantenforcer target)))
 
 (defn callback [] :external
-  ((. self/target func0)))
+  (extcall (self/target.func0)))
 
 (defn __fallback__ [] :external
-  ((. self/target func0)))
+  (extcall (self/target.func0)))

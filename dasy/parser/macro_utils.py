@@ -47,8 +47,15 @@ def compile_for_interface(filepath: str) -> CompilerData:
         # For .vy files, use Vyper's compiler directly
         if filepath.endswith(".vy"):
             from vyper.compiler import CompilerData as VyperCompilerData
-            from dasy.parser.utils import filename_to_contract_name
-            return VyperCompilerData(src, contract_name=filename_to_contract_name(filepath))
+            from vyper.compiler.input_bundle import FileInput
+            # Create FileInput for the Vyper file
+            file_input = FileInput(
+                source_id=0,
+                path=path,
+                resolved_path=path.resolve(),
+                contents=src
+            )
+            return VyperCompilerData(file_input)
         
         # For .dasy files, we need minimal compilation
         # Import here to avoid circular imports

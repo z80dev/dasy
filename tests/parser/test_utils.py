@@ -42,7 +42,10 @@ def test_has_return():
 def test_build_node():
     node = build_node(Expr, value=1)
     node_id = node.node_id
-    assert node == Expr(node_id=node_id, ast_type="Expr", value=1)
+    # Check attributes individually instead of comparing objects
+    assert node.node_id == node_id
+    assert node.ast_type == "Expr"
+    assert node.value == 1
 
 
 def test_set_parent_children():
@@ -50,7 +53,7 @@ def test_set_parent_children():
     child = build_node(Expr, value=2)
     set_parent_children(parent, [child])
     assert child._parent == parent
-    assert parent._children == set([child])
+    assert parent._children == [child]
 
 
 def test_add_src_map():

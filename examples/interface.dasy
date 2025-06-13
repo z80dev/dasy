@@ -1,4 +1,9 @@
-(interface! "examples/test_interface.vy")
+(definterface TestInterface
+  (defn owner [] :address :view)
+  (defn eth [] :uint256 :view)
+  (defn setOwner [:address owner] :nonpayable)
+  (defn sendEth [] :payable)
+  (defn setOwnerAndSendEth [:address owner] :payable))
 
 (defvar test (public TestInterface))
 
@@ -6,10 +11,10 @@
   (set self/test (TestInterface test)))
 
 (defn getOwner [] :address [:external :view]
-  ((. self/test owner)))
+  (staticcall (self/test.owner)))
 
 (defn getOwnerFromAddress [:address test] :address [:external :view]
-  ((. (TestInterface test) owner)))
+  (staticcall ((. (TestInterface test) owner))))
 
 (defn setOwner [:address owner] :external
-  (.setOwner self/test owner))
+  (extcall (self/test.setOwner owner)))

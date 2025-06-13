@@ -4,10 +4,10 @@
   amount :uint256)
 
 (defn transfer [:address receiver :uint256 amount] :external
-  (log (Transfer msg/sender receiver amount)))
+  (log (Transfer :sender msg/sender :receiver receiver :amount amount)))
 
 (defn mint [:uint256 amount] :external
-  (log (Transfer (empty :address) msg/sender amount)))
+  (log (Transfer :sender (empty :address) :receiver msg/sender :amount amount)))
 
 (defn burn [:uint256 amount] :external
-  (log (Transfer msg/sender (empty :address) amount)))
+  (log (Transfer :sender msg/sender :receiver (empty :address) :amount amount)))

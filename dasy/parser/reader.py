@@ -37,7 +37,7 @@ class DasyReader(HyReader):
             # Verify it's all valid hex characters after 0x
             try:
                 int(ident[2:], 16)
-                return models.Symbol(ident, from_parser=True)
+                return models.Symbol(ident)
             except ValueError:
                 # Not valid hex, let normal parsing handle it
                 pass

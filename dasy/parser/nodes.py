@@ -97,10 +97,14 @@ def parse_expr(expr, nodes):
     return [parser.parse_node_legacy(node) for node in expr[1 : nodes + 1]]
 
 
+# Create handler functions for each node type to avoid lambda pickle issues
+def _make_handler(node_type):
+    def handler(expr):
+        return build_node(node_type, *parse_expr(expr, 2))
+    return handler
+
 handlers = {
-    node_type.__name__.lower(): lambda expr, node_type=node_type: build_node(
-        node_type, *parse_expr(expr, 2)
-    )
+    node_type.__name__.lower(): _make_handler(node_type)
     for node_type in [
         Break,
         Pass,
@@ -116,27 +120,41 @@ handlers = {
 
 def parse_extcall(expr):
     # (extcall contract.method arg1 arg2 ...)
-    # Build a Call node from the arguments
+    # extcall foo.bar(x) becomes ExtCall(value=Call(...))
     if len(expr) < 2:
         raise ValueError("extcall requires at least a function call")
     
-    # Parse the call expression
-    call_expr = models.Expression(expr[1:])
-    call_node = parser.parse_node_legacy(call_expr)
+    # The second element should be the call expression
+    # If it's already an expression (wrapped in parens), use it directly
+    # Otherwise, create an expression from all remaining elements
+    if len(expr) == 2 and isinstance(expr[1], models.Expression):
+        # Case: (extcall (contract.method args...))
+        call_node = parser.parse_node_legacy(expr[1])
+    else:
+        # Case: (extcall contract.method args...)
+        call_expr = models.Expression(expr[1:])
+        call_node = parser.parse_node_legacy(call_expr)
     
-    # Wrap it in an ExtCall node
+    # Wrap the Call in an ExtCall node
     return build_node(ExtCall, value=call_node)
 
 
 def parse_staticcall(expr):
     # (staticcall contract.method arg1 arg2 ...)
-    # Build a Call node from the arguments
+    # staticcall is an expression (not a statement) that returns a value
     if len(expr) < 2:
         raise ValueError("staticcall requires at least a function call")
     
-    # Parse the call expression
-    call_expr = models.Expression(expr[1:])
-    call_node = parser.parse_node_legacy(call_expr)
+    # The second element should be the call expression
+    # If it's already an expression (wrapped in parens), use it directly
+    # Otherwise, create an expression from all remaining elements
+    if len(expr) == 2 and isinstance(expr[1], models.Expression):
+        # Case: (staticcall (contract.method args...))
+        call_node = parser.parse_node_legacy(expr[1])
+    else:
+        # Case: (staticcall contract.method args...)
+        call_expr = models.Expression(expr[1:])
+        call_node = parser.parse_node_legacy(call_expr)
     
     # Wrap it in a StaticCall node
     return build_node(StaticCall, value=call_node)

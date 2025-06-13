@@ -81,13 +81,24 @@ class CompilerData(VyperCompilerData):
     def source_map(self):
         """Source map for debugging - required by titanoboa"""
         if not hasattr(self, "_source_map"):
-            # Generate a simple source map
+            # Generate source map using vyper's output module
             from vyper.compiler.output import build_source_map_output
             try:
                 self._source_map = build_source_map_output(self)
-            except:
-                # Fallback if source map generation fails
-                self._source_map = {}
+                # Vyper 0.4.2 stores tuples (source_id, node_id) in pc_ast_map
+                # Titanoboa expects pc_raw_ast_map with actual AST nodes
+                if "pc_ast_map" in self._source_map:
+                    # For compatibility with titanoboa, just provide an empty mapping
+                    # This prevents crashes but won't give accurate source locations
+                    self._source_map["pc_raw_ast_map"] = {}
+            except Exception as e:
+                logger.debug(f"Source map generation failed: {e}")
+                # Provide minimal structure expected by titanoboa
+                self._source_map = {
+                    "pc_raw_ast_map": {},
+                    "pc_ast_map": {},
+                    "source_map": {}
+                }
         return self._source_map
 
 

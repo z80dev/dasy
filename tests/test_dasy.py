@@ -148,7 +148,7 @@ def test_struct():
       (set-in mPers age 10)
       mPers)
     (defn literalPerson [] Person :external
-      (Person {:age 100 :name "Foo"}))
+      (Person :age 100 :name "Foo"))
     """
     )
     assert c.person()[0] == 12
@@ -255,7 +255,8 @@ def test_view_pure():
 
 def test_constants():
     c = compile("examples/constants.dasy")
-    assert c.getMyConstants() == (1, 10, "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B")
+    # ADDR is returned as uint256 now
+    assert c.getMyConstants() == (1, 10, 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B)
     assert c.test(5) == 6
 
 
@@ -376,7 +377,7 @@ def test_token():
 
 
 def test_enums():
-    c = compile("examples/enum.dasy")
+    c = compile("examples/flag.dasy")
     assert c.getPrice() == 10
     assert c.getPriceUsingCondp() == 10
 

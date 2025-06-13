@@ -96,4 +96,6 @@
                              (build-node Expr :value f2)
                              f2))
               Call [(build-node Expr :value f)]
+              ExtCall [(build-node Expr :value f)]
+              StaticCall [(build-node Expr :value f)]
               else [f]))))

@@ -25,14 +25,14 @@
   (set-self name symbol decimals totalSupply)
   (set-at self.balanceOf msg.sender totalSupply)
   (set self.minter msg.sender)
-  (log (Transfer (empty address) msg/sender totalSupply)))
+  (log (Transfer :sender (empty address) :receiver msg/sender :value totalSupply)))
 
 (defn transfer [:address to :uint256 val] :bool :external
   (doto (get-at self/balanceOf msg/sender)
         (-= val))
   (doto (get-at self/balanceOf to)
         (+= val))
-  (log (Transfer msg/sender to val))
+  (log (Transfer :sender msg/sender :receiver to :value val))
   True)
 
 (defn transferFrom [:address _from _to :uint256 val] :bool :external
@@ -42,12 +42,12 @@
         (+= val))
   (doto (get-at self/allowance _from msg/sender)
         (-= val))
-  (log (Transfer _from _to val))
+  (log (Transfer :sender _from :receiver _to :value val))
   True)
 
 (defn approve [:address spender :uint256 val] :bool :external
   (set-at self/allowance msg/sender spender val)
-  (log (Approval msg/sender spender val))
+  (log (Approval :owner msg/sender :spender spender :value val))
   True)
 
 (defn mint [:address to :uint256 val] :external
@@ -56,13 +56,13 @@
   (+= self/totalSupply val)
   (doto (get-at self/balanceOf to)
         (+= val))
-  (log (Transfer (empty :address) to val)))
+  (log (Transfer :sender (empty :address) :receiver to :value val)))
 
 (defn _burn [:address to :uint256 val] :internal
   (assert (!= to (empty :address)))
   (-= self/totalSupply val)
   (vyper "self.balanceOf[to] -= val")
-  (log (Transfer to (empty :address) val)))
+  (log (Transfer :sender to :receiver (empty :address) :value val)))
 
 (defn burn [:uint256 val] :external
   (self/_burn msg/sender val))

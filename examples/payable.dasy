@@ -3,7 +3,7 @@
   amount :uint256)
 
 (defn deposit [] [:external :payable]
-  (log (Deposit msg/sender msg/value)))
+  (log (Deposit :sender msg/sender :amount msg/value)))
 
 (defn getBalance [] :uint256 [:external :view]
   ;; get balance of Ether stored in this contract

@@ -214,6 +214,9 @@ def parse_node(
     # dispatch on type of parsed model
     match node:
         case models.Expression(node):
+            # Handle empty expressions
+            if len(node) == 0:
+                return None
             # check for pragma and set settings
             if node[0] == models.Symbol("pragma"):
                 if node[1] == models.Keyword("evm-version"):
@@ -248,12 +251,22 @@ def parse_node(
                     (models.Symbol("."), models.Symbol(target), models.Symbol(attr))
                 )
                 ast_node = parse_node(replacement_node, context)
+            # Handle Ethereum addresses (0x + 40 hex chars = 42 chars total)
+            elif str_node.startswith("0x") and len(str_node) == 42:
+                try:
+                    # Verify it's a valid hex address
+                    int(str_node[2:], 16)
+                    # Create a Hex node for address literal
+                    ast_node = build_node(vy_nodes.Hex, value=str_node)
+                except ValueError:
+                    # Not a valid hex address, treat as name
+                    ast_node = build_node(vy_nodes.Name, id=str(node))
             else:
                 ast_node = build_node(vy_nodes.Name, id=str(node))
         case models.Keyword(node):
             ast_node = build_node(vy_nodes.Name, id=str(node))
         case models.Bytes(byt):
-            ast_node = build_node(vy_nodes.Bytes, value=byt)
+            ast_node = build_node(vy_nodes.Bytes, value=bytes(byt))
         case models.List(lst):
             ast_node = build_node(
                 vy_nodes.List, elements=[parse_node(elmt, context) for elmt in lst]

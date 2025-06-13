@@ -5,5 +5,5 @@
   (set OWNER msg/sender)
   (set MY_IMMUTABLE _val))
 
-(defn getMyImmutable [] :uint256 [:external :pure]
+(defn getMyImmutable [] :uint256 [:external :view]
   MY_IMMUTABLE)
