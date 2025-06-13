@@ -11,10 +11,9 @@ from vyper.compiler.output import (
     build_layout_output,
     build_opcodes_output,
 )
-from vyper.compiler.settings import Settings
+from vyper.compiler.settings import Settings, anchor_settings
 from dasy.parser import parse_src
 from dasy.parser.utils import filename_to_contract_name
-from vyper.evm.opcodes import anchor_evm_version
 
 
 class CompilerData(VyperCompilerData):
@@ -77,8 +76,7 @@ class CompilerData(VyperCompilerData):
 def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) -> CompilerData:
     (ast, settings) = parse_src(src, filepath)
     settings = Settings(**settings)
-    version = settings.evm_version or "paris"
-    with anchor_evm_version(version):
+    with anchor_settings(settings):
         data = CompilerData(
             "",
             ast.name or name,

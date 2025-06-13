@@ -4,8 +4,7 @@ from pathlib import Path
 from typing import Optional, Set
 import threading
 from vyper.compiler import CompilerData
-from vyper.compiler.settings import Settings
-from vyper.evm.opcodes import anchor_evm_version
+from vyper.compiler.settings import Settings, anchor_settings
 
 from dasy.exceptions import DasyCircularDependencyError
 
@@ -58,9 +57,7 @@ def compile_for_interface(filepath: str) -> CompilerData:
         # Parse with minimal processing - just enough to get the interface
         ast, settings = parse_src(src, filepath)
         settings = Settings(**settings)
-        version = settings.evm_version or "paris"
-        
-        with anchor_evm_version(version):
+        with anchor_settings(settings):
             # Create minimal compiler data
             from dasy.compiler import CompilerData as DasyCompilerData
             data = DasyCompilerData(

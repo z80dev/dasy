@@ -64,7 +64,7 @@
     (branch (isinstance n it)
             list (set-parent-children parent n)
             VyperNode (do
-                        (.add (. parent _children) n)
+                        (.append (. parent _children) n)
                         (setv (. n _parent) parent))))
   parent)
 

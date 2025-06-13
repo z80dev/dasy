@@ -1,4 +1,4 @@
-from vyper.evm.opcodes import anchor_evm_version
+from vyper.compiler.settings import Settings, anchor_settings
 import dasy
 from boa.vyper.contract import VyperContract
 import boa
@@ -189,7 +189,8 @@ def test_map():
 
 
 def test_reference_types():
-    with anchor_evm_version("cancun"):
+    settings = Settings(evm_version="cancun")
+    with anchor_settings(settings):
         c = compile_src(
             """
         (defvar nums (array :uint256 10))
@@ -342,7 +343,8 @@ def testInterface():
 
 
 def test_reentrancy():
-    with anchor_evm_version("cancun"):
+    settings = Settings(evm_version="cancun")
+    with anchor_settings(settings):
         c = compile("examples/nonreentrantenforcer.dasy")  # noqa: F841
         # v = boa.load("examples/nonreentrantenforcer.vy")
         # print("vyper settings")

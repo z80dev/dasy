@@ -8,7 +8,6 @@ from vyper.ast.nodes import (
     Return,
     AugAssign,
     Assert,
-    Index,
 )
 from hy import models
 from dasy import parser
@@ -84,6 +83,5 @@ handlers = {
         Return,
         AugAssign,
         Assert,
-        Index,
     ]
 }

@@ -343,8 +343,7 @@ def parse_do(expr):
 
 def parse_subscript(expr):
     """(subscript value slice)"""
-    index_value_node = dasy.parser.parse_node_legacy(expr[2])
-    index_node = build_node(vy_nodes.Index, value=index_value_node)
+    slice_node = dasy.parser.parse_node_legacy(expr[2])
     value_node = dasy.parser.parse_node_legacy(expr[1])
-    subscript_node = build_node(vy_nodes.Subscript, slice=index_node, value=value_node)
+    subscript_node = build_node(vy_nodes.Subscript, slice=slice_node, value=value_node)
     return subscript_node
