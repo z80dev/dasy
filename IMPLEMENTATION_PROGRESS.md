@@ -32,7 +32,7 @@ Status legend: [x] done, [~] in progress, [ ] pending
 
 ## Core Surface Tightening
 
-- [~] Retain existing `ALIASES`; plan to trim once macro parity is complete (esp. `->`, `->>`)
+- [x] Trim `ALIASES` to spec-level essentials (remove `setv`, shift `quote` handling into parser)
 - [ ] Dispatch table simplification (follow-up cleanup)
 
 ## Notes / Next Steps

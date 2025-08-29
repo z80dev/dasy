@@ -81,7 +81,7 @@ def install_builtin_dasy_macros(env) -> None:
 
     # keep doto provided by Hy for now, due to reader/shape nuances
 
-    # keep thread macros provided by Hy for now (ALIASES map to arrow/arroww)
+    # thread macros are provided here as Dasy-native procedural macros
 
     # when
     when_rules = [

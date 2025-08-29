@@ -8,7 +8,7 @@ dependencies = [
     "argparse>=1.4.0",
     "hy>=1.1.0",
     "hyrule>=0.6.0",
-    "vyper==0.4.2",
+    "vyper==0.4.3",
     "eth-abi>=4.0.0",
     "eth-typing>=3.2.0",
     "py-evm>=0.6.1a2",
@@ -16,9 +16,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.1.3",
+    "pytest>=8.0.0",
     "black>=22.8.0",
-    "titanoboa==0.1.8",
+    "titanoboa==0.2.7",
 ]
 
 [build-system]

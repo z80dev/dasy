@@ -55,7 +55,8 @@ def main():
                     src, contract_name=args.filename.split("/")[-1].split(".")[0]
                 )
             else:
-                data = compiler.compile(src, name=args.filename.split(".")[0])
+                # Pass the filepath so macros like include! resolve relative paths correctly
+                data = compiler.compile(src, name=args.filename.split(".")[0], filepath=args.filename)
     else:
         for line in sys.stdin:
             src += line

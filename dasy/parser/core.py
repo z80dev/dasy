@@ -71,6 +71,14 @@ def parse_tuple(tuple_tree):
     )
 
 
+def parse_quote(expr):
+    """Support (quote ...) without relying on ALIASES.
+
+    Delegates to parse_tuple which handles both 'quote' and 'tuple' shapes.
+    """
+    return parse_tuple(expr)
+
+
 def parse_args_list(args_list) -> list[vy_nodes.arg]:
     if len(args_list) == 0:
         return []

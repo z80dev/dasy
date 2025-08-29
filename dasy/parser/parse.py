@@ -33,10 +33,8 @@ NAME_CONSTS = ["True", "False"]
 
 ALIASES = {
     ".": "attribute",
-    "quote": "tuple",
     "array": "subscript",
     "defvar": "annassign",
-    "setv": "assign",
     "set": "assign",
     "+!": "unsafe_add",
     "-!": "unsafe_sub",

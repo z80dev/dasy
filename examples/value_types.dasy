@@ -11,6 +11,7 @@
     (set self/b False)
     (set self/i -1)
     (set self/u 123)
-    (set self/b32 0xada1b75f8ae9a65dcc16f95678ac203030505c6b465c8206e26ae84b525cdacb)
+    ;; bytes32 expects a fixed-size 32-byte value; convert from a bytes literal
+    (set self/b32 (convert b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" :bytes32))
     (set self/bs b"\x01")
     (set self/s "Hello Dasy"))
