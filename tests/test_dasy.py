@@ -36,9 +36,12 @@ def compile_src(src: str, *args) -> VyperContract:
 
 
 def compile(filename: str, *args) -> VyperContract:
-    with open(filename) as f:
-        src = f.read()
-        return compile_src(src, *args)
+    # Resolve relative to the repository root (tests/..)
+    import pathlib
+    base = pathlib.Path(__file__).resolve().parent.parent
+    path = (base / filename).resolve()
+    data = dasy.compile_file(str(path))
+    return VyperContract(data, *args)
 
 
 def test_binops():

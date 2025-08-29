@@ -141,25 +141,21 @@ def install_builtin_dasy_macros(env) -> None:
     ]
     env.define("get-at", SyntaxRulesMacro([], get_at_rules))
 
-    # get-at! : list-based path
-    # (get-at! obj [])           => obj
-    # (get-at! obj [k])          => (subscript obj k)
-    # (get-at! obj [k rest ...]) => (get-at! (subscript obj k) [rest ...])
-    get_at_bang_rules = [
-        (
-            exp(sym("get-at!"), sym("obj"), lst()),
-            sym("obj"),
-        ),
-        (
-            exp(sym("get-at!"), sym("obj"), lst(sym("k"))),
-            exp(sym("subscript"), sym("obj"), sym("k")),
-        ),
-        (
-            exp(sym("get-at!"), sym("obj"), lst(sym("k"), sym("rest"), ELLIPSIS)),
-            exp(sym("get-at!"), exp(sym("subscript"), sym("obj"), sym("k")), lst(sym("rest"), ELLIPSIS)),
-        ),
-    ]
-    env.define("get-at!", SyntaxRulesMacro([], get_at_bang_rules))
+    # get-at! : list-based path (procedural to avoid matcher edge cases)
+    # (get-at! obj [k1 k2 ...]) => (subscript (subscript obj k1) k2) ...
+    def _get_at_bang(call_stx: Syntax, _env):
+        form = call_stx.datum
+        if len(form) != 3:
+            raise Exception("get-at! expects exactly 2 args: (get-at! obj [keys...])")
+        obj = form[1]
+        keys = form[2]
+        if not isinstance(keys, models.List):
+            raise Exception("get-at! requires a list of keys, e.g. [k1 k2]")
+        acc = obj
+        for k in keys:
+            acc = models.Expression([models.Symbol("subscript"), acc, k])
+        return acc
+    env.define("get-at!", _get_at_bang)
 
     # set-at: variadic keys, last is value
     # (set-at obj key value)             => (set (subscript obj key) value)

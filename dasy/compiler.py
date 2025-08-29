@@ -138,7 +138,7 @@ def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) 
     
     with anchor_settings(settings):
         try:
-            data = VyperCompilerData(file_input, settings=settings)
+            data = CompilerData(file_input, settings=settings)
             # Override the vyper_module with our parsed AST
             data.__dict__["vyper_module"] = ast
             logger.debug("CompilerData created, attempting to compile bytecode...")
