@@ -8,8 +8,8 @@ dependencies = [
     "argparse>=1.4.0",
     "hy>=1.1.0",
     "hyrule>=0.6.0",
-    # Support latest 0.4.x while keeping 0.4.2 compatible
-    "vyper>=0.4.2,<0.5",
+    # Target a single supported Vyper version (no shims)
+    "vyper==0.4.3",
     "eth-abi>=4.0.0",
     "eth-typing>=3.2.0",
     "py-evm>=0.6.1a2",
@@ -19,10 +19,6 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "black>=22.8.0",
-]
-boa_v042 = [
-    # titanoboa release compatible with vyper 0.4.2 for running boa tests
-    "titanoboa==0.1.8",
 ]
 
 [build-system]

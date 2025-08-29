@@ -14,7 +14,8 @@ from vyper.compiler.output import (
 from vyper.compiler.settings import Settings, anchor_settings
 from dasy.parser import parse_src
 from dasy.parser.utils import filename_to_contract_name
-from .vyper_compat import make_file_input, make_compiler_data
+from vyper.compiler.input_bundle import FileInput
+from vyper.compiler.phases import CompilerData as VyperCompilerData
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -124,14 +125,20 @@ def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) 
     settings = Settings(**settings)
     logger.debug(f"Settings: {settings}")
     
-    # Create a FileInput object (compat with Vyper 0.4.x)
-    file_input = make_file_input(src, name, filepath)
+    # Create a FileInput object for Vyper 0.4.3
+    path = filepath or f"{name}.dasy"
+    file_input = FileInput(
+        contents=src,
+        source_id=0,
+        path=path,
+        resolved_path=path,
+    )
     
     logger.debug(f"Created FileInput: path={file_input.path}")
     
     with anchor_settings(settings):
         try:
-            data = make_compiler_data(file_input, settings)
+            data = VyperCompilerData(file_input, settings=settings)
             # Override the vyper_module with our parsed AST
             data.__dict__["vyper_module"] = ast
             logger.debug("CompilerData created, attempting to compile bytecode...")
