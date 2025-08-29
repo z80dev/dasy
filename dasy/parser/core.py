@@ -368,8 +368,8 @@ def parse_defflag(expr):
 
 def parse_do(expr):
     calls = [dasy.parser.parse_node_legacy(x) for x in expr[1:]]
-    exprs = [build_node(vy_nodes.Expr, value=call_node) for call_node in calls]
-    return exprs
+    # Use process_body to wrap Calls into Expr nodes but leave Assign/AugAssign etc. intact
+    return process_body(calls)
 
 
 def parse_subscript(expr):

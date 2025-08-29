@@ -8,20 +8,17 @@
 (defn prefix_add [:uint256 x y] :uint256 [:external :pure]
   (+ x y))
 
-;; in lisp, we can use macros to create new syntax.  Here we define a
-;; macro called infix.  The macro takes an expression as an argument,
-;; and returns a new expression.  The new expression swaps the first
-;; two arguments of the original expression.
+;; Define a nested-only macro using Dasy's define-syntax.
+;; Pattern: (infix (x + y)) => (+ x y)
 
-(defmacro infix [expr]
-  "Swap the first two arguments of an expression"
-  (let [[arg1 op arg2] expr] ;; destructure the expression
-    `(~op ~arg1 ~arg2)))
+(define-syntax infix
+  (syntax-rules ()
+    ;; General nested pattern: capture operator symbol as `op`
+    ((infix (a op b)) (op a b))))
 
 
 ;; Now we can write infix_add, which is more readable than
 ;; prefix_add to some people. The compiler will expand infix_add to
 ;; prefix_add, so the two functions are equivalent.
 (defn infix_add [:uint256 x y] :uint256 [:external :pure]
-  (infix
-   (x + y)))
+  (infix (x + y)))

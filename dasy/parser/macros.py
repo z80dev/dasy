@@ -1,7 +1,7 @@
 import dasy
 import hy
 
-MACROS = ["cond"]
+MACROS = []
 
 
 def is_macro(cmd_str):

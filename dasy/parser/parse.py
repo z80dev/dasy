@@ -23,6 +23,9 @@ from dasy.exceptions import (
 # namespaces with expression handlers
 from . import nodes, core, macros
 from dasy.builtin import functions
+from .expander import expand_module
+from ..macro.syntax import MacroEnv
+from . import macros2
 
 BUILTIN_FUNCS = BIN_FUNCS | COMP_FUNCS | UNARY_OPS | BOOL_OPS | {"in", "notin"}
 
@@ -40,8 +43,6 @@ ALIASES = {
     "*!": "unsafe_mul",
     "/!": "unsafe_div",
     "def": "annassign",
-    "->": "arrow",
-    "->>": "arroww",
     # Built-in function mappings for Vyper 0.4.2
     "_abi_encode": "abi_encode",
     "_abi_decode": "abi_decode",
@@ -297,7 +298,18 @@ def parse_src(src: str, filepath: Optional[str] = None):
     vars = []
     fs = []
     settings = {}
-    for element in dasy_read_many(src):
+    # Read raw forms
+    forms = list(dasy_read_many(src))
+
+    # Macro expansion pass (Dasy-native), with Hy fallback later during parse
+    env = MacroEnv()
+    # Register builtin Dasy macros (cond, doto, ->, ->>, when, unless, let)
+    macros2.install_builtin_dasy_macros(env)
+
+    # Expand module using Dasy macro system and collect expanded forms
+    forms = expand_module(forms, env, macros2.parse_define_syntax, context)
+
+    for element in forms:
         # parse each top-level form
         ast = parse_node(element, context)
 
