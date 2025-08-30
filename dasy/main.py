@@ -1,7 +1,9 @@
-from dasy import compiler
+from dasy import compiler, __version__
 from vyper.compiler import OUTPUT_FORMATS as VYPER_OUTPUT_FORMATS
 import argparse
 import sys
+import logging
+import difflib
 
 from dasy.parser.output import get_external_interface
 from dasy.exceptions import DasyUsageError
@@ -41,15 +43,37 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument("filename", type=str, nargs="?", default="")
-    parser.add_argument("-f", help=format_help, default="bytecode", dest="format")
+    parser.add_argument("-f", "--format", help=format_help, default="bytecode", dest="format")
+    parser.add_argument("--list-formats", action="store_true", help="List available output formats and exit")
+    parser.add_argument("--evm-version", type=str, default=None, help="Override EVM version (e.g., cancun, paris)")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging (DEBUG)")
+    parser.add_argument("--quiet", action="store_true", help="Suppress logs (ERROR only)")
+    parser.add_argument("--version", action="version", version=f"dasy {__version__}")
 
     src = ""
 
     args = parser.parse_args()
 
+    # Configure logging based on verbosity flags
+    level = logging.WARNING
+    if args.verbose:
+        level = logging.DEBUG
+    elif args.quiet:
+        level = logging.ERROR
+    logging.basicConfig(level=level, format="[%(levelname)s] %(message)s")
+
+    # List formats and exit if requested
+    if args.list_formats:
+        for key in sorted(OUTPUT_FORMATS.keys()):
+            print(key)
+        return
+
     if args.filename != "":
         with open(args.filename, "r") as f:
             src = f.read()
+            # Allow CLI to override EVM version via pragma appended last (wins over earlier pragmas)
+            if args.evm_version and not args.filename.endswith(".vy"):
+                src = src + f"\n(pragma :evm-version {args.evm_version})\n"
             if args.filename.endswith(".vy"):
                 data = compiler.CompilerData(
                     src, contract_name=args.filename.split("/")[-1].split(".")[0]
@@ -60,6 +84,8 @@ def main():
     else:
         for line in sys.stdin:
             src += line
+        if args.evm_version:
+            src = src + f"\n(pragma :evm-version {args.evm_version})\n"
         data = compiler.compile(src, name="StdIn")
 
     translate_map = {
@@ -69,13 +95,21 @@ def main():
         "ir_json": "ir_dict",
         "interface": "external_interface",
     }
+    # Accept aliases and canonical names at input
+    valid_inputs = set(OUTPUT_FORMATS.keys()) | set(translate_map.keys())
     output_format = translate_map.get(args.format, args.format)
     if output_format in OUTPUT_FORMATS:
         print(OUTPUT_FORMATS[output_format](data))
     else:
-        raise DasyUsageError(
-            f"Unrecognized Output Format {args.format}. Must be one of {OUTPUT_FORMATS.keys()}"
+        # Provide helpful suggestions
+        suggestions = difflib.get_close_matches(args.format, list(valid_inputs), n=3)
+        msg = (
+            f"Unrecognized output format '{args.format}'.\n"
+            f"Valid options: {', '.join(sorted(valid_inputs))}."
         )
+        if suggestions:
+            msg += f"\nDid you mean: {', '.join(suggestions)}?"
+        raise DasyUsageError(msg)
 
 
 if __name__ == "__main__":
