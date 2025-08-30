@@ -31,7 +31,7 @@ Status legend: [x] done, [~] in progress, [ ] pending
 
 ## Validation
 
-- [ ] Run tests to ensure nothing breaks
+- [x] Run tests to ensure nothing breaks
 
 ---
 
