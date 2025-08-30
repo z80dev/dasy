@@ -1,9 +1,10 @@
-from dasy import compiler, __version__
+from dasy import compiler
 from vyper.compiler import OUTPUT_FORMATS as VYPER_OUTPUT_FORMATS
 import argparse
 import sys
 import logging
 import difflib
+from importlib.metadata import version as pkg_version, PackageNotFoundError
 
 from dasy.parser.output import get_external_interface
 from dasy.exceptions import DasyUsageError
@@ -48,7 +49,11 @@ def main():
     parser.add_argument("--evm-version", type=str, default=None, help="Override EVM version (e.g., cancun, paris)")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging (DEBUG)")
     parser.add_argument("--quiet", action="store_true", help="Suppress logs (ERROR only)")
-    parser.add_argument("--version", action="version", version=f"dasy {__version__}")
+    try:
+        ver = pkg_version("dasy")
+    except PackageNotFoundError:
+        ver = "unknown"
+    parser.add_argument("--version", action="version", version=f"dasy {ver}")
 
     src = ""
 
