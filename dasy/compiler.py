@@ -18,7 +18,6 @@ from vyper.compiler.input_bundle import FileInput
 from vyper.compiler.phases import CompilerData as VyperCompilerData
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
