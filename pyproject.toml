@@ -14,7 +14,7 @@ dependencies = [
     "py-evm>=0.6.1a2",
 ]
 
-readme = "README.org"
+readme = { file = "README.org", content-type = "text/plain" }
 keywords = ["evm", "vyper", "lisp", "smart-contracts", "ethereum", "compiler"]
 classifiers = [
     "Programming Language :: Python :: 3",
