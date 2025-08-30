@@ -6,28 +6,28 @@ Status legend: [x] done, [~] in progress, [ ] pending
 
 ## Packaging & Release
 
-- [ ] Remove `argparse` from runtime deps (stdlib)
-- [ ] Change entry point to `dasy.main:main`
-- [ ] Add `readme`, `classifiers`, `urls`, `keywords` to `pyproject.toml`
-- [ ] Add optional dev extras: `ruff`, `mypy`, `pytest-cov` (no CI)
+- [x] Remove `argparse` from runtime deps (stdlib)
+- [x] Change entry point to `dasy.main:main`
+- [x] Add `readme`, `classifiers`, `urls`, `keywords` to `pyproject.toml`
+- [x] Add optional dev extras: `ruff`, `mypy`, `pytest-cov` (no CI)
 - [ ] Note: License metadata requires maintainer decision (left pending)
 
 ## CLI & UX
 
-- [ ] Add `--list-formats` and `--version`
-- [ ] Add `--evm-version` passthrough to compiler settings
-- [ ] Add `--verbose/--quiet` logging controls
-- [ ] Improve error messages for bad `-f/--format`
+- [x] Add `--list-formats` and `--version`
+- [x] Add `--evm-version` passthrough to compiler settings
+- [x] Add `--verbose/--quiet` logging controls
+- [x] Improve error messages for bad `-f/--format`
 - [ ] Optional: `--expand` (print expanded forms) — deferred unless requested
 
 ## Logging & Errors
 
-- [ ] Remove global `basicConfig(level=DEBUG)` default; default to WARNING
-- [ ] Keep detailed debug available via `--verbose`
+- [x] Remove global `basicConfig(level=DEBUG)` default; default to WARNING
+- [x] Keep detailed debug available via `--verbose`
 
 ## Docs & Examples
 
-- [ ] Fix `dyn-arr` → `dyn-array` in `README.org`
+- [x] Fix `dyn-arr` → `dyn-array` in `README.org`
 
 ## Validation
 
