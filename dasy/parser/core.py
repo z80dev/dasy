@@ -15,7 +15,7 @@ def parse_attribute(expr):
     """Parses an attribute and builds a node."""
     if len(expr) < 3:
         raise DasySyntaxError("Expression too short to parse attribute.")
-    
+
     # If we have more than 3 elements, it's a method call
     if len(expr) > 3:
         # Transform (. obj method args...) to ((. obj method) args...)
@@ -29,17 +29,17 @@ def parse_attribute(expr):
             vy_nodes.Call, func=attr_node, args=args_list, keywords=[]
         )
         return call_node
-    
+
     # For exactly 3 elements: (. obj attr)
     # Check if this should be a function call or attribute access
     _, obj, attr = expr
     attr_node = build_node(
         vy_nodes.Attribute, attr=str(attr), value=dasy.parser.parse_node_legacy(obj)
     )
-    
+
     # If obj is an interface constructor call, treat this as a zero-argument method call
     if isinstance(obj, models.Expression) and len(obj) == 2:
-        # Check if it looks like (Interface address) 
+        # Check if it looks like (Interface address)
         if isinstance(obj[0], models.Symbol):
             # TODO: EDGE CASE BUG - This heuristic may incorrectly detect non-interface
             # expressions as interface constructors. Examples that would break:
@@ -49,11 +49,9 @@ def parse_attribute(expr):
             # Need better detection logic, perhaps checking if first symbol is
             # actually an interface type name, or using explicit syntax.
             # This could be an interface constructor - create a function call
-            call_node = build_node(
-                vy_nodes.Call, func=attr_node, args=[], keywords=[]
-            )
+            call_node = build_node(vy_nodes.Call, func=attr_node, args=[], keywords=[])
             return call_node
-    
+
     # Otherwise, standard attribute access
     return attr_node
 
@@ -177,6 +175,7 @@ def parse_defn(fn_tree):
     assert fn_tree[0] == models.Symbol("defn")
     return_type = None
     from .utils import kebab_to_snake
+
     name = kebab_to_snake(str(fn_tree[1]))
     args = None
     decorators = []
@@ -294,7 +293,7 @@ def parse_structbody(expr):
 def parse_defcontract(expr):
     body_nodes = []
     expr_body = []
-    
+
     match expr[1:]:
         case (_, vars, *body) if isinstance(vars, models.List):
             # contract has state
@@ -306,10 +305,10 @@ def parse_defcontract(expr):
             expr_body = body
         case _:
             raise DasySyntaxError(f"Invalid defcontract form: {expr}")
-    
+
     for node in expr_body:
         body_nodes.append(dasy.parser.parse_node_legacy(node))
-    
+
     mod_node = vy_nodes.Module(
         body=body_nodes,
         name=str(expr[1]),
@@ -323,7 +322,7 @@ def parse_defcontract(expr):
         is_interface=False,
         # settings will be set by parent parser
     )
-    
+
     return mod_node
 
 
@@ -367,7 +366,10 @@ def parse_defevent(expr):
 
 
 def parse_enumbody(expr):
-    return [build_node(vy_nodes.Expr, value=dasy.parser.parse_node_legacy(x)) for x in expr[2:]]
+    return [
+        build_node(vy_nodes.Expr, value=dasy.parser.parse_node_legacy(x))
+        for x in expr[2:]
+    ]
 
 
 def parse_defflag(expr):

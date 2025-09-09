@@ -37,7 +37,11 @@ def emit_stmt_dasy(s: n.AST, indent: int = 0) -> List[str]:
             out.append(f"{pad}(defvar {name} {typ})")
     elif isinstance(s, n.Assign):
         tgt = s.target
-        if isinstance(tgt, n.Attribute) and isinstance(tgt.value, n.Name) and tgt.value.id == "self":
+        if (
+            isinstance(tgt, n.Attribute)
+            and isinstance(tgt.value, n.Name)
+            and tgt.value.id == "self"
+        ):
             left = f"self/{tgt.attr}"
         else:
             left = dasy_expr_from_vy(tgt)
@@ -73,9 +77,7 @@ def emit_stmt_dasy(s: n.AST, indent: int = 0) -> List[str]:
         name = getattr(target, "arg", None) or getattr(target, "id", None) or "i"
         typ = getattr(target, "annotation", None)
         typ_s = dasy_type_from_vy(typ) if typ is not None else ":uint256"
-        out.append(
-            f"{pad}(for [{name} {typ_s} {dasy_expr_from_vy(s.iter)}]"
-        )
+        out.append(f"{pad}(for [{name} {typ_s} {dasy_expr_from_vy(s.iter)}]")
         for b in s.body:
             out.extend(emit_stmt_dasy(b, indent + 2))
         out.append(f"{pad})")
@@ -92,12 +94,20 @@ def emit_module_dasy(mod: n.Module) -> str:
             lines.append(f"(defevent {node.name}")
             for it in node.body:
                 if isinstance(it, n.AnnAssign):
-                    fname = getattr(it.target, "id", None) or dasy_expr_from_vy(it.target)
+                    fname = getattr(it.target, "id", None) or dasy_expr_from_vy(
+                        it.target
+                    )
                     ann = it.annotation
-                    if isinstance(ann, n.Call) and isinstance(ann.func, n.Name) and ann.func.id == "indexed":
+                    if (
+                        isinstance(ann, n.Call)
+                        and isinstance(ann.func, n.Name)
+                        and ann.func.id == "indexed"
+                    ):
                         # first arg is the type
                         arg0 = ann.args[0] if getattr(ann, "args", []) else None
-                        t_s = dasy_type_from_vy(arg0) if arg0 is not None else ":unknown"
+                        t_s = (
+                            dasy_type_from_vy(arg0) if arg0 is not None else ":unknown"
+                        )
                         lines.append(f"  {fname} (indexed {t_s})")
                     else:
                         t_s = dasy_type_from_vy(ann)
@@ -114,7 +124,9 @@ def emit_module_dasy(mod: n.Module) -> str:
             if getattr(node, "is_transient", False):
                 typ = f"(transient {typ})"
             if getattr(node, "value", None) is not None:
-                lines.append(f"(defvar {node.target.id} {typ} {dasy_expr_from_vy(node.value)})")
+                lines.append(
+                    f"(defvar {node.target.id} {typ} {dasy_expr_from_vy(node.value)})"
+                )
             else:
                 lines.append(f"(defvars {node.target.id} {typ})")
     if lines:
@@ -125,7 +137,13 @@ def emit_module_dasy(mod: n.Module) -> str:
             # decorators -> attributes
             attrs = []
             for d in node.decorator_list:
-                if isinstance(d, n.Name) and d.id in {"external", "view", "pure", "payable", "nonreentrant"}:
+                if isinstance(d, n.Name) and d.id in {
+                    "external",
+                    "view",
+                    "pure",
+                    "payable",
+                    "nonreentrant",
+                }:
                     attrs.append(f":{d.id}")
                 elif isinstance(d, n.Name) and d.id == "deploy":
                     # constructor marker
@@ -165,9 +183,17 @@ def emit_module_dasy(mod: n.Module) -> str:
 
 
 def main():
-    p = argparse.ArgumentParser(description="Convert Vyper source to Dasy source (best-effort)")
-    p.add_argument("filename", nargs="?", help=".vy file to convert (reads stdin if omitted)")
-    p.add_argument("--check", action="store_true", help="Compile the generated Dasy to verify correctness")
+    p = argparse.ArgumentParser(
+        description="Convert Vyper source to Dasy source (best-effort)"
+    )
+    p.add_argument(
+        "filename", nargs="?", help=".vy file to convert (reads stdin if omitted)"
+    )
+    p.add_argument(
+        "--check",
+        action="store_true",
+        help="Compile the generated Dasy to verify correctness",
+    )
     args = p.parse_args()
     if args.filename:
         with open(args.filename, "r") as f:
@@ -181,17 +207,20 @@ def main():
     out = emit_module_dasy(mod)
     # Preserve pragma if present in source
     import re
+
     m = re.search(r"pragma\s+evm-version\s+([A-Za-z0-9_\-]+)", src)
     if m:
         evm = m.group(1)
-        out = f"(pragma :evm-version \"{evm}\")\n\n" + out
+        out = f'(pragma :evm-version "{evm}")\n\n' + out
     if args.check:
         # Try compiling with Dasy compiler to ensure validity
         try:
             from dasy import compiler as dcompiler
+
             dcompiler.compile(out, name="Converted")
         except Exception as e:
             import sys
+
             sys.stderr.write(f"Conversion produced non-compiling Dasy: {e}\n")
             raise
     print(out)

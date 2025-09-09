@@ -4,8 +4,6 @@ import boa
 from boa.contracts.vyper.vyper_contract import VyperContract
 
 
-
-
 # def test_merkle():
 #     leaf3 = 0xdca3326ad7e8121bf9cf9c12333e6b2271abe823ec9edfe42f813b1e768fa57b
 #     leaf_bytes = leaf3.to_bytes(32, 'big')
@@ -38,6 +36,7 @@ def compile_src(src: str, *args) -> VyperContract:
 def compile(filename: str, *args) -> VyperContract:
     # Resolve relative to the repository root (tests/..)
     import pathlib
+
     base = pathlib.Path(__file__).resolve().parent.parent
     path = (base / filename).resolve()
     data = dasy.compile_file(str(path))
@@ -259,7 +258,7 @@ def test_view_pure():
 def test_constants():
     c = compile("examples/constants.dasy")
     # ADDR is returned as uint256 now
-    assert c.getMyConstants() == (1, 10, 0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B)
+    assert c.getMyConstants() == (1, 10, 0xAB5801A7D398351B8BE11C439E05C5B3259AEC9B)
     assert c.test(5) == 6
 
 
@@ -436,47 +435,49 @@ def test_interface_arities():
     """Test interface function calls with different argument counts (0, 1, 2, 3+)"""
     # Deploy the target contract
     target = compile("examples/test_interface_arities.dasy")
-    
+
     # Deploy the caller contract
     caller = compile("examples/interface_arity_caller.dasy", target.address)
-    
+
     # Test zero argument functions
     assert caller.testZeroArgs() == 100  # Initial value0
     assert caller.testZeroArgsConstructor(target.address) == 100  # Constructor pattern
-    
+
     # Test state modification with zero args
     caller.callIncrement0()
     assert caller.testZeroArgs() == 101  # value0 should be incremented
-    
+
     # Test one argument functions
     assert caller.testOneArg(2) == 400  # value1 (200) * 2
     assert caller.testOneArg(3) == 600  # value1 (200) * 3
-    
+
     # Test state modification with one arg
     caller.callSetValue1(250)
     assert caller.testOneArg(2) == 500  # new value1 (250) * 2
-    
+
     # Test two argument functions
     assert caller.testTwoArgs(2, 10) == 610  # (value2=300 * 2) + 10
     assert caller.testTwoArgs(1, 50) == 350  # (value2=300 * 1) + 50
-    
+
     # Test state modification with two args
     caller.callSetValue2(100, 25)  # newValue=100, extra=25, so value2 = 125
     assert caller.testTwoArgs(2, 0) == 250  # (125 * 2) + 0
-    
+
     # Test three argument functions
     assert caller.testThreeArgs(5, 6, 7) == 138  # (5*6) + 7 + value0(101) = 30+7+101
     assert caller.testThreeArgs(2, 3, 4) == 111  # (2*3) + 4 + value0(101) = 6+4+101
-    
+
     # Test state modification with three args
     caller.callUpdateValues(1000, 2000, 3000)
     assert caller.testZeroArgs() == 1000  # value0 updated
-    assert caller.testOneArg(1) == 2000   # value1 updated
+    assert caller.testOneArg(1) == 2000  # value1 updated
     assert caller.testTwoArgs(1, 0) == 3000  # value2 updated
-    
+
     # Test constructor pattern with arguments
     assert caller.testConstructorWithArgs(target.address, 2) == 4000  # value1(2000) * 2
-    assert caller.testConstructorThreeArgs(target.address, 10, 10, 5) == 1105  # (10*10) + 5 + value0(1000)
+    assert (
+        caller.testConstructorThreeArgs(target.address, 10, 10, 5) == 1105
+    )  # (10*10) + 5 + value0(1000)
 
 
 def test_interface_edge_cases():
@@ -484,23 +485,29 @@ def test_interface_edge_cases():
     # Test that our interface arity tests still work (validates edge case handling)
     target = compile("examples/test_interface_arities.dasy")
     caller = compile("examples/interface_arity_caller.dasy", target.address)
-    
+
     # Test zero args with both patterns work correctly
     assert caller.testZeroArgs() == 100  # Stored interface variable (self/target)
-    assert caller.testZeroArgsConstructor(target.address) == 100  # Constructor pattern (Interface addr)
-    
-    # Test one arg with both patterns  
+    assert (
+        caller.testZeroArgsConstructor(target.address) == 100
+    )  # Constructor pattern (Interface addr)
+
+    # Test one arg with both patterns
     assert caller.testOneArg(2) == 400  # Stored interface
-    assert caller.testConstructorWithArgs(target.address, 2) == 400  # Constructor pattern
-    
+    assert (
+        caller.testConstructorWithArgs(target.address, 2) == 400
+    )  # Constructor pattern
+
     # Test multi-argument calls work correctly
     assert caller.testThreeArgs(2, 3, 4) == 110  # (2*3) + 4 + value0(100) = 6+4+100
-    assert caller.testConstructorThreeArgs(target.address, 2, 3, 4) == 110  # Same via constructor
-    
+    assert (
+        caller.testConstructorThreeArgs(target.address, 2, 3, 4) == 110
+    )  # Same via constructor
+
     # Test extcall vs staticcall both work
     caller.callIncrement0()  # extcall
     assert caller.testZeroArgs() == 101  # staticcall - should see incremented value
-    
+
     # Test complex nested calls work (validates parser doesn't break on complexity)
     caller.callSetValue1(500)
     assert caller.testOneArg(1) == 500
@@ -511,30 +518,38 @@ def test_interface_mixed_scenarios():
     # This test reuses existing infrastructure to test mixed patterns more thoroughly
     target = compile("examples/test_interface_arities.dasy")
     caller = compile("examples/interface_arity_caller.dasy", target.address)
-    
+
     # Test sequence of different call types
     initial_value = caller.testZeroArgs()  # staticcall, zero args, stored interface
     assert initial_value == 100
-    
-    # Test constructor pattern with multiple arguments  
-    computed = caller.testConstructorThreeArgs(target.address, 5, 4, 3)  # staticcall, 3 args, constructor
+
+    # Test constructor pattern with multiple arguments
+    computed = caller.testConstructorThreeArgs(
+        target.address, 5, 4, 3
+    )  # staticcall, 3 args, constructor
     assert computed == 123  # (5*4) + 3 + 100 = 20+3+100
-    
+
     # Test state change via extcall
     caller.callUpdateValues(1000, 2000, 3000)  # extcall, 3 args, stored interface
-    
+
     # Verify state changes via different patterns
     assert caller.testZeroArgs() == 1000  # staticcall, zero args, stored interface
-    assert caller.testZeroArgsConstructor(target.address) == 1000  # staticcall, zero args, constructor
-    assert caller.testOneArg(2) == 4000  # staticcall, 1 arg, stored interface (2000 * 2)
-    assert caller.testConstructorWithArgs(target.address, 3) == 6000  # staticcall, 1 arg, constructor (2000 * 3)
-    
+    assert (
+        caller.testZeroArgsConstructor(target.address) == 1000
+    )  # staticcall, zero args, constructor
+    assert (
+        caller.testOneArg(2) == 4000
+    )  # staticcall, 1 arg, stored interface (2000 * 2)
+    assert (
+        caller.testConstructorWithArgs(target.address, 3) == 6000
+    )  # staticcall, 1 arg, constructor (2000 * 3)
+
     # Test multiple state changes in sequence
-    caller.callIncrement0()  # extcall, zero args, stored interface  
+    caller.callIncrement0()  # extcall, zero args, stored interface
     caller.callSetValue1(500)  # extcall, 1 arg, stored interface
     caller.callSetValue2(100, 50)  # extcall, 2 args, stored interface (100 + 50 = 150)
-    
+
     # Verify final state
     assert caller.testZeroArgs() == 1001  # value0 incremented
-    assert caller.testOneArg(1) == 500   # value1 set
+    assert caller.testOneArg(1) == 500  # value1 set
     assert caller.testTwoArgs(1, 0) == 150  # value2 set to 150

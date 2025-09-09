@@ -6,7 +6,11 @@ from .context import ParseContext
 from ..macro.syntax_rules import SyntaxRulesMacro, ELLIPSIS
 from ..macro.syntax import Syntax
 from .macro_context import get_macro_context
-from .macro_utils import check_include_recursion, get_include_stack, compile_for_interface
+from .macro_utils import (
+    check_include_recursion,
+    get_include_stack,
+    compile_for_interface,
+)
 from .reader import read_many as dasy_read_many
 from .output import get_external_interface
 
@@ -65,7 +69,10 @@ def install_builtin_dasy_macros(env) -> None:
         # (cond :else e) => e
         (exp(sym("cond"), kw("else"), sym("e")), sym("e")),
         # (cond test expr) => (if test expr)
-        (exp(sym("cond"), sym("test"), sym("expr")), exp(sym("if"), sym("test"), sym("expr"))),
+        (
+            exp(sym("cond"), sym("test"), sym("expr")),
+            exp(sym("if"), sym("test"), sym("expr")),
+        ),
         # (cond test expr :else e) => (if test expr e)
         (
             exp(sym("cond"), sym("test"), sym("expr"), kw("else"), sym("e")),
@@ -74,7 +81,12 @@ def install_builtin_dasy_macros(env) -> None:
         # (cond test expr rest ...) => (if test expr (cond rest ...))
         (
             exp(sym("cond"), sym("test"), sym("expr"), sym("rest"), ELLIPSIS),
-            exp(sym("if"), sym("test"), sym("expr"), exp(sym("cond"), sym("rest"), ELLIPSIS)),
+            exp(
+                sym("if"),
+                sym("test"),
+                sym("expr"),
+                exp(sym("cond"), sym("rest"), ELLIPSIS),
+            ),
         ),
     ]
     env.define("cond", SyntaxRulesMacro([kw("else")], cond_rules))
@@ -85,7 +97,10 @@ def install_builtin_dasy_macros(env) -> None:
 
     # when
     when_rules = [
-        (exp(sym("when"), sym("test"), sym("body"), ELLIPSIS), exp(sym("if"), sym("test"), exp(sym("do"), sym("body"), ELLIPSIS))),
+        (
+            exp(sym("when"), sym("test"), sym("body"), ELLIPSIS),
+            exp(sym("if"), sym("test"), exp(sym("do"), sym("body"), ELLIPSIS)),
+        ),
     ]
     env.define("when", SyntaxRulesMacro([], when_rules))
 
@@ -93,7 +108,12 @@ def install_builtin_dasy_macros(env) -> None:
     unless_rules = [
         (
             exp(sym("unless"), sym("test"), sym("body"), ELLIPSIS),
-            exp(sym("if"), sym("test"), models.Symbol("None"), exp(sym("do"), sym("body"), ELLIPSIS)),
+            exp(
+                sym("if"),
+                sym("test"),
+                models.Symbol("None"),
+                exp(sym("do"), sym("body"), ELLIPSIS),
+            ),
         )
     ]
     env.define("unless", SyntaxRulesMacro([], unless_rules))
@@ -107,7 +127,12 @@ def install_builtin_dasy_macros(env) -> None:
             exp(sym("do"), sym("body"), ELLIPSIS),
         ),
         (
-            exp(sym("let"), lst(sym("x"), sym("v"), sym("rest"), ELLIPSIS), sym("body"), ELLIPSIS),
+            exp(
+                sym("let"),
+                lst(sym("x"), sym("v"), sym("rest"), ELLIPSIS),
+                sym("body"),
+                ELLIPSIS,
+            ),
             exp(
                 sym("do"),
                 exp(sym("defvar"), sym("x"), sym("v")),
@@ -136,7 +161,12 @@ def install_builtin_dasy_macros(env) -> None:
         ),
         (
             exp(sym("get-at"), sym("obj"), sym("key"), sym("rest"), ELLIPSIS),
-            exp(sym("get-at"), exp(sym("subscript"), sym("obj"), sym("key")), sym("rest"), ELLIPSIS),
+            exp(
+                sym("get-at"),
+                exp(sym("subscript"), sym("obj"), sym("key")),
+                sym("rest"),
+                ELLIPSIS,
+            ),
         ),
     ]
     env.define("get-at", SyntaxRulesMacro([], get_at_rules))
@@ -155,6 +185,7 @@ def install_builtin_dasy_macros(env) -> None:
         for k in keys:
             acc = models.Expression([models.Symbol("subscript"), acc, k])
         return acc
+
     env.define("get-at!", _get_at_bang)
 
     # set-at: variadic keys, last is value
@@ -163,11 +194,26 @@ def install_builtin_dasy_macros(env) -> None:
     set_at_rules = [
         (
             exp(sym("set-at"), sym("obj"), sym("key"), sym("value")),
-            exp(sym("set"), exp(sym("subscript"), sym("obj"), sym("key")), sym("value")),
+            exp(
+                sym("set"), exp(sym("subscript"), sym("obj"), sym("key")), sym("value")
+            ),
         ),
         (
-            exp(sym("set-at"), sym("obj"), sym("key"), sym("rest"), ELLIPSIS, sym("value")),
-            exp(sym("set-at"), exp(sym("subscript"), sym("obj"), sym("key")), sym("rest"), ELLIPSIS, sym("value")),
+            exp(
+                sym("set-at"),
+                sym("obj"),
+                sym("key"),
+                sym("rest"),
+                ELLIPSIS,
+                sym("value"),
+            ),
+            exp(
+                sym("set-at"),
+                exp(sym("subscript"), sym("obj"), sym("key")),
+                sym("rest"),
+                ELLIPSIS,
+                sym("value"),
+            ),
         ),
     ]
     env.define("set-at", SyntaxRulesMacro([], set_at_rules))
@@ -197,6 +243,7 @@ def install_builtin_dasy_macros(env) -> None:
                 # bare symbol/function name
                 acc = models.Expression([step, acc])
         return acc
+
     env.define("->", _thread_first)
 
     # thread-last (->>) as a procedural macro
@@ -212,6 +259,7 @@ def install_builtin_dasy_macros(env) -> None:
             else:
                 acc = models.Expression([step, acc])
         return acc
+
     env.define("->>", _thread_last)
 
     # doto as procedural macro (returns a (do ...) of calls)
@@ -233,7 +281,9 @@ def install_builtin_dasy_macros(env) -> None:
                 ):
                     meth = step[0][2]
                     args = list(step[1:])
-                    call_expr = models.Expression([models.Symbol("."), obj, meth, *args])
+                    call_expr = models.Expression(
+                        [models.Symbol("."), obj, meth, *args]
+                    )
                 else:
                     f = step[0]
                     args = list(step[1:])
@@ -243,6 +293,7 @@ def install_builtin_dasy_macros(env) -> None:
                 call_expr = models.Expression([step, obj])
             calls.append(call_expr)
         return models.Expression([models.Symbol("do"), *calls])
+
     env.define("doto", _doto)
 
     # set-self: (set-self k1 k2 ...) => (do (set (. self k1) k1) (set (. self k2) k2) ...)
@@ -251,13 +302,18 @@ def install_builtin_dasy_macros(env) -> None:
         assigns = []
         for k in form[1:]:
             assigns.append(
-                models.Expression([
-                    models.Symbol("set"),
-                    models.Expression([models.Symbol("."), models.Symbol("self"), k]),
-                    k,
-                ])
+                models.Expression(
+                    [
+                        models.Symbol("set"),
+                        models.Expression(
+                            [models.Symbol("."), models.Symbol("self"), k]
+                        ),
+                        k,
+                    ]
+                )
             )
         return models.Expression([models.Symbol("do"), *assigns])
+
     env.define("set-self", _set_self)
 
     # include!: read another .dasy file and splice its forms
@@ -269,6 +325,7 @@ def install_builtin_dasy_macros(env) -> None:
         if not isinstance(filename_node, models.String):
             raise Exception("include! filename must be a string literal")
         from pathlib import Path
+
         fname = str(filename_node)
         ctx = get_macro_context()
         base_dir = ctx.base_dir if ctx else Path.cwd()
@@ -288,12 +345,13 @@ def install_builtin_dasy_macros(env) -> None:
         include_stack = get_include_stack()
         include_stack.add(abs_path)
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 src = f.read()
             forms = dasy_read_many(src, filename=str(path))
             return models.List(list(forms))
         finally:
             include_stack.discard(abs_path)
+
     env.define("include!", _include_bang)
 
     # interface!: compile target and read back interface as forms
@@ -306,6 +364,7 @@ def install_builtin_dasy_macros(env) -> None:
             raise Exception("interface! filename must be a string literal")
         fname = str(filename_node)
         from pathlib import Path
+
         ctx = get_macro_context()
         base_dir = ctx.base_dir if ctx else Path.cwd()
         p = Path(fname)
@@ -314,6 +373,7 @@ def install_builtin_dasy_macros(env) -> None:
         interface_str = get_external_interface(data)
         forms = dasy_read_many(interface_str, filename=str(path))
         return models.List(list(forms))
+
     env.define("interface!", _interface_bang)
 
     # (no builtin infix; examples define their own)

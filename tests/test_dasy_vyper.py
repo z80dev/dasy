@@ -14,7 +14,12 @@ from boa.contracts.vyper.vyper_contract import VyperContract
 
 
 def _compile_vyper_source(vy_src: str, *args) -> VyperContract:
-    fi = FileInput(contents=vy_src, source_id=0, path=Path("test.vy"), resolved_path=Path("test.vy"))
+    fi = FileInput(
+        contents=vy_src,
+        source_id=0,
+        path=Path("test.vy"),
+        resolved_path=Path("test.vy"),
+    )
     cd = DasyCompilerData(fi, settings=Settings())
     return VyperContract(cd, *args)
 
@@ -36,7 +41,11 @@ def _compile_file_vyper(filename: str, *args) -> VyperContract:
 
 @pytest.mark.parametrize(
     "test_fn",
-    [getattr(td, name) for name in dir(td) if name.startswith("test_") and callable(getattr(td, name))],
+    [
+        getattr(td, name)
+        for name in dir(td)
+        if name.startswith("test_") and callable(getattr(td, name))
+    ],
     ids=[name for name in dir(td) if name.startswith("test_")],
 )
 def test_all_against_generated_vyper(monkeypatch, test_fn):

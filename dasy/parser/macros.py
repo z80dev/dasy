@@ -15,7 +15,7 @@ def macroexpand(code_str):
 def handle_macro(expr, context):
     # Make context available to macros through thread-local storage
     from .macro_context import set_macro_context, clear_macro_context
-    
+
     set_macro_context(context)
     try:
         new_node = hy.macroexpand(expr)

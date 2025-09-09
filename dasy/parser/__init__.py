@@ -17,6 +17,7 @@ def reset_nodeid_counter():
 
 def install_builtin_macros():
     from .context import ParseContext
+
     macro_file = Path(os.path.dirname(__file__)).parent / "builtin" / "macros.hy"
     with macro_file.open() as f:
         code = f.read()

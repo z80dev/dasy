@@ -24,7 +24,7 @@ def parse_for(expr):
     # (for [target iter] *body) - old syntax
     # (for [x :uint256 xs] *body) - new syntax with type annotation
     binding = expr[1]
-    
+
     # Check if we have type annotation (3 elements) or not (2 elements)
     if len(binding) == 3:
         # New syntax with type annotation: [target type iter]
@@ -33,19 +33,16 @@ def parse_for(expr):
         target_name = build_node(vy_nodes.Name, id=str(target))
         annotation = parser.parse_node_legacy(type_ann)
         target_node = build_node(
-            vy_nodes.AnnAssign, 
-            target=target_name,
-            annotation=annotation,
-            simple=1
+            vy_nodes.AnnAssign, target=target_name, annotation=annotation, simple=1
         )
     elif len(binding) == 2:
-        # Old syntax without type annotation: [target iter]  
+        # Old syntax without type annotation: [target iter]
         target, iter_ = binding
         # For backward compatibility, create a Name node directly
         target_node = build_node(vy_nodes.Name, id=str(target))
     else:
         raise ValueError(f"Invalid for loop binding: {binding}")
-    
+
     iter_node = parser.parse_node_legacy(iter_)
     body_nodes = [parser.parse_node_legacy(b) for b in expr[2:]]
     body = process_body(body_nodes)
@@ -101,7 +98,9 @@ def parse_expr(expr, nodes):
 def _make_handler(node_type):
     def handler(expr):
         return build_node(node_type, *parse_expr(expr, 2))
+
     return handler
+
 
 handlers = {
     node_type.__name__.lower(): _make_handler(node_type)
@@ -124,7 +123,7 @@ def parse_extcall(expr):
     # extcall foo.bar(x) becomes ExtCall(value=Call(...))
     if len(expr) < 2:
         raise ValueError("extcall requires at least a function call")
-    
+
     # Handle different cases of extcall syntax
     if len(expr) == 2:
         # Case: (extcall (expression))
@@ -136,18 +135,18 @@ def parse_extcall(expr):
         # Case: (extcall contract.method args...) - create expression from all remaining elements
         call_expr = models.Expression(expr[1:])
         call_node = parser.parse_node_legacy(call_expr)
-    
+
     # Wrap the Call in an ExtCall node
     return build_node(ExtCall, value=call_node)
 
 
 def parse_staticcall(expr):
     # (staticcall (. contract method args...)) - new simplified syntax
-    # (staticcall contract.method arg1 arg2 ...) - original syntax  
+    # (staticcall contract.method arg1 arg2 ...) - original syntax
     # staticcall is an expression (not a statement) that returns a value
     if len(expr) < 2:
         raise ValueError("staticcall requires at least a function call")
-    
+
     # Handle different cases of staticcall syntax
     if len(expr) == 2:
         # Case: (staticcall (expression))
@@ -159,7 +158,7 @@ def parse_staticcall(expr):
         # Case: (staticcall contract.method args...) - create expression from all remaining elements
         call_expr = models.Expression(expr[1:])
         call_node = parser.parse_node_legacy(call_expr)
-    
+
     # Wrap it in a StaticCall node
     return build_node(StaticCall, value=call_node)
 
@@ -168,7 +167,7 @@ def parse_uses(expr):
     # (uses module_name)
     if len(expr) != 2:
         raise ValueError("uses requires exactly one module name")
-    
+
     module_name = str(expr[1])
     # Create a Name node for the module
     name_node = build_node(vy_nodes.Name, id=module_name)
@@ -179,7 +178,7 @@ def parse_initializes(expr):
     # (initializes module_name)
     if len(expr) != 2:
         raise ValueError("initializes requires exactly one module name")
-    
+
     module_name = str(expr[1])
     # Create a Name node for the module
     name_node = build_node(vy_nodes.Name, id=module_name)
@@ -190,7 +189,7 @@ def parse_exports(expr):
     # (exports function_name) or (exports (function1 function2 ...))
     if len(expr) < 2:
         raise ValueError("exports requires at least one function name")
-    
+
     # Handle single export or list of exports
     if len(expr) == 2 and isinstance(expr[1], models.Symbol):
         # Single export

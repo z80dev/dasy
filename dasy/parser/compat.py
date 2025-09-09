@@ -28,10 +28,12 @@ def get_default_context() -> ParseContext:
 def parse_node_compat(node):
     """Backwards-compatible version of parse_node."""
     from . import parse as parse_module
+
     return parse_module.parse_node(node, get_default_context())
 
 
 def parse_expr_compat(expr):
     """Backwards-compatible version of parse_expr."""
     from . import parse as parse_module
+
     return parse_module.parse_expr(expr, get_default_context())

@@ -12,7 +12,9 @@ from vyper.compiler.settings import Settings
 from vyper import warnings as vy_warnings
 
 
-EXAMPLES = sorted(Path(__file__).resolve().parent.parent.joinpath("examples").glob("*.dasy"))
+EXAMPLES = sorted(
+    Path(__file__).resolve().parent.parent.joinpath("examples").glob("*.dasy")
+)
 
 
 def _vyper_warnings_only(records):
@@ -45,7 +47,8 @@ def test_no_vyper_warnings_generated_vyper(path: Path):
         cd = VyperCompilerData(fi, settings=Settings())
         _ = cd.bytecode
     vy_w = _vyper_warnings_only(w)
-    assert not vy_w, f"Vyper warnings on generated Vyper for {path.name}:\n" + "\n".join(
+    assert (
+        not vy_w
+    ), f"Vyper warnings on generated Vyper for {path.name}:\n" + "\n".join(
         f"  {r.category.__name__}: {r.message}" for r in vy_w
     )
-

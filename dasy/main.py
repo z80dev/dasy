@@ -44,11 +44,26 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument("filename", type=str, nargs="?", default="")
-    parser.add_argument("-f", "--format", help=format_help, default="bytecode", dest="format")
-    parser.add_argument("--list-formats", action="store_true", help="List available output formats and exit")
-    parser.add_argument("--evm-version", type=str, default=None, help="Override EVM version (e.g., cancun, paris)")
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging (DEBUG)")
-    parser.add_argument("--quiet", action="store_true", help="Suppress logs (ERROR only)")
+    parser.add_argument(
+        "-f", "--format", help=format_help, default="bytecode", dest="format"
+    )
+    parser.add_argument(
+        "--list-formats",
+        action="store_true",
+        help="List available output formats and exit",
+    )
+    parser.add_argument(
+        "--evm-version",
+        type=str,
+        default=None,
+        help="Override EVM version (e.g., cancun, paris)",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true", help="Enable verbose logging (DEBUG)"
+    )
+    parser.add_argument(
+        "--quiet", action="store_true", help="Suppress logs (ERROR only)"
+    )
     try:
         ver = pkg_version("dasy")
     except PackageNotFoundError:
@@ -85,7 +100,9 @@ def main():
                 )
             else:
                 # Pass the filepath so macros like include! resolve relative paths correctly
-                data = compiler.compile(src, name=args.filename.split(".")[0], filepath=args.filename)
+                data = compiler.compile(
+                    src, name=args.filename.split(".")[0], filepath=args.filename
+                )
     else:
         for line in sys.stdin:
             src += line

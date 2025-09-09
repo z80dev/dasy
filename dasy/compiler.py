@@ -79,13 +79,14 @@ class CompilerData(VyperCompilerData):
     @property
     def layout(self):
         return build_layout_output(self)
-    
+
     @property
     def source_map(self):
         """Source map for debugging - required by titanoboa"""
         if not hasattr(self, "_source_map"):
             # Generate source map using vyper's output module
             from vyper.compiler.output import build_source_map_output
+
             try:
                 self._source_map = build_source_map_output(self)
                 # Vyper 0.4.2 stores tuples (source_id, node_id) in pc_ast_map
@@ -100,30 +101,36 @@ class CompilerData(VyperCompilerData):
                 self._source_map = {
                     "pc_raw_ast_map": {},
                     "pc_ast_map": {},
-                    "source_map": {}
+                    "source_map": {},
                 }
         return self._source_map
 
 
-def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) -> CompilerData:
+def generate_compiler_data(
+    src: str, name="DasyContract", filepath: str = None
+) -> CompilerData:
     logger.debug(f"generate_compiler_data: name={name}, filepath={filepath}")
     (ast, settings) = parse_src(src, filepath)
-    
+
     # Log AST structure
     logger.debug(f"Parsed AST type: {type(ast).__name__}")
-    logger.debug(f"AST body length: {len(ast.body) if hasattr(ast, 'body') else 'no body'}")
-    if hasattr(ast, 'body'):
+    logger.debug(
+        f"AST body length: {len(ast.body) if hasattr(ast, 'body') else 'no body'}"
+    )
+    if hasattr(ast, "body"):
         for i, node in enumerate(ast.body):
-            logger.debug(f"  Body[{i}]: {type(node).__name__} - {getattr(node, 'name', 'N/A')}")
-            if hasattr(node, 'body') and node.body:
+            logger.debug(
+                f"  Body[{i}]: {type(node).__name__} - {getattr(node, 'name', 'N/A')}"
+            )
+            if hasattr(node, "body") and node.body:
                 for j, child in enumerate(node.body):
                     logger.debug(f"    Child[{j}]: {type(child).__name__}")
-                    if hasattr(child, 'value'):
+                    if hasattr(child, "value"):
                         logger.debug(f"      Value type: {type(child.value).__name__}")
-    
+
     settings = Settings(**settings)
     logger.debug(f"Settings: {settings}")
-    
+
     # Create a FileInput object for Vyper 0.4.3
     path = filepath or f"{name}.dasy"
     file_input = FileInput(
@@ -132,9 +139,9 @@ def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) 
         path=path,
         resolved_path=path,
     )
-    
+
     logger.debug(f"Created FileInput: path={file_input.path}")
-    
+
     with anchor_settings(settings):
         try:
             data = CompilerData(file_input, settings=settings)
@@ -147,11 +154,14 @@ def generate_compiler_data(src: str, name="DasyContract", filepath: str = None) 
         except Exception as e:
             logger.error(f"Compilation error: {type(e).__name__}: {str(e)}")
             import traceback
+
             logger.error(f"Traceback:\n{traceback.format_exc()}")
             raise
 
 
-def compile(src: str, name="DasyContract", include_abi=True, filepath: str = None) -> CompilerData:
+def compile(
+    src: str, name="DasyContract", include_abi=True, filepath: str = None
+) -> CompilerData:
     data = generate_compiler_data(src, name, filepath)
     return data
 

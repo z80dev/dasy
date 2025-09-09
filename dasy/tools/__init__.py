@@ -10,4 +10,3 @@ ifs, simple loops, calls). For unsupported nodes, the converters insert
 TODO comments or wrap raw Vyper lines using the `(vyper "...")` macro
 to preserve semantics.
 """
-

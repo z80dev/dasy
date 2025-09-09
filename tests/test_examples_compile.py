@@ -10,11 +10,18 @@ from dasy.compiler import CompilerData as DasyCompilerData
 from vyper.compiler.settings import Settings
 
 
-EXAMPLES = sorted(Path(__file__).resolve().parent.parent.joinpath("examples").glob("*.dasy"))
+EXAMPLES = sorted(
+    Path(__file__).resolve().parent.parent.joinpath("examples").glob("*.dasy")
+)
 
 
 def _compile_vyper_source(vy_src: str):
-    fi = FileInput(contents=vy_src, source_id=0, path=Path("test.vy"), resolved_path=Path("test.vy"))
+    fi = FileInput(
+        contents=vy_src,
+        source_id=0,
+        path=Path("test.vy"),
+        resolved_path=Path("test.vy"),
+    )
     cd = DasyCompilerData(fi, settings=Settings())
     _ = cd.bytecode
 

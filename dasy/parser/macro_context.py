@@ -15,10 +15,10 @@ def set_macro_context(context: ParseContext) -> None:
 
 def get_macro_context() -> Optional[ParseContext]:
     """Get the current macro context for this thread."""
-    return getattr(_thread_local, 'context', None)
+    return getattr(_thread_local, "context", None)
 
 
 def clear_macro_context() -> None:
     """Clear the current macro context for this thread."""
-    if hasattr(_thread_local, 'context'):
-        delattr(_thread_local, 'context')
+    if hasattr(_thread_local, "context"):
+        delattr(_thread_local, "context")

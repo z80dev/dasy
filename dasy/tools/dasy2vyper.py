@@ -49,7 +49,11 @@ def emit_stmt(s: n.AST, indent: int = 0) -> List[str]:
         target = s.target
         name = getattr(target, "id", None) or vy_expr_to_str(target)
         typ = vy_type_to_str(s.annotation) if s.annotation else None
-        rhs = f" = {vy_expr_to_str(s.value)}" if getattr(s, "value", None) is not None else ""
+        rhs = (
+            f" = {vy_expr_to_str(s.value)}"
+            if getattr(s, "value", None) is not None
+            else ""
+        )
         if typ is None:
             out.append(f"{pad}{name}{rhs}")
         else:
@@ -104,7 +108,11 @@ def emit_module_vyper(mod: n.Module) -> str:
                 if isinstance(it, n.AnnAssign):
                     fname = getattr(it.target, "id", None) or vy_expr_to_str(it.target)
                     ann = it.annotation
-                    if isinstance(ann, n.Call) and isinstance(ann.func, n.Name) and ann.func.id == "indexed":
+                    if (
+                        isinstance(ann, n.Call)
+                        and isinstance(ann.func, n.Name)
+                        and ann.func.id == "indexed"
+                    ):
                         # indexed(type)
                         a0 = ann.args[0] if getattr(ann, "args", []) else None
                         t = vy_type_to_str(a0) if a0 is not None else "unknown"
@@ -115,13 +123,13 @@ def emit_module_vyper(mod: n.Module) -> str:
 
     # Interfaces
     for node in mod.body:
-        if hasattr(n, 'InterfaceDef') and isinstance(node, getattr(n, 'InterfaceDef')):
+        if hasattr(n, "InterfaceDef") and isinstance(node, getattr(n, "InterfaceDef")):
             lines.append(f"interface {node.name}:")
             for fn in node.body:
                 # args
                 args = []
                 for a in fn.args.args:
-                    ann = vy_type_to_str(a.annotation) if a.annotation else ''
+                    ann = vy_type_to_str(a.annotation) if a.annotation else ""
                     args.append(f"{a.arg}: {ann}" if ann else a.arg)
                 ret = vy_type_to_str(fn.returns) if fn.returns else None
                 sig = f"    def {fn.name}({ _join(args) })"
@@ -129,14 +137,14 @@ def emit_module_vyper(mod: n.Module) -> str:
                     sig += f" -> {ret}"
                 sig += ":"
                 # mark view/pure/payable as trailing annotation
-                decs = [getattr(d, 'id', '') for d in getattr(fn, 'decorator_list', [])]
+                decs = [getattr(d, "id", "") for d in getattr(fn, "decorator_list", [])]
                 vis = None
-                if not decs and getattr(fn, 'body', None):
+                if not decs and getattr(fn, "body", None):
                     first = fn.body[0]
-                    vis = getattr(getattr(first, 'value', None), 'id', None)
-                if 'view' in decs or vis == 'view':
+                    vis = getattr(getattr(first, "value", None), "id", None)
+                if "view" in decs or vis == "view":
                     sig += " view"
-                elif 'payable' in decs or vis == 'payable':
+                elif "payable" in decs or vis == "payable":
                     sig += " payable"
                 else:
                     sig += " nonpayable"
@@ -144,21 +152,21 @@ def emit_module_vyper(mod: n.Module) -> str:
             lines.append("")
     # Structs
     for node in mod.body:
-        if hasattr(n, 'StructDef') and isinstance(node, getattr(n, 'StructDef')):
+        if hasattr(n, "StructDef") and isinstance(node, getattr(n, "StructDef")):
             lines.append(f"struct {node.name}:")
             for it in node.body:
                 if isinstance(it, n.AnnAssign):
-                    fname = getattr(it.target, 'id', None) or vy_expr_to_str(it.target)
+                    fname = getattr(it.target, "id", None) or vy_expr_to_str(it.target)
                     t = vy_type_to_str(it.annotation)
                     lines.append(f"    {fname}: {t}")
             lines.append("")
     # Flags
     for node in mod.body:
-        if hasattr(n, 'FlagDef') and isinstance(node, getattr(n, 'FlagDef')):
+        if hasattr(n, "FlagDef") and isinstance(node, getattr(n, "FlagDef")):
             lines.append(f"flag {node.name}:")
             for it in node.body:
                 # Each item is an Expr with a Name value
-                val = getattr(it, 'value', None)
+                val = getattr(it, "value", None)
                 if isinstance(val, n.Name):
                     lines.append(f"    {val.id}")
             lines.append("")
@@ -211,9 +219,17 @@ def emit_module_vyper(mod: n.Module) -> str:
 
 
 def main():
-    p = argparse.ArgumentParser(description="Convert Dasy source to Vyper source (best-effort)")
-    p.add_argument("filename", nargs="?", help=".dasy file to convert (reads stdin if omitted)")
-    p.add_argument("--check", action="store_true", help="Compile the generated Vyper to verify correctness")
+    p = argparse.ArgumentParser(
+        description="Convert Dasy source to Vyper source (best-effort)"
+    )
+    p.add_argument(
+        "filename", nargs="?", help=".dasy file to convert (reads stdin if omitted)"
+    )
+    p.add_argument(
+        "--check",
+        action="store_true",
+        help="Compile the generated Vyper to verify correctness",
+    )
     args = p.parse_args()
     if args.filename:
         with open(args.filename, "r") as f:
@@ -232,12 +248,14 @@ def main():
             from vyper.compiler.phases import CompilerData
             from vyper.compiler.settings import Settings
             from pathlib import Path
+
             p = Path("converted.vy")
             fi = FileInput(contents=out, source_id=0, path=p, resolved_path=p)
             cd = CompilerData(fi, settings=Settings())
             _ = cd.bytecode
         except Exception as e:
             import sys
+
             sys.stderr.write(f"Conversion produced non-compiling Vyper: {e}\n")
             raise
     print(out)

@@ -63,22 +63,25 @@ def vy_cmpop(op) -> str:
         n.Gt: ">",
         n.GtE: ">=",
     }
-    if type(op) in m: return m[type(op)]
+    if type(op) in m:
+        return m[type(op)]
     t = type(op).__name__
-    if t == "In": return "in"
-    if t == "NotIn": return "not in"
+    if t == "In":
+        return "in"
+    if t == "NotIn":
+        return "not in"
     return "?"
 
 
 def vy_unaryop(op) -> str:
     t = type(op).__name__
-    if t == 'USub':
-        return '-'
-    if t == 'Not':
-        return 'not'
-    if t == 'UAdd':
-        return '+'
-    return '?'
+    if t == "USub":
+        return "-"
+    if t == "Not":
+        return "not"
+    if t == "UAdd":
+        return "+"
+    return "?"
 
 
 def vy_expr_to_str(e: n.AST) -> str:
@@ -88,12 +91,12 @@ def vy_expr_to_str(e: n.AST) -> str:
         return f"{vy_expr_to_str(e.value)}.{e.attr}"
     if isinstance(e, n.Str):
         # always double-quote to avoid confusing Hy reader
-        s = e.value.replace("\\", "\\\\").replace("\"", "\\\"")
+        s = e.value.replace("\\", "\\\\").replace('"', '\\"')
         return f'"{s}"'
     if isinstance(e, n.Bytes):
         # emit bytes as hex-escaped double-quoted literal to be safe for Hy reader
         b = e.value or b""
-        hexed = ''.join(f"\\x{c:02x}" for c in b)
+        hexed = "".join(f"\\x{c:02x}" for c in b)
         return f' b"{hexed}"'.strip()
     if isinstance(e, n.Int):
         return str(e.value)
@@ -119,25 +122,27 @@ def vy_expr_to_str(e: n.AST) -> str:
         args = [vy_expr_to_str(a) for a in getattr(e, "args", [])]
         kwargs = [vy_keyword_to_str(k) for k in getattr(e, "keywords", [])]
         return f"{func}({ _join(args + kwargs) })"
-    if hasattr(n, 'StaticCall') and isinstance(e, getattr(n, 'StaticCall')):
+    if hasattr(n, "StaticCall") and isinstance(e, getattr(n, "StaticCall")):
         return f"staticcall {vy_expr_to_str(e.value)}"
-    if hasattr(n, 'ExtCall') and isinstance(e, getattr(n, 'ExtCall')):
+    if hasattr(n, "ExtCall") and isinstance(e, getattr(n, "ExtCall")):
         return f"extcall {vy_expr_to_str(e.value)}"
     if isinstance(e, n.BinOp):
         return f"({vy_expr_to_str(e.left)} {vy_binop(e.op)} {vy_expr_to_str(e.right)})"
     if isinstance(e, n.UnaryOp):
         _op = vy_unaryop(e.op)
         _expr = vy_expr_to_str(e.operand)
-        return f'not {_expr}' if _op=='not' else f'{_op}{_expr}'
-    if hasattr(n, 'IfExp') and isinstance(e, getattr(n, 'IfExp')):
+        return f"not {_expr}" if _op == "not" else f"{_op}{_expr}"
+    if hasattr(n, "IfExp") and isinstance(e, getattr(n, "IfExp")):
         return f"({vy_expr_to_str(e.body)} if {vy_expr_to_str(e.test)} else {vy_expr_to_str(e.orelse)})"
     if isinstance(e, n.Compare):
         if hasattr(e, "op") and hasattr(e, "right"):
-            return f"{vy_expr_to_str(e.left)} {vy_cmpop(e.op)} {vy_expr_to_str(e.right)}"
+            return (
+                f"{vy_expr_to_str(e.left)} {vy_cmpop(e.op)} {vy_expr_to_str(e.right)}"
+            )
         if hasattr(e, "ops") and e.ops and e.comparators:
             return f"{vy_expr_to_str(e.left)} {vy_cmpop(e.ops[0])} {vy_expr_to_str(e.comparators[0])}"
-    if hasattr(n, 'IfExp') and isinstance(e, getattr(n, 'IfExp')):
-        return f'(if {dasy_expr_from_vy(e.test)} {dasy_expr_from_vy(e.body)} {dasy_expr_from_vy(e.orelse)})'
+    if hasattr(n, "IfExp") and isinstance(e, getattr(n, "IfExp")):
+        return f"(if {dasy_expr_from_vy(e.test)} {dasy_expr_from_vy(e.body)} {dasy_expr_from_vy(e.orelse)})"
     if isinstance(e, n.NameConstant):
         return "True" if e.value is True else ("False" if e.value is False else "None")
     # fallback
@@ -189,11 +194,11 @@ def dasy_expr_from_vy(e: n.AST) -> str:
             return f"self/{e.attr}"
         return f"(. {dasy_expr_from_vy(e.value)} {e.attr})"
     if isinstance(e, n.Str):
-        s = e.value.replace("\\", "\\\\").replace("\"", "\\\"")
+        s = e.value.replace("\\", "\\\\").replace('"', '\\"')
         return f'"{s}"'
     if isinstance(e, n.Bytes):
         b = e.value or b""
-        hexed = ''.join(f"\\x{c:02x}" for c in b)
+        hexed = "".join(f"\\x{c:02x}" for c in b)
         return f'b"{hexed}"'
     if isinstance(e, n.Int):
         return str(e.value)
@@ -243,9 +248,13 @@ def dasy_expr_from_vy(e: n.AST) -> str:
     if isinstance(e, n.UnaryOp):
         op = vy_unaryop(e.op)
         if op in ("+", "-"):
-            return f"({('u' if op=='-' else '')}sub {dasy_expr_from_vy(e.operand)})" if op == '-' else f"(+ {dasy_expr_from_vy(e.operand)})"
+            return (
+                f"({('u' if op=='-' else '')}sub {dasy_expr_from_vy(e.operand)})"
+                if op == "-"
+                else f"(+ {dasy_expr_from_vy(e.operand)})"
+            )
         return f"({op} {dasy_expr_from_vy(e.operand)})"
-    if hasattr(n, 'IfExp') and isinstance(e, getattr(n, 'IfExp')):
+    if hasattr(n, "IfExp") and isinstance(e, getattr(n, "IfExp")):
         return f"({vy_expr_to_str(e.body)} if {vy_expr_to_str(e.test)} else {vy_expr_to_str(e.orelse)})"
     if isinstance(e, n.Compare):
         if hasattr(e, "op") and hasattr(e, "right"):
@@ -254,8 +263,8 @@ def dasy_expr_from_vy(e: n.AST) -> str:
         if hasattr(e, "ops") and e.ops and e.comparators:
             op = vy_cmpop(e.ops[0])
             return f"({op} {dasy_expr_from_vy(e.left)} {dasy_expr_from_vy(e.comparators[0])})"
-    if hasattr(n, 'IfExp') and isinstance(e, getattr(n, 'IfExp')):
-        return f'(if {dasy_expr_from_vy(e.test)} {dasy_expr_from_vy(e.body)} {dasy_expr_from_vy(e.orelse)})'
+    if hasattr(n, "IfExp") and isinstance(e, getattr(n, "IfExp")):
+        return f"(if {dasy_expr_from_vy(e.test)} {dasy_expr_from_vy(e.body)} {dasy_expr_from_vy(e.orelse)})"
     if isinstance(e, n.NameConstant):
         return "True" if e.value is True else ("False" if e.value is False else "None")
     return f"(vyper {repr(vy_expr_to_str(e))})"

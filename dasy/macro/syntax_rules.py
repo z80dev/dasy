@@ -55,7 +55,9 @@ def match(pattern, stx: Syntax, literals: set[str], scopes, binds=None):
                 ok = True
                 jj = j
                 while jj < k:
-                    r = match(subpat, Syntax(d_seq[jj], stx.scopes), literals, scopes, trial)
+                    r = match(
+                        subpat, Syntax(d_seq[jj], stx.scopes), literals, scopes, trial
+                    )
                     if r is None:
                         ok = False
                         break
@@ -92,7 +94,11 @@ def substitute(template, binds, scopes):
         if name in binds:
             vals = binds[name]
             # last occurrence wins for 1:1
-            return vals[-1].datum if len(vals) == 1 else models.Expression([v.datum for v in vals])
+            return (
+                vals[-1].datum
+                if len(vals) == 1
+                else models.Expression([v.datum for v in vals])
+            )
         return template
 
     # expression splice with ellipses
@@ -140,9 +146,13 @@ class SyntaxRulesMacro:
         form = call_stx.datum
         scopes = call_stx.scopes
         head = None
-        if isinstance(form, models.Expression) and len(form) > 0 and isinstance(form[0], models.Symbol):
+        if (
+            isinstance(form, models.Expression)
+            and len(form) > 0
+            and isinstance(form[0], models.Symbol)
+        ):
             head = str(form[0])
-        for (pat, tmpl) in self.rules:
+        for pat, tmpl in self.rules:
             # Prefer matching with macro head stripped to avoid binding it as a variable
             p = pat
             d = form

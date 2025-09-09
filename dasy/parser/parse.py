@@ -111,7 +111,9 @@ def parse_expr(expr, context: ParseContext):
 
     if cmd_str.startswith("."):
         # Handle .method syntax - transform to (. obj method ...)
-        inner_node = models.Expression((models.Symbol("."), expr[1], models.Symbol(cmd_str[1:])))
+        inner_node = models.Expression(
+            (models.Symbol("."), expr[1], models.Symbol(cmd_str[1:]))
+        )
         outer_node = models.Expression((inner_node, *expr[2:]))
         return parse_node(outer_node, context)
 
@@ -144,19 +146,23 @@ def parse_call(expr, context: ParseContext, wrap_expr=False):
     match expr:
         case (fn_name, *args):
             # Handle Hy's (. None method) pattern for method references like .append
-            if (isinstance(fn_name, models.Expression) and 
-                len(fn_name) == 3 and 
-                fn_name[0] == models.Symbol(".") and 
-                fn_name[1] == models.Symbol("None")):
+            if (
+                isinstance(fn_name, models.Expression)
+                and len(fn_name) == 3
+                and fn_name[0] == models.Symbol(".")
+                and fn_name[1] == models.Symbol("None")
+            ):
                 # Transform ((. None append) obj arg1 arg2) to (. obj append arg1 arg2)
                 if args:
                     method_name = fn_name[2]
                     obj = args[0]
                     method_args = args[1:]
                     # Create new expression: (. obj method args...)
-                    new_expr = models.Expression([models.Symbol("."), obj, method_name, *method_args])
+                    new_expr = models.Expression(
+                        [models.Symbol("."), obj, method_name, *method_args]
+                    )
                     return parse_node(new_expr, context)
-            
+
             args_list = []
             kw_args = []
             i = 0
@@ -277,18 +283,21 @@ def parse_node(
             values = [parse_node(v, context) for v in node.values()]
             ast_node = build_node(vy_nodes.Dict, keys=keys, values=values)
         case _:
-            raise DasyUnsupportedError(f"No match for node {node}. Unsupported node type.")
+            raise DasyUnsupportedError(
+                f"No match for node {node}. Unsupported node type."
+            )
     return add_src_map(context.source_code, node, ast_node)
 
 
 def parse_src(src: str, filepath: Optional[str] = None):
     # Create context instead of using global variables
     context = ParseContext(source_path=filepath, source_code=src)
-    
+
     # Set default context for backwards compatibility
     from .compat import set_default_context
+
     set_default_context(context)
-    
+
     mod_node: vy_nodes.Module = build_node(
         vy_nodes.Module, body=[], name="", doc_string=""
     )
@@ -361,16 +370,17 @@ def parse_src(src: str, filepath: Optional[str] = None):
         node._parent = mod_node
         if node not in mod_node._children:
             mod_node._children.append(node)
-    
+
     # Set required attributes for Module
     mod_node.path = filepath or "contract.dasy"
     mod_node.resolved_path = filepath or "contract.dasy"
     mod_node.source_id = 0
     mod_node.full_source_code = src
     mod_node.is_interface = False
-    
+
     # Convert settings dict to Settings object and attach to module
     from vyper.compiler.settings import Settings
+
     mod_node.settings = Settings(**settings) if settings else Settings()
 
     return mod_node, settings

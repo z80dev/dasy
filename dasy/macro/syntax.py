@@ -60,4 +60,3 @@ class MacroEnv:
 
     def pop(self):
         self.frames.pop()
-
