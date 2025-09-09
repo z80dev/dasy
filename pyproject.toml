@@ -42,6 +42,8 @@ build-backend = "hatchling.build"
 
 [project.scripts]
 dasy = "dasy.main:main"
+dasy2vyper = "dasy.tools.dasy2vyper:main"
+vyper2dasy = "dasy.tools.vyper2dasy:main"
 
 [tool.pytest.ini_options]
 filterwarnings = [

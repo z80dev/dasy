@@ -50,4 +50,5 @@
 * Re-Entrancy Lock
 #+include: "./examples/nonreentrant.dasy" src clojure -n
 * Self Destruct
-#+include: "./examples/selfdestruct.dasy" src clojure -n
+Deprecated in EVM/Vyper. The opcode is no longer recommended and may be removed.
+Dasy intentionally avoids examples using ~selfdestruct~ to prevent compiler warnings.

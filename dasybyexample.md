@@ -386,13 +386,13 @@
  4    amount :uint256)
  5  
  6  (defn transfer [:address receiver :uint256 amount] :external
- 7    (log (Transfer msg/sender receiver amount)))
+ 7    (log (Transfer :sender msg/sender :receiver receiver :amount amount)))
  8  
  9  (defn mint [:uint256 amount] :external
-10    (log (Transfer (empty :address) msg/sender amount)))
+10    (log (Transfer :sender (empty :address) :receiver msg/sender :amount amount)))
 11  
 12  (defn burn [:uint256 amount] :external
-13    (log (Transfer msg/sender (empty :address) amount)))
+13    (log (Transfer :sender msg/sender :receiver (empty :address) :amount amount)))
 ```
 
 
@@ -406,7 +406,7 @@
  3    amount :uint256)
  4  
  5  (defn deposit [] [:external :payable]
- 6    (log (Deposit msg/sender msg/value)))
+ 6    (log (Deposit :sender msg/sender :amount msg/value)))
  7  
  8  (defn getBalance [] :uint256 [:external :view]
  9    ;; get balance of Ether stored in this contract
@@ -430,7 +430,7 @@
 3    amount :uint256)
 4  
 5  (defn __default__ [] [:external :payable]
-6    (log (Payment msg/sender msg/value)))
+6    (log (Payment :sender msg/sender :amount msg/value)))
 ```
 
 
@@ -590,13 +590,5 @@
 
 # Self Destruct
 
-```clojure
-1  (defn __default__ [] [:external :payable]
-2    (pass))
-3  
-4  (defn kill [] :external
-5    (selfdestruct msg/sender))
-6  
-7  (defn burn [] :external
-8    (selfdestruct (empty :address)))
-```
+Deprecated in EVM/Vyper. The opcode is no longer recommended and may be removed.
+Dasy intentionally avoids examples using `selfdestruct` to prevent compiler warnings.
