@@ -88,7 +88,9 @@ def emit_stmt_dasy(s: n.AST, indent: int = 0) -> List[str]:
             typ = getattr(target, "annotation", None)
         # Check for AnnAssign (has .target with name)
         elif isinstance(target, n.AnnAssign):
-            name = getattr(target.target, "id", None) or dasy_expr_from_vy(target.target)
+            name = getattr(target.target, "id", None) or dasy_expr_from_vy(
+                target.target
+            )
             typ = target.annotation
         # Check for Name node
         elif isinstance(target, n.Name):
@@ -139,7 +141,9 @@ def emit_module_dasy(mod: n.Module) -> str:
             lines.append(f"(defstruct {node.name}")
             for it in node.body:
                 if isinstance(it, n.AnnAssign):
-                    fname = getattr(it.target, "id", None) or dasy_expr_from_vy(it.target)
+                    fname = getattr(it.target, "id", None) or dasy_expr_from_vy(
+                        it.target
+                    )
                     t_s = dasy_type_from_vy(it.annotation)
                     lines.append(f"  {fname} {t_s}")
             lines.append(")\n")
