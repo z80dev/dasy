@@ -24,6 +24,12 @@ def emit_stmt_dasy(s: n.AST, indent: int = 0) -> List[str]:
         out.append(f"{pad}(assert {dasy_expr_from_vy(s.test)}{msg})")
     elif isinstance(s, n.Log):
         out.append(f"{pad}(log {dasy_expr_from_vy(s.value)})")
+    elif hasattr(n, "Raise") and isinstance(s, getattr(n, "Raise")):
+        exc = getattr(s, "exc", None)
+        if exc is not None:
+            out.append(f"{pad}(raise {dasy_expr_from_vy(exc)})")
+        else:
+            out.append(f"{pad}(raise)")
     elif isinstance(s, n.Break):
         out.append(f"{pad}(break)")
     elif isinstance(s, n.Continue):
@@ -72,11 +78,25 @@ def emit_stmt_dasy(s: n.AST, indent: int = 0) -> List[str]:
             out.append(f"{pad} )")
         out.append(f"{pad})")
     elif isinstance(s, n.For):
-        # try to extract typed target if present
+        # Extract typed target - can be arg node, AnnAssign, or Name
         target = s.target
-        name = getattr(target, "arg", None) or getattr(target, "id", None) or "i"
-        typ = getattr(target, "annotation", None)
-        typ_s = dasy_type_from_vy(typ) if typ is not None else ":uint256"
+        name = None
+        typ = None
+        # Check for arg node (has .arg attribute for name)
+        if hasattr(target, "arg") and target.arg:
+            name = target.arg
+            typ = getattr(target, "annotation", None)
+        # Check for AnnAssign (has .target with name)
+        elif isinstance(target, n.AnnAssign):
+            name = getattr(target.target, "id", None) or dasy_expr_from_vy(target.target)
+            typ = target.annotation
+        # Check for Name node
+        elif isinstance(target, n.Name):
+            name = target.id
+        # Fallback
+        if name is None:
+            name = getattr(target, "id", None) or "i"
+        typ_s = dasy_type_from_vy(typ) if typ is not None else "uint256"
         out.append(f"{pad}(for [{name} {typ_s} {dasy_expr_from_vy(s.iter)}]")
         for b in s.body:
             out.extend(emit_stmt_dasy(b, indent + 2))
@@ -113,6 +133,62 @@ def emit_module_dasy(mod: n.Module) -> str:
                         t_s = dasy_type_from_vy(ann)
                         lines.append(f"  {fname} {t_s}")
             lines.append(")\n")
+    # Structs
+    for node in mod.body:
+        if hasattr(n, "StructDef") and isinstance(node, getattr(n, "StructDef")):
+            lines.append(f"(defstruct {node.name}")
+            for it in node.body:
+                if isinstance(it, n.AnnAssign):
+                    fname = getattr(it.target, "id", None) or dasy_expr_from_vy(it.target)
+                    t_s = dasy_type_from_vy(it.annotation)
+                    lines.append(f"  {fname} {t_s}")
+            lines.append(")\n")
+    # Flags
+    for node in mod.body:
+        if hasattr(n, "FlagDef") and isinstance(node, getattr(n, "FlagDef")):
+            members = []
+            for it in node.body:
+                val = getattr(it, "value", None)
+                if isinstance(val, n.Name):
+                    members.append(val.id)
+            lines.append(f"(defflag {node.name}")
+            for m in members:
+                lines.append(f"  {m}")
+            lines.append(")\n")
+    # Interfaces
+    for node in mod.body:
+        if hasattr(n, "InterfaceDef") and isinstance(node, getattr(n, "InterfaceDef")):
+            lines.append(f"(definterface {node.name}")
+            for fn in node.body:
+                # args
+                arg_parts = []
+                for a in fn.args.args:
+                    if a.annotation is not None:
+                        arg_parts.append(f"[{a.arg} {dasy_type_from_vy(a.annotation)}]")
+                    else:
+                        arg_parts.append(a.arg)
+                args_vec = "[" + " ".join(arg_parts) + "]"
+                ret = dasy_type_from_vy(fn.returns) if fn.returns else None
+                # visibility from decorators or body
+                decs = [getattr(d, "id", "") for d in getattr(fn, "decorator_list", [])]
+                vis = None
+                if not decs and getattr(fn, "body", None):
+                    first = fn.body[0]
+                    vis = getattr(getattr(first, "value", None), "id", None)
+                if "view" in decs or vis == "view":
+                    vis = ":view"
+                elif "pure" in decs or vis == "pure":
+                    vis = ":pure"
+                elif "payable" in decs or vis == "payable":
+                    vis = ":payable"
+                else:
+                    vis = ":nonpayable"
+                sig = f"  (defn {fn.name} {args_vec}"
+                if ret:
+                    sig += f" {ret}"
+                sig += f" {vis})"
+                lines.append(sig)
+            lines.append(")\n")
     # State vars
     for node in mod.body:
         if isinstance(node, n.VariableDecl):
@@ -139,6 +215,7 @@ def emit_module_dasy(mod: n.Module) -> str:
             for d in node.decorator_list:
                 if isinstance(d, n.Name) and d.id in {
                     "external",
+                    "internal",
                     "view",
                     "pure",
                     "payable",

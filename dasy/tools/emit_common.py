@@ -55,6 +55,7 @@ def vy_binop(op) -> str:
 
 
 def vy_cmpop(op) -> str:
+    """Convert comparison operator to Vyper syntax."""
     m = {
         n.Eq: "==",
         n.NotEq: "!=",
@@ -70,6 +71,26 @@ def vy_cmpop(op) -> str:
         return "in"
     if t == "NotIn":
         return "not in"
+    return "?"
+
+
+def dasy_cmpop(op) -> str:
+    """Convert comparison operator to Dasy syntax."""
+    m = {
+        n.Eq: "==",
+        n.NotEq: "!=",
+        n.Lt: "<",
+        n.LtE: "<=",
+        n.Gt: ">",
+        n.GtE: ">=",
+    }
+    if type(op) in m:
+        return m[type(op)]
+    t = type(op).__name__
+    if t == "In":
+        return "in"
+    if t == "NotIn":
+        return "notin"  # Dasy uses 'notin' not 'not in'
     return "?"
 
 
@@ -156,8 +177,8 @@ def dasy_kw(name: str) -> str:
 def dasy_type_from_vy(t: n.AST) -> str:
     """Pretty-print a Vyper AST type into a Dasy type form."""
     if isinstance(t, n.Name):
-        # built-ins become :type
-        return dasy_kw(t.id) if t.id and t.id[0].islower() else t.id
+        # Types in Dasy don't have colon prefix (colons are for decorators)
+        return t.id
     if isinstance(t, n.Subscript):
         base = t.value
         if isinstance(base, n.Name) and base.id in ("String", "Bytes"):
@@ -176,13 +197,17 @@ def dasy_type_from_vy(t: n.AST) -> str:
             if hasattr(t.slice, "elements") and len(t.slice.elements) == 2:
                 a, b = t.slice.elements
                 return f"(hash-map {dasy_type_from_vy(a)} {dasy_type_from_vy(b)})"
+        # Fixed-size array: type[size] -> (array type size)
+        if isinstance(base, n.Name):
+            return f"(array {dasy_type_from_vy(base)} {vy_expr_to_str(t.slice)})"
         # fallback to raw
         return f"{dasy_type_from_vy(base)}[{vy_expr_to_str(t.slice)}]"
     if isinstance(t, n.Attribute):
         return f"{dasy_type_from_vy(t.value)}/{t.attr}"
     if isinstance(t, n.Tuple):
-        return "'(" + _join([dasy_type_from_vy(e) for e in t.elts]) + ")"
-    return ":unknown"
+        items = getattr(t, "elts", None) or getattr(t, "elements", [])
+        return "'(" + _join([dasy_type_from_vy(e) for e in items], sep=" ") + ")"
+    return "unknown"
 
 
 def dasy_expr_from_vy(e: n.AST) -> str:
@@ -206,9 +231,10 @@ def dasy_expr_from_vy(e: n.AST) -> str:
         return e.value
     if isinstance(e, n.Tuple):
         items = getattr(e, "elts", None) or getattr(e, "elements", [])
-        return "'(" + _join([dasy_expr_from_vy(x) for x in items]) + ")"
+        return "'(" + _join([dasy_expr_from_vy(x) for x in items], sep=" ") + ")"
     if isinstance(e, n.List):
-        return "[" + _join([dasy_expr_from_vy(x) for x in e.elements]) + "]"
+        # Dasy list literals use spaces, not commas
+        return "[" + _join([dasy_expr_from_vy(x) for x in e.elements], sep=" ") + "]"
     if isinstance(e, n.Subscript):
         value = dasy_expr_from_vy(e.value)
         sl = e.slice
@@ -220,7 +246,7 @@ def dasy_expr_from_vy(e: n.AST) -> str:
     if isinstance(e, n.Call):
         # attribute call: obj.method(args) => (. obj method args)
         if isinstance(e.func, n.Attribute):
-            obj = dasy_expr_from_vy(e.func.value)
+            obj_node = e.func.value
             meth = e.func.attr
             args = [dasy_expr_from_vy(a) for a in getattr(e, "args", [])]
             kwargs = []
@@ -230,6 +256,12 @@ def dasy_expr_from_vy(e: n.AST) -> str:
                 else:
                     kwargs.append(f"{dasy_kw(k.arg)} {dasy_expr_from_vy(k.value)}")
             items = _join(args + kwargs, sep=" ")
+            # Special case: self.method(...) => (self/method args) for internal calls
+            if isinstance(obj_node, n.Name) and obj_node.id == "self":
+                if items:
+                    return f"(self/{meth} {items})"
+                return f"(self/{meth})"
+            obj = dasy_expr_from_vy(obj_node)
             return f"(. {obj} {meth} {items})".strip()
         # plain call: f(args) => (f args)
         func = dasy_expr_from_vy(e.func)
@@ -255,16 +287,53 @@ def dasy_expr_from_vy(e: n.AST) -> str:
             )
         return f"({op} {dasy_expr_from_vy(e.operand)})"
     if hasattr(n, "IfExp") and isinstance(e, getattr(n, "IfExp")):
-        return f"({vy_expr_to_str(e.body)} if {vy_expr_to_str(e.test)} else {vy_expr_to_str(e.orelse)})"
+        # Dasy uses (if test then else) syntax
+        return f"(if {dasy_expr_from_vy(e.test)} {dasy_expr_from_vy(e.body)} {dasy_expr_from_vy(e.orelse)})"
     if isinstance(e, n.Compare):
         if hasattr(e, "op") and hasattr(e, "right"):
-            op = vy_cmpop(e.op)
+            op = dasy_cmpop(e.op)
             return f"({op} {dasy_expr_from_vy(e.left)} {dasy_expr_from_vy(e.right)})"
         if hasattr(e, "ops") and e.ops and e.comparators:
-            op = vy_cmpop(e.ops[0])
+            op = dasy_cmpop(e.ops[0])
             return f"({op} {dasy_expr_from_vy(e.left)} {dasy_expr_from_vy(e.comparators[0])})"
-    if hasattr(n, "IfExp") and isinstance(e, getattr(n, "IfExp")):
-        return f"(if {dasy_expr_from_vy(e.test)} {dasy_expr_from_vy(e.body)} {dasy_expr_from_vy(e.orelse)})"
     if isinstance(e, n.NameConstant):
         return "True" if e.value is True else ("False" if e.value is False else "None")
-    return f"(vyper {repr(vy_expr_to_str(e))})"
+    # StaticCall: staticcall interface.method(args) => (staticcall interface method args)
+    if hasattr(n, "StaticCall") and isinstance(e, getattr(n, "StaticCall")):
+        inner = e.value
+        if isinstance(inner, n.Call) and isinstance(inner.func, n.Attribute):
+            obj = dasy_expr_from_vy(inner.func.value)
+            meth = inner.func.attr
+            args = [dasy_expr_from_vy(a) for a in getattr(inner, "args", [])]
+            kwargs = []
+            for k in getattr(inner, "keywords", []):
+                if k.arg is None:
+                    kwargs.append(dasy_expr_from_vy(k.value))
+                else:
+                    kwargs.append(f"{dasy_kw(k.arg)} {dasy_expr_from_vy(k.value)}")
+            items = _join(args + kwargs, sep=" ")
+            if items:
+                return f"(staticcall (. {obj} {meth} {items}))"
+            return f"(staticcall (. {obj} {meth}))"
+        return f"(staticcall {dasy_expr_from_vy(inner)})"
+    # ExtCall: extcall interface.method(args) => (extcall interface method args)
+    if hasattr(n, "ExtCall") and isinstance(e, getattr(n, "ExtCall")):
+        inner = e.value
+        if isinstance(inner, n.Call) and isinstance(inner.func, n.Attribute):
+            obj = dasy_expr_from_vy(inner.func.value)
+            meth = inner.func.attr
+            args = [dasy_expr_from_vy(a) for a in getattr(inner, "args", [])]
+            kwargs = []
+            for k in getattr(inner, "keywords", []):
+                if k.arg is None:
+                    kwargs.append(dasy_expr_from_vy(k.value))
+                else:
+                    kwargs.append(f"{dasy_kw(k.arg)} {dasy_expr_from_vy(k.value)}")
+            items = _join(args + kwargs, sep=" ")
+            if items:
+                return f"(extcall (. {obj} {meth} {items}))"
+            return f"(extcall (. {obj} {meth}))"
+        return f"(extcall {dasy_expr_from_vy(inner)})"
+    raise NotImplementedError(
+        f"Cannot convert Vyper expression to Dasy: {type(e).__name__} - {vy_expr_to_str(e)}"
+    )

@@ -6,7 +6,6 @@ This package provides two entrypoints:
 
 The conversion is best-effort and currently supports common constructs
 used in this repository (state vars, basic expressions, returns, assigns,
-ifs, simple loops, calls). For unsupported nodes, the converters insert
-TODO comments or wrap raw Vyper lines using the `(vyper "...")` macro
-to preserve semantics.
+ifs, simple loops, calls). For unsupported nodes, the converters raise
+NotImplementedError with a helpful message.
 """
