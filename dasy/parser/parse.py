@@ -2,9 +2,6 @@ import ast as py_ast
 
 from typing import Union, Optional
 
-from dasy.parser.macros import handle_macro, is_macro
-
-
 import hy
 import vyper.ast.nodes as vy_nodes
 from hy import models
@@ -21,13 +18,45 @@ from dasy.exceptions import (
 )
 
 # namespaces with expression handlers
-from . import nodes, core, macros
+from . import nodes, core
 from dasy.builtin import functions
 from .expander import expand_module
 from ..macro.syntax import MacroEnv
 from . import macros2
 
 BUILTIN_FUNCS = BIN_FUNCS | COMP_FUNCS | UNARY_OPS | BOOL_OPS | {"in", "notin"}
+
+
+def _build_handlers():
+    """Build explicit handler dispatch table from parse_* functions."""
+    handlers = {}
+
+    # Add handlers from nodes module
+    for name in dir(nodes):
+        if name.startswith("parse_"):
+            cmd = name[6:]  # strip "parse_" prefix
+            handlers[cmd] = getattr(nodes, name)
+
+    # Add handlers from core module
+    for name in dir(core):
+        if name.startswith("parse_"):
+            cmd = name[6:]
+            handlers[cmd] = getattr(core, name)
+
+    # Add handlers from functions module
+    for name in dir(functions):
+        if name.startswith("parse_"):
+            cmd = name[6:]
+            handlers[cmd] = getattr(functions, name)
+
+    # Add special handlers from nodes.handlers (break, continue, return, etc.)
+    handlers.update(nodes.handlers)
+
+    return handlers
+
+
+# Explicit handler dispatch table - maps command names to handler functions
+HANDLERS = _build_handlers()
 
 NAME_CONSTS = ["True", "False"]
 
@@ -88,26 +117,17 @@ def parse_expr(expr, context: ParseContext):
         # parse_op expects (expr, alias) not context
         return parse_op(expr, cmd_str)
 
-    if cmd_str in nodes.handlers:
-        # nodes.handlers functions don't expect context
-        return nodes.handlers[cmd_str](expr)
-
-    node_fn = f"parse_{cmd_str}"
-
-    for ns in [nodes, core, macros, functions]:
-        if hasattr(ns, node_fn):
-            func = getattr(ns, node_fn)
-            # Try calling with context first, fall back to without for backwards compatibility
-            try:
-                return func(expr, context)
-            except TypeError as e:
-                if "takes 1 positional argument but 2 were given" in str(e):
-                    # Function doesn't support context yet, call without it
-                    return func(expr)
-                raise
-
-    if is_macro(cmd_str):
-        return handle_macro(expr, context)
+    # Use explicit handler dispatch table
+    if cmd_str in HANDLERS:
+        handler = HANDLERS[cmd_str]
+        # Try calling with context first, fall back to without for backwards compatibility
+        try:
+            return handler(expr, context)
+        except TypeError as e:
+            if "takes 1 positional argument but 2 were given" in str(e):
+                # Handler doesn't support context yet, call without it
+                return handler(expr)
+            raise
 
     if cmd_str.startswith("."):
         # Handle .method syntax - transform to (. obj method ...)
@@ -118,9 +138,6 @@ def parse_expr(expr, context: ParseContext):
         return parse_node(outer_node, context)
 
     match cmd_str:
-        case "defconst":
-            context.constants[str(expr[1])] = expr[2]
-            return None
         case "defimmutable" | "defimm":
             context.constants[str(expr[1])] = None
             return None
@@ -290,6 +307,12 @@ def parse_node(
 
 
 def parse_src(src: str, filepath: Optional[str] = None):
+    # Reset node-id counter for reproducible compilation
+    from . import builtins
+    from .utils import next_node_id_maker
+
+    builtins.next_nodeid = next_node_id_maker()
+
     # Create context instead of using global variables
     context = ParseContext(source_path=filepath, source_code=src)
 

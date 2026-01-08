@@ -77,13 +77,115 @@ def parse_quote(expr):
     return parse_tuple(expr)
 
 
+# Known built-in Vyper types that can be used as symbols (without colon prefix)
+BUILTIN_TYPES = {
+    # Integer types
+    "uint256",
+    "uint128",
+    "uint64",
+    "uint32",
+    "uint16",
+    "uint8",
+    "int256",
+    "int128",
+    "int64",
+    "int32",
+    "int16",
+    "int8",
+    # Short aliases
+    "u256",
+    "u128",
+    "u64",
+    "u32",
+    "u16",
+    "u8",
+    "i256",
+    "i128",
+    "i64",
+    "i32",
+    "i16",
+    "i8",
+    # Other primitives
+    "address",
+    "bool",
+    "bytes32",
+    "bytes4",
+    "bytes20",
+    "decimal",
+    "String",
+    "Bytes",
+    # Special types
+    "Bytes",
+    "String",
+    "DynArray",
+    "HashMap",
+}
+
+
+def _is_type_symbol(sym):
+    """Check if a symbol should be treated as a type (not an argument name)."""
+    return str(sym) in BUILTIN_TYPES
+
+
+def _is_canonical_args(args_list):
+    """Check if args use canonical [[name type] ...] syntax."""
+    if len(args_list) == 0:
+        return False
+    # Check if first arg is a list/expression with 2 elements (name + type pair)
+    first = args_list[0]
+    return isinstance(first, models.List) and len(first) == 2
+
+
+def _parse_type_annotation(typ):
+    """Parse a type annotation (keyword, symbol, or expression) into a Vyper node."""
+    if isinstance(typ, models.Keyword):
+        # built-in types like :uint256 (keyword syntax)
+        return build_node(vy_nodes.Name, id=str(typ.name), parent=None)
+    elif isinstance(typ, models.Symbol):
+        # built-in types like uint256 (symbol syntax - preferred)
+        return build_node(vy_nodes.Name, id=str(typ), parent=None)
+    elif isinstance(typ, models.Expression):
+        # complex types like (HashMap address uint256)
+        return dasy.parser.parse_node_legacy(typ)
+    else:
+        raise DasyTypeError(f"Invalid type annotation: {typ}")
+
+
 def parse_args_list(args_list) -> list[vy_nodes.arg]:
+    """Parse function arguments.
+
+    Supports two syntaxes:
+    - Canonical (preferred): [[name type] [name2 type2] ...]
+      Example: [[x uint256] [y uint256]]
+    - Legacy: [type name name2 type2 name3 ...]
+      Example: [:uint256 x y :address sender]
+    """
     if len(args_list) == 0:
         return []
+
+    # Detect canonical [[name type] ...] syntax
+    if _is_canonical_args(args_list):
+        results = []
+        for pair in args_list:
+            if not isinstance(pair, models.List) or len(pair) != 2:
+                raise DasyTypeError(
+                    f"Canonical syntax requires [name type] pairs, got: {pair}"
+                )
+            name, typ = pair
+            annotation_node = _parse_type_annotation(typ)
+            arg_node = build_node(
+                vy_nodes.arg, arg=str(name), parent=None, annotation=annotation_node
+            )
+            results.append(arg_node)
+        return results
+
+    # Legacy syntax: [type name name type2 name ...]
     results = []
     current_type = args_list[0]
-    assert isinstance(current_type, models.Keyword) or isinstance(
-        current_type, models.Expression
+    # Accept types as Keywords (:uint256), Expressions ((HashMap address uint256)),
+    # or Symbols that are known type names (uint256, address)
+    assert isinstance(current_type, (models.Keyword, models.Expression)) or (
+        isinstance(current_type, models.Symbol) and _is_type_symbol(current_type)
     )
     # get annotation and name
     for arg in args_list[1:]:
@@ -91,17 +193,12 @@ def parse_args_list(args_list) -> list[vy_nodes.arg]:
         if isinstance(arg, (models.Keyword, models.Expression)):
             current_type = arg
             continue
+        # Check if symbol is a type (not an argument name)
+        if isinstance(arg, models.Symbol) and _is_type_symbol(arg):
+            current_type = arg
+            continue
         # get annotation and name
-        if isinstance(current_type, models.Keyword):
-            # built-in types like :uint256
-            annotation_node = build_node(
-                vy_nodes.Name, id=str(current_type.name), parent=None
-            )
-        elif isinstance(current_type, models.Expression):
-            # user-defined types like Foo
-            annotation_node = dasy.parser.parse_node_legacy(current_type)
-        else:
-            raise DasyTypeError("Invalid type annotation")
+        annotation_node = _parse_type_annotation(current_type)
         arg_node = build_node(
             vy_nodes.arg, arg=str(arg), parent=None, annotation=annotation_node
         )
@@ -256,6 +353,63 @@ def parse_defvars(expr):
     return [parse_declaration(var, typ) for var, typ in pairwise(expr[1:])]
 
 
+def parse_defstorage(expr):
+    """Parse (defstorage name type modifier*) form.
+
+    Syntax:
+        (defstorage owner address)
+        (defstorage balances (hash-map address uint256) :public)
+        (defstorage my-imm uint256 :immutable)
+
+    Modifiers: :public, :immutable, :transient
+    """
+    if len(expr) < 3:
+        raise DasyTypeError("defstorage requires at least name and type")
+
+    name = expr[1]
+    typ = expr[2]
+    modifiers = expr[3:]
+
+    # Collect modifiers
+    attrs = set()
+    for mod in modifiers:
+        if isinstance(mod, models.Keyword):
+            attrs.add(mod.name)
+
+    return parse_declaration(name, typ, attrs=attrs)
+
+
+def parse_defconst(expr, context=None):
+    """Parse (defconst name type value) or legacy (defconst name value) form.
+
+    New Syntax (preferred):
+        (defconst MAX_DEPOSIT uint256 1000000)
+
+    Legacy Syntax (symbolic expansion, deprecated):
+        (defconst MY_CONSTANT 123)
+    """
+    if len(expr) == 3:
+        # Legacy syntax: (defconst NAME value) - symbolic constant
+        # Store in context for symbolic expansion (like the old behavior)
+        if context is not None:
+            context.constants[str(expr[1])] = expr[2]
+        return None  # No AST node generated
+    elif len(expr) == 4:
+        # New syntax: (defconst NAME type value) - Vyper constant
+        name = expr[1]
+        typ = expr[2]
+        value = expr[3]
+
+        # Parse the value
+        parsed_value = dasy.parser.parse_node_legacy(value)
+
+        return parse_declaration(name, typ, value=parsed_value, attrs={"constant"})
+    else:
+        raise DasyTypeError(
+            "defconst requires either (defconst name value) or (defconst name type value)"
+        )
+
+
 def create_annotated_node(node_class, var, typ, value=None):
     target = dasy.parser.parse_node_legacy(var)
     if not isinstance(typ, (models.Expression, models.Keyword, models.Symbol)):
@@ -333,28 +487,59 @@ def parse_defstruct(expr):
     return struct_node
 
 
+def parse_sig(f):
+    """Parse a sig form inside definterface.
+
+    Syntax:
+        (sig name [args] return-type :mutability)
+        (sig name [args] :mutability)  ; for void-returning functions
+
+    Examples:
+        (sig transfer [:address to :uint256 amount] :bool :external)
+        (sig balanceOf [:address owner] :uint256 :view)
+        (sig setOwner [:address owner] :nonpayable)
+    """
+    # f[0] = sig or defn
+    # f[1] = name
+    # f[2] = args
+    # f[3] = return type (if len > 4) or mutability
+    # f[-1] = mutability
+
+    rets = None if len(f) == 4 else dasy.parser.parse_node_legacy(f[3])
+
+    args_list = parse_args_list(f[2])
+    args_node = build_node(vy_nodes.arguments, args=args_list, defaults=list())
+
+    # in an interface, the body is a single expr node with the visibility
+    visibility_node = dasy.parser.parse_node_legacy(f[-1])
+    body_node = build_node(vy_nodes.Expr, value=visibility_node)
+
+    fn_node = build_node(
+        vy_nodes.FunctionDef,
+        args=args_node,
+        returns=rets,
+        decorator_list=[],
+        pos=None,
+        body=[body_node],
+        name=str(f[1]),
+    )
+    return fn_node
+
+
 def parse_definterface(expr):
+    """Parse (definterface Name (sig|defn ...)*) form.
+
+    Supports both `sig` (preferred) and `defn` (legacy) for function signatures.
+
+    Syntax:
+        (definterface IERC20
+          (sig transfer [:address to :uint256 amount] :bool :external)
+          (sig balanceOf [:address owner] :uint256 :view))
+    """
     name = str(expr[1])
     body = []
     for f in expr[2:]:
-        rets = None if len(f) == 4 else dasy.parser.parse_node_legacy(f[3])
-
-        args_list = parse_args_list(f[2])
-        args_node = build_node(vy_nodes.arguments, args=args_list, defaults=list())
-
-        # in an interface, the body is a single expr node with the visibility
-        visibility_node = dasy.parser.parse_node_legacy(f[-1])
-        body_node = build_node(vy_nodes.Expr, value=visibility_node)
-
-        fn_node = build_node(
-            vy_nodes.FunctionDef,
-            args=args_node,
-            returns=rets,
-            decorator_list=[],
-            pos=None,
-            body=[body_node],
-            name=str(f[1]),
-        )
+        fn_node = parse_sig(f)
         body.append(fn_node)
 
     interface_node = build_node(vy_nodes.InterfaceDef, body=body, name=name)
