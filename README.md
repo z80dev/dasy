@@ -291,7 +291,7 @@ decimal
 
 ;; Payable function (can receive Ether)
 (defn deposit [] [:external :payable]
-  (+= self/balance msg/value))
+  (+= self/deposits msg/value))
 ```
 
 #### Function Visibility
@@ -348,10 +348,17 @@ decimal
 #### For Loops
 
 ```clojure
-;; Range-based loop
+;; Range-based loop (literal bound)
+(defn sumTo10 [] uint256 [:external :pure]
+  (defvar total uint256 0)
+  (for [i uint256 (range 10)]
+    (+= total i))
+  total)
+
+;; Range with variable requires :bound
 (defn sumToN [[n uint256]] uint256 [:external :pure]
   (defvar total uint256 0)
-  (for [i uint256 (range n)]
+  (for [i uint256 (range n :bound 256)]
     (+= total i))
   total)
 
