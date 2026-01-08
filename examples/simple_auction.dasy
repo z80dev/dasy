@@ -3,24 +3,24 @@
 (defvars
   ;; Auction params
   ;; beneficiary receives money from highest bidder
-  beneficiary (public :address)
-  auctionStart (public :uint256)
-  auctionEnd (public :uint256)
+  beneficiary (public address)
+  auctionStart (public uint256)
+  auctionEnd (public uint256)
 
   ;; current state of auction
-  highestBidder (public :address)
-  highestBid (public :uint256)
+  highestBidder (public address)
+  highestBid (public uint256)
 
   ;; set to true at the end, disallows any change
-  ended (public :bool)
+  ended (public bool)
 
   ;; keep track of refunded bids so we can follow the entire withdraw pattern
-  pendingReturns (public (hash-map :address :uint256)))
+  pendingReturns (public (hash-map address uint256)))
 
 ;; create a simple auction with auction_start and
 ;; bidding_time seconds bidding time on behalf of
 ;; the beneficiary address beneficiary
-(defn __init__ [:address beneficiary :uint256 auction_start bidding_time] :external
+(defn __init__ [[beneficiary address] [auction_start uint256] [bidding_time uint256]] :external
   (set self/beneficiary beneficiary)
   ;; auction start time can be in the past, present, or future
   (set self/auctionStart auction_start)
@@ -46,7 +46,7 @@
 
 ;; withdraw a previously refunded bid
 (defn withdraw [] :external
-  (defvar pending_amount :uint256 (get-at self/pendingReturns msg/sender))
+  (defvar pending_amount uint256 (get-at self/pendingReturns msg/sender))
   (set-at self/pendingReturns msg/sender 0)
   (send msg/sender pending_amount))
 

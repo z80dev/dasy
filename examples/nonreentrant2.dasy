@@ -4,7 +4,7 @@
 
 (defvar target (public Nonreentrantenforcer))
 
-(defn __init__ [:address target] :external
+(defn __init__ [[target address]] :external
   (set self/target (Nonreentrantenforcer target)))
 
 (defn callback [] :external

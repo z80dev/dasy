@@ -2,19 +2,19 @@
     ADMIN
     USER)
 
-(defvar roles (public (hash-map :address Roles)))
+(defvar roles (public (hash-map address Roles)))
 
 (defn __init__ [] :external
   (set-at self/roles msg/sender Roles/ADMIN))
 
-(defn getPrice [] :uint256 [:external :view]
+(defn getPrice [] uint256 [:external :view]
       (if (== (get-at self/roles msg/sender) Roles/ADMIN)
            10
           (if (== (get-at self/roles msg/sender) Roles/USER)
                20
                30)))
 
-(defn getPriceUsingCondp [] :uint256 [:external :view]
+(defn getPriceUsingCondp [] uint256 [:external :view]
       (defvar role Roles (get-at self/roles msg/sender))
       (condp == role
              Roles/ADMIN  10

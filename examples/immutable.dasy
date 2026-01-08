@@ -1,9 +1,9 @@
-(defvar OWNER (immutable :address))
-(defvar MY_IMMUTABLE (immutable :uint256))
+(defvar OWNER (immutable address))
+(defvar MY_IMMUTABLE (immutable uint256))
 
-(defn __init__ [:uint256 _val] :external
+(defn __init__ [[_val uint256]] :external
   (set OWNER msg/sender)
   (set MY_IMMUTABLE _val))
 
-(defn getMyImmutable [] :uint256 [:external :view]
+(defn getMyImmutable [] uint256 [:external :view]
   MY_IMMUTABLE)

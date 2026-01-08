@@ -1,13 +1,13 @@
 (defvars
-    owner (public :address)
-    eth (public :uint256))
+    owner (public address)
+    eth (public uint256))
 
-(defn setOwner [:address owner] :external
+(defn setOwner [[owner address]] :external
   (set self/owner owner))
 
 (defn sendEth [] [:external :payable]
   (set self/eth msg/value))
 
-(defn setOwnerAndSendEth [:address owner] [:external :payable]
+(defn setOwnerAndSendEth [[owner address]] [:external :payable]
   (set self/owner owner)
   (set self/eth msg/value))

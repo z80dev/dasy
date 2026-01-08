@@ -1,9 +1,9 @@
 (defvars
-    b (public :bool)
-    i (public :int128)
-    u (public :uint256)
-    addr (public :address)
-    b32 :bytes32
+    b (public bool)
+    i (public int128)
+    u (public uint256)
+    addr (public address)
+    b32 bytes32
     bs (public (bytes 100))
     s   (public (string 100)))
 
@@ -12,6 +12,6 @@
     (set self/i -1)
     (set self/u 123)
     ;; bytes32 expects a fixed-size 32-byte value; convert from a bytes literal
-    (set self/b32 (convert b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" :bytes32))
+    (set self/b32 (convert b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" bytes32))
     (set self/bs b"\x01")
     (set self/s "Hello Dasy"))

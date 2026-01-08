@@ -5,5 +5,5 @@
 (include! "examples/hello_world.dasy")
 
 ;; define a new function, which references code from the hello_world contract
-(defn setGreeting [(string 100) newGreeting] :external
+(defn setGreeting [[newGreeting (string 100)]] :external
   (set self/greet newGreeting))

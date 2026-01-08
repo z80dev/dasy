@@ -1,7 +1,7 @@
 (defvars
-    owner (public :address)
-    foo :uint256
-    bar (public :bool))
+    owner (public address)
+    foo uint256
+    bar (public bool))
 
 (defn __init__ [] :external
   (set self/owner msg/sender)

@@ -1,9 +1,9 @@
-(defvars owner (public :address)
-        createdAt (public :uint256)
-        expiresAt (public :uint256)
+(defvars owner (public address)
+        createdAt (public uint256)
+        expiresAt (public uint256)
         name (public (string 10)))
 
-(defn __init__ [(string 10) name :uint256 duration] :external
+(defn __init__ [[name (string 10)] [duration uint256]] :external
     ;; set owner to caller
     (set self/owner msg/sender)
     ;; set name from input

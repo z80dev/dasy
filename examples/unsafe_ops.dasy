@@ -1,11 +1,11 @@
-(defn unsafe_sub [:uint256 x y] :uint256 :external
+(defn unsafe_sub [[x uint256] [y uint256]] uint256 :external
   (-! x y))
 
-(defn unsafe_add [:uint256 x y] :uint256 :external
+(defn unsafe_add [[x uint256] [y uint256]] uint256 :external
   (+! x y))
 
-(defn unsafe_mul [:uint256 x y] :uint256 :external
+(defn unsafe_mul [[x uint256] [y uint256]] uint256 :external
   (*! x y))
 
-(defn unsafe_div [:uint256 x y] :uint256 :external
+(defn unsafe_div [[x uint256] [y uint256]] uint256 :external
   (/! x y))

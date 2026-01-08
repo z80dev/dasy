@@ -1,20 +1,20 @@
 (definterface TestInterface
-  (defn owner [] :address :view)
-  (defn eth [] :uint256 :view)
-  (defn setOwner [:address owner] :nonpayable)
+  (defn owner [] address :view)
+  (defn eth [] uint256 :view)
+  (defn setOwner [[owner address]] :nonpayable)
   (defn sendEth [] :payable)
-  (defn setOwnerAndSendEth [:address owner] :payable))
+  (defn setOwnerAndSendEth [[owner address]] :payable))
 
 (defvar test (public TestInterface))
 
-(defn __init__ [:address test] :external
+(defn __init__ [[test address]] :external
   (set self/test (TestInterface test)))
 
-(defn getOwner [] :address [:external :view]
+(defn getOwner [] address [:external :view]
   (staticcall (self/test.owner)))
 
-(defn getOwnerFromAddress [:address test] :address [:external :view]
+(defn getOwnerFromAddress [[test address]] address [:external :view]
   (staticcall (. (TestInterface test) owner)))
 
-(defn setOwner [:address owner] :external
+(defn setOwner [[owner address]] :external
   (extcall (. self/test setOwner owner)))

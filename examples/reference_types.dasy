@@ -1,11 +1,11 @@
 (defstruct Person
   name (string 100)
-  age :uint256)
+  age uint256)
 
 (defvars
     :public
-    nums   (array :uint256 10) ;; fixed size list, must be bounded
-    myMap  (hash-map :address :uint256)
+    nums   (array uint256 10) ;; fixed size list, must be bounded
+    myMap  (hash-map address uint256)
     person Person)
 
 (defn __init__ [] :external
@@ -14,7 +14,7 @@
         (set-at 9 456)) ;; this updates self.nums[9]
 
   ;; copies self.nums to array in memory
-  (defvar arr (array :uint256 10) self/nums)
+  (defvar arr (array uint256 10) self/nums)
   (set-at arr 0 123) ;; does not modify self/nums
 
   ;; this updates self/myMap
