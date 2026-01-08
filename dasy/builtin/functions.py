@@ -1,13 +1,6 @@
 from vyper.ast import Call, Expr
-import vyper.ast
 
 from dasy import parser
-
-
-def parse_vyper(expr):
-    # Use vyper.ast.parse_to_ast instead of phases.generate_ast
-    ast = vyper.ast.parse_to_ast(str(expr[1]), source_id=0)
-    return ast.body[0]
 
 
 def wrap_calls(nodes):

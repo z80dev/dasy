@@ -4,7 +4,10 @@ from hy import models
 
 from .context import ParseContext
 from ..macro.syntax_rules import SyntaxRulesMacro, ELLIPSIS
-from ..macro.syntax import Syntax
+from ..macro.syntax import (
+    Syntax,
+    gensym,
+)  # noqa: F401 - gensym exported for procedural macros
 from .macro_context import get_macro_context
 from .macro_utils import (
     check_include_recursion,
@@ -375,5 +378,106 @@ def install_builtin_dasy_macros(env) -> None:
         return models.List(list(forms))
 
     env.define("interface!", _interface_bang)
+
+    # --- Type constructor macros (migrated from Hy) ---
+
+    # hash-map: (hash-map key-type val-type) => (subscript HashMap (tuple key-type val-type))
+    hash_map_rules = [
+        (
+            exp(sym("hash-map"), sym("key-type"), sym("val-type")),
+            exp(
+                sym("subscript"),
+                sym("HashMap"),
+                exp(sym("tuple"), sym("key-type"), sym("val-type")),
+            ),
+        )
+    ]
+    env.define("hash-map", SyntaxRulesMacro([], hash_map_rules))
+
+    # dyn-array: (dyn-array type length) => (subscript DynArray (tuple type length))
+    dyn_array_rules = [
+        (
+            exp(sym("dyn-array"), sym("type"), sym("length")),
+            exp(
+                sym("subscript"),
+                sym("DynArray"),
+                exp(sym("tuple"), sym("type"), sym("length")),
+            ),
+        )
+    ]
+    env.define("dyn-array", SyntaxRulesMacro([], dyn_array_rules))
+
+    # string: (string length) => (subscript String length)
+    string_rules = [
+        (
+            exp(sym("string"), sym("length")),
+            exp(sym("subscript"), sym("String"), sym("length")),
+        )
+    ]
+    env.define("string", SyntaxRulesMacro([], string_rules))
+
+    # bytes: (bytes length) => (subscript Bytes length)
+    bytes_rules = [
+        (
+            exp(sym("bytes"), sym("length")),
+            exp(sym("subscript"), sym("Bytes"), sym("length")),
+        )
+    ]
+    env.define("bytes", SyntaxRulesMacro([], bytes_rules))
+
+    # --- Simple sugar macros (migrated from Hy) ---
+
+    # inc: (inc target) => (+= target 1)
+    inc_rules = [
+        (
+            exp(sym("inc"), sym("target")),
+            exp(sym("+="), sym("target"), models.Integer(1)),
+        )
+    ]
+    env.define("inc", SyntaxRulesMacro([], inc_rules))
+
+    # dec: (dec target) => (-= target 1)
+    dec_rules = [
+        (
+            exp(sym("dec"), sym("target")),
+            exp(sym("-="), sym("target"), models.Integer(1)),
+        )
+    ]
+    env.define("dec", SyntaxRulesMacro([], dec_rules))
+
+    # condp: predicate-based cond (procedural macro)
+    # (condp op obj test1 expr1 test2 expr2 :else default)
+    # => (cond (op obj test1) expr1 (op obj test2) expr2 :else default)
+    def _condp(call_stx: Syntax, _env):
+        form = call_stx.datum
+        if len(form) < 4:
+            raise Exception(
+                "condp requires at least 3 args: (condp op obj test expr ...)"
+            )
+        op = form[1]
+        obj = form[2]
+        body = list(form[3:])
+
+        # Build cond arguments, transforming test/expr pairs
+        cond_args = []
+        i = 0
+        while i < len(body):
+            test = body[i]
+            # Check if it's :else (Keyword.name returns "else", str() returns ":else")
+            if isinstance(test, models.Keyword) and test.name == "else":
+                cond_args.append(test)
+                if i + 1 < len(body):
+                    cond_args.append(body[i + 1])
+                break
+            else:
+                # Transform test to (op obj test)
+                cond_args.append(models.Expression([op, obj, test]))
+                if i + 1 < len(body):
+                    cond_args.append(body[i + 1])
+            i += 2
+
+        return models.Expression([models.Symbol("cond"), *cond_args])
+
+    env.define("condp", _condp)
 
     # (no builtin infix; examples define their own)
