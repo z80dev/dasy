@@ -9,6 +9,69 @@ from importlib.metadata import version as pkg_version, PackageNotFoundError
 from dasy.parser.output import get_external_interface
 from dasy.exceptions import DasyUsageError
 
+
+def get_expanded_forms(src: str, filepath: str = None):
+    """Return macro-expanded forms as a formatted string (for debugging/inspection)."""
+    from dasy.parser.reader import read_many as dasy_read_many
+    from dasy.parser.expander import expand_module
+    from dasy.parser.context import ParseContext
+    from dasy.parser import macros2
+    from dasy.macro.syntax import MacroEnv
+
+    # Create context
+    context = ParseContext(source_path=filepath, source_code=src)
+
+    # Read raw forms
+    forms = list(dasy_read_many(src))
+
+    # Macro expansion pass
+    env = MacroEnv()
+    macros2.install_builtin_dasy_macros(env)
+    expanded = expand_module(forms, env, macros2.parse_define_syntax, context)
+
+    # Pretty-print each expanded form
+    def pretty(form, indent=0):
+        """Simple pretty-printer for Hy models."""
+        from hy import models
+
+        sp = "  " * indent
+        if isinstance(form, models.Expression):
+            if len(form) == 0:
+                return "()"
+            parts = [pretty(x, indent + 1) for x in form]
+            # If short enough, keep on one line
+            one_line = "(" + " ".join(parts) + ")"
+            if len(one_line) < 60:
+                return one_line
+            # Otherwise multiline
+            inner = "\n".join("  " * (indent + 1) + p for p in parts)
+            return "(\n" + inner + ")"
+        elif isinstance(form, models.List):
+            if len(form) == 0:
+                return "[]"
+            parts = [pretty(x, indent + 1) for x in form]
+            return "[" + " ".join(parts) + "]"
+        elif isinstance(form, models.String):
+            return '"' + str(form).replace("\\", "\\\\").replace('"', '\\"') + '"'
+        elif isinstance(form, models.Keyword):
+            return ":" + form.name
+        elif isinstance(form, models.Symbol):
+            return str(form)
+        elif isinstance(form, models.Integer):
+            return str(int(form))
+        elif isinstance(form, models.Float):
+            return str(float(form))
+        elif isinstance(form, models.Bytes):
+            return repr(bytes(form))
+        else:
+            # Fallback - try to get a clean representation
+            if hasattr(form, "__int__"):
+                return str(int(form))
+            return repr(form)
+
+    return "\n\n".join(pretty(f) for f in expanded)
+
+
 format_help = """Format to print, one or more of:
 bytecode (default) - Deployable bytecode
 bytecode_runtime   - Bytecode at runtime
@@ -29,6 +92,7 @@ ir                 - Intermediate representation in list format
 ir_json            - Intermediate representation in JSON format
 hex-ir             - Output IR and assembly constants in hex instead of decimal
 no-optimize        - Do not optimize (don't use this for production code)
+expand             - Show macro-expanded forms (for debugging macros)
 """
 
 OUTPUT_FORMATS = VYPER_OUTPUT_FORMATS.copy()
@@ -84,30 +148,40 @@ def main():
 
     # List formats and exit if requested
     if args.list_formats:
-        for key in sorted(OUTPUT_FORMATS.keys()):
+        all_formats = set(OUTPUT_FORMATS.keys()) | {"expand"}
+        for key in sorted(all_formats):
             print(key)
         return
 
+    # Read source code
+    filepath = None
     if args.filename != "":
+        filepath = args.filename
         with open(args.filename, "r") as f:
             src = f.read()
             # Allow CLI to override EVM version via pragma appended last (wins over earlier pragmas)
             if args.evm_version and not args.filename.endswith(".vy"):
                 src = src + f"\n(pragma :evm-version {args.evm_version})\n"
-            if args.filename.endswith(".vy"):
-                data = compiler.CompilerData(
-                    src, contract_name=args.filename.split("/")[-1].split(".")[0]
-                )
-            else:
-                # Pass the filepath so macros like include! resolve relative paths correctly
-                data = compiler.compile(
-                    src, name=args.filename.split(".")[0], filepath=args.filename
-                )
     else:
         for line in sys.stdin:
             src += line
         if args.evm_version:
             src = src + f"\n(pragma :evm-version {args.evm_version})\n"
+
+    # Handle "expand" format specially (doesn't need full compilation)
+    if args.format == "expand":
+        print(get_expanded_forms(src, filepath))
+        return
+
+    # Full compilation for other formats
+    if filepath and filepath.endswith(".vy"):
+        data = compiler.CompilerData(
+            src, contract_name=filepath.split("/")[-1].split(".")[0]
+        )
+    elif filepath:
+        # Pass the filepath so macros like include! resolve relative paths correctly
+        data = compiler.compile(src, name=filepath.split(".")[0], filepath=filepath)
+    else:
         data = compiler.compile(src, name="StdIn")
 
     translate_map = {
@@ -118,7 +192,7 @@ def main():
         "interface": "external_interface",
     }
     # Accept aliases and canonical names at input
-    valid_inputs = set(OUTPUT_FORMATS.keys()) | set(translate_map.keys())
+    valid_inputs = set(OUTPUT_FORMATS.keys()) | set(translate_map.keys()) | {"expand"}
     output_format = translate_map.get(args.format, args.format)
     if output_format in OUTPUT_FORMATS:
         print(OUTPUT_FORMATS[output_format](data))
